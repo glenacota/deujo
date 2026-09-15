@@ -5,8 +5,8 @@
  * ================================================================== */
 
 const DATA_URLS = {
-    nouns: './assets/nouns.json',
-    verbs: './assets/verbs.json',
+    nouns: './assets/datasets/nouns.json',
+    verbs: './assets/datasets/verbs.json',
 };
 
 const STORAGE_KEYS = {
