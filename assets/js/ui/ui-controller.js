@@ -35,5 +35,20 @@ export class UiController {
         dom.dashboard.bar.style.width = `${state.getTierProgressPct()}%`;
         dom.dashboard.bar.className = `h-full rounded-full transition-all duration-500 ease-out belt-${tier}`;
     }
+
+    switchTab(tab) {
+        const isNouns = tab === 'nouns';
+        dom.tabs.nounSection.classList.toggle('hidden', !isNouns);
+        dom.tabs.verbSection.classList.toggle('hidden', isNouns);
+        this.#applyTabStyle(dom.tabs.nouns, isNouns);
+        this.#applyTabStyle(dom.tabs.verbs, !isNouns);
+    }
+
+    #applyTabStyle(btn, active) {
+        const base = 'flex-1 px-5 py-2 lg:py-3 rounded-lg text-base font-semibold transition-all flex items-center justify-center space-x-2';
+        btn.className = active
+        ? `${base} bg-indigo-600 text-white shadow-md`
+        : `${base} text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200`;
+    }
   
 }

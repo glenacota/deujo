@@ -24,14 +24,6 @@ const FEEDBACK_STYLE = {
 const INPUT_ERROR_CLASS = 'border-rose-500';
 const INPUT_SUCCESS_CLASS = 'border-emerald-500';
 
-const TAB_BUTTON_CLASS = {
-    active: {
-        nouns: 'flex-1 px-5 py-2 lg:py-3 rounded-lg text-base font-semibold transition-all flex items-center justify-center space-x-2 bg-indigo-600 text-white shadow-md',
-        verbs: 'flex-1 px-5 py-2 lg:py-3 rounded-lg text-base font-semibold transition-all flex items-center justify-center space-x-2 bg-purple-600 text-white shadow-md',
-    },
-    inactive: 'flex-1 px-5 py-2 lg:py-3 rounded-lg text-base font-semibold transition-all flex items-center justify-center space-x-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200',
-};
-
 
 const audio = new AudioEngine();
 const fx = new FxEngine("fireworksCanvas");
@@ -385,16 +377,9 @@ function closeFeedbackModal() {
     if (nextQuestion) nextQuestion();
 }
 
-function switchTab(tab) {
+function setTab(tab) {
     state.activeTab = tab;
-    const isNouns = tab === 'nouns';
-
-    dom.tabs.nouns.className = isNouns ? TAB_BUTTON_CLASS.active.nouns : TAB_BUTTON_CLASS.inactive;
-    dom.tabs.verbs.className = isNouns ? TAB_BUTTON_CLASS.inactive : TAB_BUTTON_CLASS.active.verbs;
-    dom.tabs.nounSection.classList.toggle('hidden', !isNouns);
-    dom.tabs.verbSection.classList.toggle('hidden', isNouns);
-
-    closePracticeModals();
+    ui.switchTab(tab);
 }
 
 function handleEnterKey(event) {
@@ -419,8 +404,8 @@ function handleEnterKey(event) {
 function bindEvents() {
     dom.theme.toggleBtn.addEventListener('click', ui.toggleTheme);
 
-    dom.tabs.nouns.addEventListener('click', () => switchTab('nouns'));
-    dom.tabs.verbs.addEventListener('click', () => switchTab('verbs'));
+    dom.tabs.nouns.addEventListener('click', () => setTab('nouns'));
+    dom.tabs.verbs.addEventListener('click', () => setTab('verbs'));
 
     dom.verb.teachBtn.addEventListener('click', toggleModal);
     dom.modals.verb.closeBtn.addEventListener('click', closeModal);
@@ -441,16 +426,11 @@ function bindEvents() {
     dom.share.btn.addEventListener('click', shareResult);
 
     window.addEventListener('keydown', (e) => {
-        if (e.key === '1' || e.key === '2') {
-            e.preventDefault();
-            switchTab(e.key === '1' ? 'nouns' : 'verbs');
-            return;
-        }
-
+        if (e.key === '1') setTab('nouns');
+        if (e.key === '2') setTab('verbs');
         if (e.key === '?') {
-            e.preventDefault();
-            if (state.activeTab === 'verbs') toggleModal();
-            if (state.activeTab === 'nouns') toggleNounModal();
+            const btn = state.activeTab === 'nouns' ? dom.noun.teachBtn : dom.verb.teachBtn;
+            btn.click();
         }
         if (e.key === 'Enter' || e.key === 'Return') {
             handleEnterKey(e);
