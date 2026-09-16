@@ -161,7 +161,10 @@ function checkNounAnswer() {
 function loadNextVerb() {
     const verb = state.pickNext(verbsData, 'verbs');
     state.current.verb = verb;
-    if (verb) ui.renderVerb(verb);
+    if (verb) {
+        ui.renderVerb(verb);
+        ui.renderConjugationTable(verb);
+    }
 }
 
 function checkVerbAnswer() {
@@ -193,31 +196,6 @@ function checkVerbAnswer() {
 }
 
 /* ==================================================================
- * CONJUGATION & NOUN TABLE MODALS ("Teach Me!")
- * ================================================================== */
-
-function openVerbModal() {
-    ui.openModal(dom.modals.verb.root)
-    ui.renderConjugationTable(state.current.verb);
-}
-
-function closeVerbModal() {
-    ui.closeModal(dom.modals.verb.root);
-}
-
-function openNounModal() {
-    ui.openModal(dom.modals.noun.root);
-}
-
-function closeNounModal() {
-    ui.closeModal(dom.modals.noun.root);
-}
-
-function setModalVisibility(modal, isVisible) {
-    modal.classList.toggle('hidden', !isVisible);
-}
-
-/* ==================================================================
  * SHARED UI HELPERS
  * ================================================================== */
 
@@ -227,11 +205,11 @@ function showFeedback(htmlContent, colorClasses, nextQuestion) {
     dom.modals.feedback.content.innerHTML = htmlContent;
     dom.modals.feedback.panel.className = `w-full max-w-md rounded-2xl shadow-2xl overflow-hidden ${colorClasses}`;
     state.feedbackNext = nextQuestion;
-    setModalVisibility(dom.modals.feedback.root, true);
+    ui.openModal(dom.modals.feedback.root);
 }
 
 function closeFeedbackModal() {
-    setModalVisibility(dom.modals.feedback.root, false);
+    ui.closeModal(dom.modals.feedback.root);
     const nextQuestion = state.feedbackNext;
     state.feedbackNext = null;
     if (nextQuestion) nextQuestion();
@@ -244,14 +222,14 @@ function setTab(tab) {
 
 function handleEnterKey(event) {
     event.preventDefault();
+    const openModal = ui.getOpenModal();
 
-    if (!ui.getOpenModal()) {
+    if (!openModal) {
         const checkButton = state.activeTab === 'nouns' ? dom.noun.checkBtn : dom.verb.checkBtn;
         checkButton.click();
     } else {
         closeFeedbackModal();
-        closeNounModal();
-        closeVerbModal();
+        ui.closeModal(openModal);
     }
 }
 
@@ -265,16 +243,16 @@ function bindEvents() {
     dom.tabs.nouns.addEventListener('click', () => setTab('nouns'));
     dom.tabs.verbs.addEventListener('click', () => setTab('verbs'));
 
-    dom.verb.teachBtn.addEventListener('click', openVerbModal);
-    dom.modals.verb.closeBtn.addEventListener('click', closeVerbModal);
+    dom.verb.teachBtn.addEventListener('click', () => ui.openModal(dom.modals.verb.root));
+    dom.modals.verb.closeBtn.addEventListener('click', () => ui.closeModal(dom.modals.verb.root));
     dom.modals.verb.root.addEventListener('click', (e) => {
-        if (e.target === dom.modals.verb.root) closeVerbModal();
+        if (e.target === dom.modals.verb.root) ui.closeModal(dom.modals.verb.root);
     });
 
-    dom.noun.teachBtn.addEventListener('click', openNounModal);
-    dom.modals.noun.closeBtn.addEventListener('click', closeNounModal);
+    dom.noun.teachBtn.addEventListener('click', () => ui.openModal(dom.modals.noun.root));
+    dom.modals.noun.closeBtn.addEventListener('click', () => ui.closeModal(dom.modals.noun.root));
     dom.modals.noun.root.addEventListener('click', (e) => {
-        if (e.target === dom.modals.noun.root) closeNounModal();
+        if (e.target === dom.modals.noun.root) ui.closeModal(dom.modals.noun.root);
     });
 
     dom.modals.feedback.root.addEventListener('click', (e) => {
