@@ -69,7 +69,7 @@ function initApp() {
     ui.initTheme();
     ui.renderDashboard(state);
     bindEvents();
-    nextNoun();
+    loadNextNoun();
     nextVerb();
 }
 
@@ -136,24 +136,11 @@ function triggerBeltDemotion(currentTier) {
  * NOUN PRACTICE
  * ================================================================== */
 
-function nextNoun() {
-    state.current.noun = state.pickNext(nounsData, 'nouns');
+function loadNextNoun() {
+    const noun = state.pickNext(nounsData, 'nouns');
+    state.current.noun = noun;
     state.current.gender = null;
-
-    dom.noun.word.textContent = state.current.noun.w;
-    dom.noun.meaning.textContent = `🇬🇧 ${state.current.noun.m}`;
-    
-    const hasPlural = Boolean(state.current.noun.p);
-    dom.noun.plural.value = '';
-    dom.noun.plural.disabled = !hasPlural;
-    dom.noun.plural.placeholder = hasPlural ? 'e.g. Kinder' : 'no plural';
-    dom.noun.plural.classList.toggle('opacity-50', !hasPlural);
-    dom.noun.plural.classList.toggle('cursor-not-allowed', !hasPlural);
-
-    dom.noun.genderButtons.forEach((btn) => {
-        btn.setAttribute('aria-pressed', 'false');
-        btn.classList.remove('ring-2', 'ring-indigo-500', 'bg-indigo-100', 'dark:bg-indigo-950/60');
-    });
+    if (noun) ui.renderNoun(noun);
 }
 
 function handleAnswerResult({ isCorrect, message, nextQuestion }) {
@@ -173,7 +160,7 @@ function checkNounAnswer() {
     const userPlural = dom.noun.plural.value.trim();
 
     if (!userGender) {
-        showFeedback('⚠️ Please select a gender (der, die, or das).', FEEDBACK_STYLE.warning, nextNoun);
+        showFeedback('⚠️ Please select a gender (der, die, or das).', FEEDBACK_STYLE.warning, loadNextNoun);
         return;
     }
 
@@ -192,7 +179,7 @@ function checkNounAnswer() {
     handleAnswerResult({
         isCorrect: isGenderCorrect && isPluralCorrect,
         message,
-        nextQuestion: nextNoun,
+        nextQuestion: loadNextNoun,
     });
 }
 
@@ -397,7 +384,7 @@ function bindEvents() {
     });
 
     dom.noun.checkBtn.addEventListener('click', checkNounAnswer);
-    dom.noun.skipBtn.addEventListener('click', nextNoun);
+    dom.noun.skipBtn.addEventListener('click', loadNextNoun);
 
     dom.verb.checkBtn.addEventListener('click', checkVerbAnswer);
     dom.verb.skipBtn.addEventListener('click', nextVerb);

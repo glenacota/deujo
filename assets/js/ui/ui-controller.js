@@ -52,6 +52,38 @@ export class UiController {
         : `${base} text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200`;
     }
 
+    renderNoun(noun) {
+        dom.noun.word.textContent = noun.w;
+        dom.noun.meaning.textContent = `🇬🇧 ${noun.m}`;
+
+        dom.noun.plural.value = '';
+        
+        const hasPlural = Boolean(noun.p);
+        dom.noun.plural.disabled = !hasPlural;
+        dom.noun.plural.placeholder = hasPlural ? 'e.g. Kinder' : 'no plural';
+        
+        dom.noun.plural.classList.remove('border-rose-500', 'border-emerald-500');
+        dom.noun.genderButtons.forEach((btn) => this.#setGenderActive(btn, false));
+    }
+
+    setGenderSelection(gender) {
+        dom.noun.genderButtons.forEach((btn) => this.#setGenderActive(btn, btn.dataset.gender === gender));
+    }
+
+    #setGenderActive(btn, active) {
+        btn.setAttribute('aria-pressed', String(active));
+        btn.classList.toggle('ring-2', active);
+        btn.classList.toggle('ring-offset-2', active);
+        btn.classList.toggle('ring-indigo-500', active);
+        btn.classList.toggle('bg-indigo-100', active);
+        btn.classList.toggle('dark:bg-indigo-950/60', active);
+    }
+
+    markNounPluralResult(isCorrect) {
+        dom.noun.plural.classList.toggle('border-emerald-500', isCorrect);
+        dom.noun.plural.classList.toggle('border-rose-500', !isCorrect);
+    }
+
     renderConjugationTable(verb) {
         dom.modals.verb.title.textContent = verb.w;
         dom.modals.verb.meaning.textContent = `🇬🇧 ${verb.m}`;
