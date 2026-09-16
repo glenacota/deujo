@@ -4,7 +4,7 @@
 import { CONFIG } from './config.js';
 import { AudioEngine } from './services/audio-engine.js';
 import { FxEngine } from './services/fx-engine.js';
-import { Storage } from './services/storage.js';
+import { GameState } from './state.js';
 import { dom } from './ui/dom.js';
 import { UiController } from './ui/ui-controller.js';
 
@@ -35,6 +35,8 @@ const TAB_BUTTON_CLASS = {
 
 const audio = new AudioEngine();
 const fx = new FxEngine("fireworksCanvas");
+
+const state = new GameState();
 const ui = new UiController();
 
 /* ==================================================================
@@ -45,36 +47,6 @@ const ui = new UiController();
 let nounsData = [];
 /** @type {Array<{w:string,m:string,pres:string[],praet:string[],perf:string[]}>} */
 let verbsData = [];
-
-const state = {
-    streak: Storage.getNumber(CONFIG.storage.streak),
-    maxStreak: Storage.getNumber(CONFIG.storage.maxStreak),
-    beltProgress: Storage.getNumber(CONFIG.storage.beltProgress, Storage.getNumber(CONFIG.storage.streak)),
-
-    selectedGender: null,
-    selectedTense: 'pres',
-
-    currentNoun: null,
-    currentVerb: null,
-
-    activeTab: 'nouns',
-    isVerbModalOpen: false,
-    isNounModalOpen: false,
-    feedbackNext: null,
-
-    nounHistory: [],
-    verbHistory: [],
-};
-
-/* ==================================================================
- * PERSISTENCE (STREAK)
- * ================================================================== */
-
-function saveProgress() {
-    Storage.setNumber(CONFIG.storage.streak, state.streak);
-    Storage.setNumber(CONFIG.storage.maxStreak, state.maxStreak);
-    Storage.setNumber(CONFIG.storage.beltProgress, state.beltProgress);
-}
 
 /* ==================================================================
  * DATA LOADING & BOOTSTRAP
@@ -110,37 +82,11 @@ function initApp() {
 }
 
 /* ==================================================================
- * SPACED-REPETITION SELECTION
- * ================================================================== */
-
-function pickNextWithSpacedHistory(dataset, history) {
-    let available = dataset.filter((item) => !history.includes(item.w));
-
-    if (available.length === 0) {
-        history.splice(0, history.length - CONFIG.rules.historyRecycle);
-        available = dataset.filter((item) => !history.includes(item.w));
-    }
-
-    const chosen = available[Math.floor(Math.random() * available.length)];
-
-    history.push(chosen.w);
-    if (history.length > CONFIG.rules.historyMax) {
-        history.shift();
-    }
-
-    return chosen;
-}
-
-/* ==================================================================
  * STREAK & MILESTONE HANDLING
  * ================================================================== */
 
 function handleStreakIncrement() {
-    state.streak += 1;
-    state.maxStreak = Math.max(state.maxStreak, state.streak);
-    state.beltProgress += 1;
-
-    saveProgress();
+    state.incrementStreak();
     updateDashboardUI();
 
     if (state.beltProgress > 0 && state.beltProgress % CONFIG.rules.milestoneInterval === 0) {
@@ -151,14 +97,10 @@ function handleStreakIncrement() {
 }
 
 function resetStreak() {
-    const previousTier = Math.floor(state.beltProgress / CONFIG.rules.milestoneInterval);
-    state.streak = 0;
-    state.beltProgress = Math.max(0, state.beltProgress - 1);
-    saveProgress();
+    const isDemoted = state.resetStreak();
     updateDashboardUI();
 
-    const currentTier = Math.floor(state.beltProgress / CONFIG.rules.milestoneInterval);
-    if (currentTier < previousTier) {
+    if (isDemoted) {
         triggerBeltDemotion(currentTier);
     } else {
         audio.playWrong();
@@ -169,7 +111,7 @@ function triggerMilestoneReward() {
     audio.playMilestone();
     fx.triggerShow();
 
-    const currentTier = Math.floor(state.beltProgress / CONFIG.rules.milestoneInterval);
+    const currentTier = state.getCurrentTier();
     const beltName = CONFIG.belts[Math.min(currentTier, CONFIG.belts.length - 1)];
     dom.toast.card.className = 'bg-amber-400 text-slate-950 text-base px-6 py-4 rounded-none border-4 border-slate-950 shadow-2xl flex items-center space-x-3 animate-bounce';
     dom.toast.icon.textContent = '🥋';
@@ -225,13 +167,13 @@ function updateDashboardUI() {
  * ================================================================== */
 
 function nextNoun() {
-    state.currentNoun = pickNextWithSpacedHistory(nounsData, state.nounHistory);
-    state.selectedGender = null;
+    state.current.noun = state.pickNext(nounsData, 'nouns');
+    state.current.gender = null;
 
-    dom.noun.word.textContent = state.currentNoun.w;
-    dom.noun.meaning.textContent = `🇬🇧 ${state.currentNoun.m}`;
+    dom.noun.word.textContent = state.current.noun.w;
+    dom.noun.meaning.textContent = `🇬🇧 ${state.current.noun.m}`;
     
-    const hasPlural = Boolean(state.currentNoun.p);
+    const hasPlural = Boolean(state.current.noun.p);
     dom.noun.plural.value = '';
     dom.noun.plural.disabled = !hasPlural;
     dom.noun.plural.placeholder = hasPlural ? 'e.g. Kinder' : 'no plural';
@@ -255,9 +197,9 @@ function handleAnswerResult({ isCorrect, message, nextQuestion }) {
 }
 
 function checkNounAnswer() {
-    if (!state.currentNoun) return;
+    if (!state.current.noun) return;
 
-    const userGender = state.selectedGender;
+    const userGender = state.current.gender;
     const userPlural = dom.noun.plural.value.trim();
 
     if (!userGender) {
@@ -265,14 +207,14 @@ function checkNounAnswer() {
         return;
     }
 
-    const isGenderCorrect = userGender === state.currentNoun.g;
+    const isGenderCorrect = userGender === state.current.noun.g;
     
     // Determine if the noun has no plural and validate accordingly
-    const hasNoPlural = !state.currentNoun.p;
-    const isPluralCorrect = hasNoPlural || (userPlural.toLowerCase() === state.currentNoun.p.toLowerCase());
+    const hasNoPlural = !state.current.noun.p;
+    const isPluralCorrect = hasNoPlural || (userPlural.toLowerCase() === state.current.noun.p.toLowerCase());
 
-    const pluralText = hasNoPlural ? 'no plural' : `die ${state.currentNoun.p}`;
-    const answer = `<span class="font-extrabold underline">${state.currentNoun.g}</span> ${state.currentNoun.w}, Plural: <span class="font-extrabold underline">${pluralText}</span>`;
+    const pluralText = hasNoPlural ? 'no plural' : `die ${state.current.noun.p}`;
+    const answer = `<span class="font-extrabold underline">${state.current.noun.g}</span> ${state.current.noun.w}, Plural: <span class="font-extrabold underline">${pluralText}</span>`;
     const message = isGenderCorrect && isPluralCorrect
         ? `Excellent: ${answer}`
         : `Correct answer: ${answer}`;
@@ -289,10 +231,10 @@ function checkNounAnswer() {
  * ================================================================== */
 
 function nextVerb() {
-    state.currentVerb = pickNextWithSpacedHistory(verbsData, state.verbHistory);
+    state.current.verb = state.pickNext(verbsData, 'verbs');
 
-    dom.verb.word.textContent = state.currentVerb.w;
-    dom.verb.meaning.textContent = `🇬🇧 ${state.currentVerb.m}`;
+    dom.verb.word.textContent = state.current.verb.w;
+    dom.verb.meaning.textContent = `🇬🇧 ${state.current.verb.m}`;
     Object.values(dom.verb.inputs).forEach((input) => {
         input.value = '';
         input.classList.remove(INPUT_ERROR_CLASS, INPUT_SUCCESS_CLASS);
@@ -304,9 +246,9 @@ function nextVerb() {
 }
 
 function checkVerbAnswer() {
-    if (!state.currentVerb) return;
+    if (!state.current.verb) return;
 
-    const targetForms = state.currentVerb[state.selectedTense];
+    const targetForms = state.current.verb[state.current.tense];
     if (!targetForms) return;
 
     let allCorrect = true;
@@ -323,7 +265,7 @@ function checkVerbAnswer() {
     });
 
     const message = allCorrect
-        ? `Excellent! Perfect conjugation for "${state.currentVerb.w}"!`
+        ? `Excellent! Perfect conjugation for "${state.current.verb.w}"!`
         : 'Correct answer: '
             + CONFIG.persons.map((p) => `${p.label} <strong>${targetForms[PERSON_INDEX[p.key]]}</strong>`).join(', ')
             + '.';
@@ -336,9 +278,9 @@ function checkVerbAnswer() {
  * ================================================================== */
 
 function renderConjugationModal() {
-    if (!state.currentVerb) return;
+    if (!state.current.verb) return;
 
-    const verb = state.currentVerb;
+    const verb = state.current.verb;
     dom.modals.verb.title.childNodes[0].textContent = `${verb.w} `;
     dom.modals.verb.meaning.textContent = `🇬🇧 ${verb.m}`;
 
@@ -399,6 +341,9 @@ function setModalVisibility(modal, isVisible) {
 /* ==================================================================
  * SHARED UI HELPERS
  * ================================================================== */
+
+
+
 
 function showFeedback(htmlContent, colorClasses, nextQuestion) {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
@@ -545,7 +490,7 @@ function bindEvents() {
             selectedBtn.classList.add('bg-purple-600', 'text-white');
             selectedBtn.classList.remove('text-slate-600', 'dark:text-slate-400');
 
-            state.selectedTense = selectedBtn.dataset.tense;
+            state.current.tense = selectedBtn.dataset.tense;
         });
     });
 
@@ -559,7 +504,7 @@ function bindEvents() {
             const selectedBtn = e.currentTarget;
             selectedBtn.setAttribute('aria-pressed', 'true');
             selectedBtn.classList.add('ring-2', 'ring-indigo-500', 'bg-indigo-100', 'dark:bg-indigo-950/60');
-            state.selectedGender = selectedBtn.dataset.gender;
+            state.current.gender = selectedBtn.dataset.gender;
         });
     });
 
