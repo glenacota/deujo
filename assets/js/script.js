@@ -196,40 +196,21 @@ function checkVerbAnswer() {
  * CONJUGATION & NOUN TABLE MODALS ("Teach Me!")
  * ================================================================== */
 
-function openModal() {
-    if (state.activeTab !== 'verbs') return;
+function openVerbModal() {
+    ui.openModal(dom.modals.verb.root)
     ui.renderConjugationTable(state.current.verb);
-    setModalVisibility(dom.modals.verb.root, true);
-    state.isVerbModalOpen = true;
 }
 
-function closeModal() {
-    setModalVisibility(dom.modals.verb.root, false);
-    state.isVerbModalOpen = false;
-}
-
-function toggleModal() {
-    state.isVerbModalOpen ? closeModal() : openModal();
+function closeVerbModal() {
+    ui.closeModal(dom.modals.verb.root);
 }
 
 function openNounModal() {
-    if (state.activeTab !== 'nouns') return;
-    setModalVisibility(dom.modals.noun.root, true);
-    state.isNounModalOpen = true;
+    ui.openModal(dom.modals.noun.root);
 }
 
 function closeNounModal() {
-    setModalVisibility(dom.modals.noun.root, false);
-    state.isNounModalOpen = false;
-}
-
-function toggleNounModal() {
-    state.isNounModalOpen ? closeNounModal() : openNounModal();
-}
-
-function closePracticeModals() {
-    closeModal();
-    closeNounModal();
+    ui.closeModal(dom.modals.noun.root);
 }
 
 function setModalVisibility(modal, isVisible) {
@@ -264,15 +245,13 @@ function setTab(tab) {
 function handleEnterKey(event) {
     event.preventDefault();
 
-    const feedbackIsOpen = !dom.modals.feedback.root.classList.contains('hidden');
-    const practiceModalIsOpen = state.isVerbModalOpen || state.isNounModalOpen;
-
-    closePracticeModals();
-    if (feedbackIsOpen) {
-        closeFeedbackModal();
-    } else if (!practiceModalIsOpen) {
+    if (!ui.getOpenModal()) {
         const checkButton = state.activeTab === 'nouns' ? dom.noun.checkBtn : dom.verb.checkBtn;
         checkButton.click();
+    } else {
+        closeFeedbackModal();
+        closeNounModal();
+        closeVerbModal();
     }
 }
 
@@ -286,13 +265,13 @@ function bindEvents() {
     dom.tabs.nouns.addEventListener('click', () => setTab('nouns'));
     dom.tabs.verbs.addEventListener('click', () => setTab('verbs'));
 
-    dom.verb.teachBtn.addEventListener('click', toggleModal);
-    dom.modals.verb.closeBtn.addEventListener('click', closeModal);
+    dom.verb.teachBtn.addEventListener('click', openVerbModal);
+    dom.modals.verb.closeBtn.addEventListener('click', closeVerbModal);
     dom.modals.verb.root.addEventListener('click', (e) => {
-        if (e.target === dom.modals.verb.root) closeModal();
+        if (e.target === dom.modals.verb.root) closeVerbModal();
     });
 
-    dom.noun.teachBtn.addEventListener('click', toggleNounModal);
+    dom.noun.teachBtn.addEventListener('click', openNounModal);
     dom.modals.noun.closeBtn.addEventListener('click', closeNounModal);
     dom.modals.noun.root.addEventListener('click', (e) => {
         if (e.target === dom.modals.noun.root) closeNounModal();

@@ -123,6 +123,21 @@ export class UiController {
         `).join('');
     }
 
+    openModal(modalElement) {
+        modalElement.classList.remove('hidden');
+    }
+
+    closeModal(modalElement) {
+        modalElement.classList.add('hidden');
+    }
+
+    /** @returns {HTMLElement|null} the currently open modal root, if any */
+    getOpenModal() {
+        return Object.values(dom.modals)
+        .map((m) => m.root)
+        .find((root) => root && !root.classList.contains('hidden')) ?? null;
+    }
+
     showToast(isPromotion, tier, streak) {
         const beltName = CONFIG.belts[Math.min(tier, CONFIG.belts.length - 1)];
         if (isPromotion) {
