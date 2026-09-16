@@ -211,7 +211,7 @@ function nextVerb() {
     });
 
     if (state.isVerbModalOpen) {
-        renderConjugationModal();
+        ui.renderConjugationTable(state.current.verb);
     }
 }
 
@@ -247,30 +247,9 @@ function checkVerbAnswer() {
  * CONJUGATION & NOUN TABLE MODALS ("Teach Me!")
  * ================================================================== */
 
-function renderConjugationModal() {
-    if (!state.current.verb) return;
-
-    const verb = state.current.verb;
-    dom.modals.verb.title.childNodes[0].textContent = `${verb.w} `;
-    dom.modals.verb.meaning.textContent = `🇬🇧 ${verb.m}`;
-
-    const pres = verb.pres || [];
-    const praet = verb.praet || [];
-    const perf = verb.perf || [];
-
-    dom.modals.verb.tableBody.innerHTML = CONFIG.persons.map((person, index) => `
-        <tr class="hover:bg-slate-100 dark:hover:bg-slate-800/40 transition-colors">
-            <td class="py-2.5 px-3 font-sans font-bold text-slate-500 dark:text-slate-400 text-xs">${person.label}</td>
-            <td class="py-2.5 px-3 text-emerald-600 dark:text-emerald-300 font-medium">${pres[index] || '-'}</td>
-            <td class="py-2.5 px-3 text-cyan-600 dark:text-cyan-300 font-medium">${praet[index] || '-'}</td>
-            <td class="py-2.5 px-3 text-purple-600 dark:text-purple-300 font-medium">${perf[index] || '-'}</td>
-        </tr>
-    `).join('');
-}
-
 function openModal() {
     if (state.activeTab !== 'verbs') return;
-    renderConjugationModal();
+    ui.renderConjugationTable(state.current.verb);
     setModalVisibility(dom.modals.verb.root, true);
     state.isVerbModalOpen = true;
 }
@@ -311,9 +290,6 @@ function setModalVisibility(modal, isVisible) {
 /* ==================================================================
  * SHARED UI HELPERS
  * ================================================================== */
-
-
-
 
 function showFeedback(htmlContent, colorClasses, nextQuestion) {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });

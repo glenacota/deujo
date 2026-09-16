@@ -52,6 +52,19 @@ export class UiController {
         : `${base} text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200`;
     }
 
+    renderConjugationTable(verb) {
+        dom.modals.verb.title.textContent = verb.w;
+        dom.modals.verb.meaning.textContent = `🇬🇧 ${verb.m}`;
+        dom.modals.verb.tableBody.innerHTML = CONFIG.persons.map((person, index) => `
+            <tr>
+                <td class="py-2 px-3 font-bold">${person.label}</td>
+                <td class="py-2 px-3">${verb.pres[index] ?? '—'}</td>
+                <td class="py-2 px-3">${verb.praet[index] ?? '—'}</td>
+                <td class="py-2 px-3">${verb.perf[index] ?? '—'}</td>
+            </tr>
+        `).join('');
+    }
+
     async shareProgress(state) {
         const tier = state.getCurrentTier();
         const text = [
