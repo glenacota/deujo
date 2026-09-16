@@ -4,6 +4,7 @@
 import { CONFIG } from './config.js';
 import { AudioEngine } from './services/audio-engine.js';
 import { FxEngine } from './services/fx-engine.js';
+import { dom } from './ui/dom.js';
 
 /* ==================================================================
  * CONFIGURATION & CONSTANTS
@@ -66,78 +67,6 @@ const state = {
 };
 
 /* ==================================================================
- * DOM ELEMENT CACHE
- * ================================================================== */
-
-const dom = {
-    // Dashboard
-    streakDisplay: document.getElementById('streakDisplay'),
-    maxStreakDisplay: document.getElementById('maxStreakDisplay'),
-    progressBar: document.getElementById('progressBar'),
-    tierLabel: document.getElementById('tierLabel'),
-
-    // Tabs & sections
-    tabNouns: document.getElementById('tabNouns'),
-    tabVerbs: document.getElementById('tabVerbs'),
-    nounSection: document.getElementById('nounSection'),
-    verbSection: document.getElementById('verbSection'),
-
-    // Noun practice
-    nounWord: document.getElementById('nounWord'),
-    nounMeaning: document.getElementById('nounMeaning'),
-    pluralInput: document.getElementById('pluralInput'),
-    checkNounBtn: document.getElementById('checkNounBtn'),
-    skipNounBtn: document.getElementById('skipNounBtn'),
-    toggleNounTableBtn: document.getElementById('toggleNounTableBtn'),
-    genderBtns: document.querySelectorAll('.gender-btn'),
-
-    // Noun modal
-    nounModal: document.getElementById('nounModal'),
-    closeNounModalBtn: document.getElementById('closeNounModalBtn'),
-
-    // Verb practice
-    verbInfinitive: document.getElementById('verbInfinitive'),
-    verbMeaning: document.getElementById('verbMeaning'),
-    checkVerbBtn: document.getElementById('checkVerbBtn'),
-    skipVerbBtn: document.getElementById('skipVerbBtn'),
-    toggleVerbTableBtn: document.getElementById('toggleTableBtn'),
-    tenseBtns: document.querySelectorAll('.tense-btn'),
-    conjInputs: {
-        ich: document.getElementById('conj_ich'),
-        du: document.getElementById('conj_du'),
-        er: document.getElementById('conj_er'),
-        wir: document.getElementById('conj_wir'),
-        ihr: document.getElementById('conj_ihr'),
-        sie: document.getElementById('conj_sie'),
-    },
-
-    // Conjugation modal
-    verbModal: document.getElementById('verbModal'),
-    closeVerbModalBtn: document.getElementById('closeVerbModalBtn'),
-    modalVerbTitle: document.getElementById('modalVerbTitle'),
-    modalVerbMeaning: document.getElementById('modalVerbMeaning'),
-    modalTableBody: document.getElementById('modalTableBody'),
-
-    // Misc
-    milestoneToast: document.getElementById('milestoneToast'),
-    milestoneToastCard: document.getElementById('milestoneToastCard'),
-    milestoneToastIcon: document.getElementById('milestoneToastIcon'),
-    milestoneToastTitle: document.getElementById('milestoneToastTitle'),
-    milestoneToastText: document.getElementById('milestoneToastText'),
-    milestoneToastEffect: document.getElementById('milestoneToastEffect'),
-    progressShareBtn: document.getElementById('progressShareBtn'),
-    shareStatus: document.getElementById('shareStatus'),
-    feedbackModal: document.getElementById('feedbackModal'),
-    feedbackModalPanel: document.getElementById('feedbackModalPanel'),
-    feedbackModalTitle: document.getElementById('feedbackModalTitle'),
-    feedbackModalContent: document.getElementById('feedbackModalContent'),
-    feedbackContinueBtn: document.getElementById('feedbackContinueBtn'),
-    themeToggleBtn: document.getElementById('themeToggleBtn'),
-    themeIcon: document.getElementById('themeIcon'),
-    themeLabel: document.getElementById('themeLabel'),
-};
-
-/* ==================================================================
  * THEME (LIGHT / DARK MODE)
  * ================================================================== */
 
@@ -157,8 +86,8 @@ function toggleTheme() {
 }
 
 function updateThemeUI(isDark) {
-    dom.themeIcon.textContent = isDark ? '🌙' : '☀️';
-    dom.themeLabel.textContent = isDark ? 'Dark Mode' : 'Light Mode';
+    dom.theme.icon.textContent = isDark ? '🌙' : '☀️';
+    dom.theme.label.textContent = isDark ? 'Dark Mode' : 'Light Mode';
 }
 
 /* ==================================================================
@@ -266,30 +195,30 @@ function triggerMilestoneReward() {
 
     const currentTier = Math.floor(state.beltProgress / CONFIG.rules.milestoneInterval);
     const beltName = CONFIG.belts[Math.min(currentTier, CONFIG.belts.length - 1)];
-    dom.milestoneToastCard.className = 'bg-amber-400 text-slate-950 text-base px-6 py-4 rounded-none border-4 border-slate-950 shadow-2xl flex items-center space-x-3 animate-bounce';
-    dom.milestoneToastIcon.textContent = '🥋';
-    dom.milestoneToastTitle.textContent = 'Belt Promoted!';
-    dom.milestoneToastText.textContent = `🔥 Streak ${state.streak}! Promoted to ${beltName}!`;
-    dom.milestoneToastEffect.textContent = '🎉';
-    dom.milestoneToast.classList.remove('hidden');
+    dom.toast.card.className = 'bg-amber-400 text-slate-950 text-base px-6 py-4 rounded-none border-4 border-slate-950 shadow-2xl flex items-center space-x-3 animate-bounce';
+    dom.toast.icon.textContent = '🥋';
+    dom.toast.title.textContent = 'Belt Promoted!';
+    dom.toast.text.textContent = `🔥 Streak ${state.streak}! Promoted to ${beltName}!`;
+    dom.toast.effect.textContent = '🎉';
+    dom.toast.root.classList.remove('hidden');
 
     setTimeout(() => {
-        dom.milestoneToast.classList.add('hidden');
+        dom.toast.root.classList.add('hidden');
     }, CONFIG.timing.toastMs);
 }
 
 function triggerBeltDemotion(currentTier) {
     const beltName = CONFIG.belts[Math.min(currentTier, CONFIG.belts.length - 1)];
     audio.playDemotion();
-    dom.milestoneToastCard.className = 'bg-rose-400 text-rose-950 text-base px-6 py-4 rounded-none border-4 border-rose-950 shadow-2xl flex items-center space-x-3';
-    dom.milestoneToastIcon.textContent = '🥋';
-    dom.milestoneToastTitle.textContent = 'Belt Demoted';
-    dom.milestoneToastText.textContent = `Belt progress dropped to ${beltName}.`;
-    dom.milestoneToastEffect.textContent = '🚧';
-    dom.milestoneToast.classList.remove('hidden');
+    dom.toast.card.className = 'bg-rose-400 text-rose-950 text-base px-6 py-4 rounded-none border-4 border-rose-950 shadow-2xl flex items-center space-x-3';
+    dom.toast.icon.textContent = '🥋';
+    dom.toast.title.textContent = 'Belt Demoted';
+    dom.toast.text.textContent = `Belt progress dropped to ${beltName}.`;
+    dom.toast.effect.textContent = '🚧';
+    dom.toast.root.classList.remove('hidden');
 
     setTimeout(() => {
-        dom.milestoneToast.classList.add('hidden');
+        dom.toast.root.classList.add('hidden');
     }, CONFIG.timing.toastMs);
 }
 
@@ -298,21 +227,21 @@ function triggerBeltDemotion(currentTier) {
  * ================================================================== */
 
 function updateDashboardUI() {
-    dom.streakDisplay.textContent = state.streak;
-    dom.maxStreakDisplay.textContent = state.maxStreak;
+    dom.dashboard.streak.textContent = state.streak;
+    dom.dashboard.max.textContent = state.maxStreak;
 
     const progressInTier = state.beltProgress % CONFIG.rules.milestoneInterval;
     const currentTier = Math.floor(state.beltProgress / CONFIG.rules.milestoneInterval);
     const progressPercent = (progressInTier / CONFIG.rules.milestoneInterval) * 100;
 
-    dom.progressBar.style.width = `${progressPercent}%`;
+    dom.dashboard.bar.style.width = `${progressPercent}%`;
 
     const beltName = CONFIG.belts[Math.min(currentTier, CONFIG.belts.length - 1)];
-    dom.tierLabel.textContent = beltName;
-    dom.tierLabel.className = `text-xs px-2 py-0.5 rounded-full belt-label-${Math.min(currentTier, CONFIG.rules.maxTier)} font-semibold uppercase tracking-wider`;
+    dom.dashboard.tier.textContent = beltName;
+    dom.dashboard.tier.className = `text-xs px-2 py-0.5 rounded-full belt-label-${Math.min(currentTier, CONFIG.rules.maxTier)} font-semibold uppercase tracking-wider`;
 
     const tierClass = `belt-${Math.min(currentTier, CONFIG.rules.maxTier)}`;
-    dom.progressBar.className = `h-full rounded-full transition-all duration-500 ease-out ${tierClass}`;
+    dom.dashboard.bar.className = `h-full rounded-full transition-all duration-500 ease-out ${tierClass}`;
 }
 
 /* ==================================================================
@@ -323,17 +252,17 @@ function nextNoun() {
     state.currentNoun = pickNextWithSpacedHistory(nounsData, state.nounHistory);
     state.selectedGender = null;
 
-    dom.nounWord.textContent = state.currentNoun.w;
-    dom.nounMeaning.textContent = `🇬🇧 ${state.currentNoun.m}`;
+    dom.noun.word.textContent = state.currentNoun.w;
+    dom.noun.meaning.textContent = `🇬🇧 ${state.currentNoun.m}`;
     
     const hasPlural = Boolean(state.currentNoun.p);
-    dom.pluralInput.value = '';
-    dom.pluralInput.disabled = !hasPlural;
-    dom.pluralInput.placeholder = hasPlural ? 'e.g. Kinder' : 'no plural';
-    dom.pluralInput.classList.toggle('opacity-50', !hasPlural);
-    dom.pluralInput.classList.toggle('cursor-not-allowed', !hasPlural);
+    dom.noun.plural.value = '';
+    dom.noun.plural.disabled = !hasPlural;
+    dom.noun.plural.placeholder = hasPlural ? 'e.g. Kinder' : 'no plural';
+    dom.noun.plural.classList.toggle('opacity-50', !hasPlural);
+    dom.noun.plural.classList.toggle('cursor-not-allowed', !hasPlural);
 
-    dom.genderBtns.forEach((btn) => {
+    dom.noun.genderButtons.forEach((btn) => {
         btn.setAttribute('aria-pressed', 'false');
         btn.classList.remove('ring-2', 'ring-indigo-500', 'bg-indigo-100', 'dark:bg-indigo-950/60');
     });
@@ -353,7 +282,7 @@ function checkNounAnswer() {
     if (!state.currentNoun) return;
 
     const userGender = state.selectedGender;
-    const userPlural = dom.pluralInput.value.trim();
+    const userPlural = dom.noun.plural.value.trim();
 
     if (!userGender) {
         showFeedback('⚠️ Please select a gender (der, die, or das).', FEEDBACK_STYLE.warning, nextNoun);
@@ -386,9 +315,9 @@ function checkNounAnswer() {
 function nextVerb() {
     state.currentVerb = pickNextWithSpacedHistory(verbsData, state.verbHistory);
 
-    dom.verbInfinitive.textContent = state.currentVerb.w;
-    dom.verbMeaning.textContent = `🇬🇧 ${state.currentVerb.m}`;
-    Object.values(dom.conjInputs).forEach((input) => {
+    dom.verb.word.textContent = state.currentVerb.w;
+    dom.verb.meaning.textContent = `🇬🇧 ${state.currentVerb.m}`;
+    Object.values(dom.verb.inputs).forEach((input) => {
         input.value = '';
         input.classList.remove(INPUT_ERROR_CLASS, INPUT_SUCCESS_CLASS);
     });
@@ -406,7 +335,7 @@ function checkVerbAnswer() {
 
     let allCorrect = true;
 
-    Object.entries(dom.conjInputs).forEach(([person, input]) => {
+    Object.entries(dom.verb.inputs).forEach(([person, input]) => {
         const userValue = input.value.trim().toLowerCase();
         const expected = targetForms[PERSON_INDEX[person]].toLowerCase();
         const isCorrect = userValue === expected;
@@ -434,14 +363,14 @@ function renderConjugationModal() {
     if (!state.currentVerb) return;
 
     const verb = state.currentVerb;
-    dom.modalVerbTitle.childNodes[0].textContent = `${verb.w} `;
-    dom.modalVerbMeaning.textContent = `🇬🇧 ${verb.m}`;
+    dom.modals.verb.title.childNodes[0].textContent = `${verb.w} `;
+    dom.modals.verb.meaning.textContent = `🇬🇧 ${verb.m}`;
 
     const pres = verb.pres || [];
     const praet = verb.praet || [];
     const perf = verb.perf || [];
 
-    dom.modalTableBody.innerHTML = CONFIG.persons.map((person, index) => `
+    dom.modals.verb.tableBody.innerHTML = CONFIG.persons.map((person, index) => `
         <tr class="hover:bg-slate-100 dark:hover:bg-slate-800/40 transition-colors">
             <td class="py-2.5 px-3 font-sans font-bold text-slate-500 dark:text-slate-400 text-xs">${person.label}</td>
             <td class="py-2.5 px-3 text-emerald-600 dark:text-emerald-300 font-medium">${pres[index] || '-'}</td>
@@ -454,12 +383,12 @@ function renderConjugationModal() {
 function openModal() {
     if (state.activeTab !== 'verbs') return;
     renderConjugationModal();
-    setModalVisibility(dom.verbModal, true);
+    setModalVisibility(dom.modals.verb.root, true);
     state.isVerbModalOpen = true;
 }
 
 function closeModal() {
-    setModalVisibility(dom.verbModal, false);
+    setModalVisibility(dom.modals.verb.root, false);
     state.isVerbModalOpen = false;
 }
 
@@ -469,12 +398,12 @@ function toggleModal() {
 
 function openNounModal() {
     if (state.activeTab !== 'nouns') return;
-    setModalVisibility(dom.nounModal, true);
+    setModalVisibility(dom.modals.noun.root, true);
     state.isNounModalOpen = true;
 }
 
 function closeNounModal() {
-    setModalVisibility(dom.nounModal, false);
+    setModalVisibility(dom.modals.noun.root, false);
     state.isNounModalOpen = false;
 }
 
@@ -497,16 +426,16 @@ function setModalVisibility(modal, isVisible) {
 
 function showFeedback(htmlContent, colorClasses, nextQuestion) {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-    dom.feedbackModalTitle.textContent = colorClasses === FEEDBACK_STYLE.success ? '✅ Correct!' : '❌ Try again!';
-    dom.feedbackModalContent.innerHTML = htmlContent;
-    dom.feedbackModalPanel.className = `w-full max-w-md rounded-2xl shadow-2xl overflow-hidden ${colorClasses}`;
+    dom.modals.feedback.title.textContent = colorClasses === FEEDBACK_STYLE.success ? '✅ Correct!' : '❌ Try again!';
+    dom.modals.feedback.content.innerHTML = htmlContent;
+    dom.modals.feedback.panel.className = `w-full max-w-md rounded-2xl shadow-2xl overflow-hidden ${colorClasses}`;
     state.feedbackNext = nextQuestion;
-    setModalVisibility(dom.feedbackModal, true);
+    setModalVisibility(dom.modals.feedback.root, true);
 }
 
 function getShareMessage() {
     return [
-        `🥋🇩🇪 I'm a ${dom.tierLabel.textContent} in the Deujo now.`,
+        `🥋🇩🇪 I'm a ${dom.dashboard.tier.textContent} in the Deujo now.`,
         `Can you beat my ${state.maxStreak} streak of flawless German mastery?`,
         'Join in: https://deujo.glenacota.me'
     ].join('\n');
@@ -537,21 +466,21 @@ async function shareResult() {
     try {
         if (navigator.share) {
             await navigator.share(shareData);
-            dom.shareStatus.textContent = 'Result shared!';
+            dom.share.status.textContent = 'Result shared!';
             return;
         }
 
         await copyShareText(shareData.text);
-        dom.shareStatus.textContent = 'Result copied to clipboard!';
+        dom.share.status.textContent = 'Result copied to clipboard!';
     } catch (error) {
         if (error.name !== 'AbortError') {
-            dom.shareStatus.textContent = 'Sharing is unavailable right now.';
+            dom.share.status.textContent = 'Sharing is unavailable right now.';
         }
     }
 }
 
 function closeFeedbackModal() {
-    setModalVisibility(dom.feedbackModal, false);
+    setModalVisibility(dom.modals.feedback.root, false);
     const nextQuestion = state.feedbackNext;
     state.feedbackNext = null;
     if (nextQuestion) nextQuestion();
@@ -561,10 +490,10 @@ function switchTab(tab) {
     state.activeTab = tab;
     const isNouns = tab === 'nouns';
 
-    dom.tabNouns.className = isNouns ? TAB_BUTTON_CLASS.active.nouns : TAB_BUTTON_CLASS.inactive;
-    dom.tabVerbs.className = isNouns ? TAB_BUTTON_CLASS.inactive : TAB_BUTTON_CLASS.active.verbs;
-    dom.nounSection.classList.toggle('hidden', !isNouns);
-    dom.verbSection.classList.toggle('hidden', isNouns);
+    dom.tabs.nouns.className = isNouns ? TAB_BUTTON_CLASS.active.nouns : TAB_BUTTON_CLASS.inactive;
+    dom.tabs.verbs.className = isNouns ? TAB_BUTTON_CLASS.inactive : TAB_BUTTON_CLASS.active.verbs;
+    dom.tabs.nounSection.classList.toggle('hidden', !isNouns);
+    dom.tabs.verbSection.classList.toggle('hidden', isNouns);
 
     closePracticeModals();
 }
@@ -572,14 +501,14 @@ function switchTab(tab) {
 function handleEnterKey(event) {
     event.preventDefault();
 
-    const feedbackIsOpen = !dom.feedbackModal.classList.contains('hidden');
+    const feedbackIsOpen = !dom.modals.feedback.root.classList.contains('hidden');
     const practiceModalIsOpen = state.isVerbModalOpen || state.isNounModalOpen;
 
     closePracticeModals();
     if (feedbackIsOpen) {
         closeFeedbackModal();
     } else if (!practiceModalIsOpen) {
-        const checkButton = state.activeTab === 'nouns' ? dom.checkNounBtn : dom.checkVerbBtn;
+        const checkButton = state.activeTab === 'nouns' ? dom.noun.checkBtn : dom.verb.checkBtn;
         checkButton.click();
     }
 }
@@ -589,28 +518,28 @@ function handleEnterKey(event) {
  * ================================================================== */
 
 function bindEvents() {
-    dom.themeToggleBtn.addEventListener('click', toggleTheme);
+    dom.theme.toggleBtn.addEventListener('click', toggleTheme);
 
-    dom.tabNouns.addEventListener('click', () => switchTab('nouns'));
-    dom.tabVerbs.addEventListener('click', () => switchTab('verbs'));
+    dom.tabs.nouns.addEventListener('click', () => switchTab('nouns'));
+    dom.tabs.verbs.addEventListener('click', () => switchTab('verbs'));
 
-    dom.toggleVerbTableBtn.addEventListener('click', toggleModal);
-    dom.closeVerbModalBtn.addEventListener('click', closeModal);
-    dom.verbModal.addEventListener('click', (e) => {
-        if (e.target === dom.verbModal) closeModal();
+    dom.verb.teachBtn.addEventListener('click', toggleModal);
+    dom.modals.verb.closeBtn.addEventListener('click', closeModal);
+    dom.modals.verb.root.addEventListener('click', (e) => {
+        if (e.target === dom.modals.verb.root) closeModal();
     });
 
-    dom.toggleNounTableBtn.addEventListener('click', toggleNounModal);
-    dom.closeNounModalBtn.addEventListener('click', closeNounModal);
-    dom.nounModal.addEventListener('click', (e) => {
-        if (e.target === dom.nounModal) closeNounModal();
+    dom.noun.teachBtn.addEventListener('click', toggleNounModal);
+    dom.modals.noun.closeBtn.addEventListener('click', closeNounModal);
+    dom.modals.noun.root.addEventListener('click', (e) => {
+        if (e.target === dom.modals.noun.root) closeNounModal();
     });
 
-    dom.feedbackModal.addEventListener('click', (e) => {
-        if (e.target === dom.feedbackModal) closeFeedbackModal();
+    dom.modals.feedback.root.addEventListener('click', (e) => {
+        if (e.target === dom.modals.feedback.root) closeFeedbackModal();
     });
-    dom.feedbackContinueBtn.addEventListener('click', closeFeedbackModal);
-    dom.progressShareBtn.addEventListener('click', shareResult);
+    dom.modals.feedback.continueBtn.addEventListener('click', closeFeedbackModal);
+    dom.share.btn.addEventListener('click', shareResult);
 
     window.addEventListener('keydown', (e) => {
         if (e.key === '1' || e.key === '2') {
@@ -629,9 +558,9 @@ function bindEvents() {
         }
     });
 
-    dom.tenseBtns.forEach((btn) => {
+    dom.verb.tenseButtons.forEach((btn) => {
         btn.addEventListener('click', (e) => {
-            dom.tenseBtns.forEach((b) => {
+            dom.verb.tenseButtons.forEach((b) => {
                 b.classList.remove('bg-purple-600', 'text-white');
                 b.classList.add('text-slate-600', 'dark:text-slate-400');
             });
@@ -644,9 +573,9 @@ function bindEvents() {
         });
     });
 
-    dom.genderBtns.forEach((btn) => {
+    dom.noun.genderButtons.forEach((btn) => {
         btn.addEventListener('click', (e) => {
-            dom.genderBtns.forEach((b) => {
+            dom.noun.genderButtons.forEach((b) => {
                 b.setAttribute('aria-pressed', 'false');
                 b.classList.remove('ring-2', 'ring-indigo-500', 'bg-indigo-100', 'dark:bg-indigo-950/60');
             });
@@ -658,11 +587,11 @@ function bindEvents() {
         });
     });
 
-    dom.checkNounBtn.addEventListener('click', checkNounAnswer);
-    dom.skipNounBtn.addEventListener('click', nextNoun);
+    dom.noun.checkBtn.addEventListener('click', checkNounAnswer);
+    dom.noun.skipBtn.addEventListener('click', nextNoun);
 
-    dom.checkVerbBtn.addEventListener('click', checkVerbAnswer);
-    dom.skipVerbBtn.addEventListener('click', nextVerb);
+    dom.verb.checkBtn.addEventListener('click', checkVerbAnswer);
+    dom.verb.skipBtn.addEventListener('click', nextVerb);
 }
 
 /* ==================================================================
