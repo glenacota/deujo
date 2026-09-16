@@ -75,7 +75,7 @@ async function loadVocabularyData() {
 
 function initApp() {
     ui.initTheme();
-    updateDashboardUI();
+    ui.renderDashboard(state);
     bindEvents();
     nextNoun();
     nextVerb();
@@ -87,7 +87,7 @@ function initApp() {
 
 function handleStreakIncrement() {
     state.incrementStreak();
-    updateDashboardUI();
+    ui.renderDashboard(state);
 
     if (state.beltProgress > 0 && state.beltProgress % CONFIG.rules.milestoneInterval === 0) {
         triggerMilestoneReward();
@@ -98,7 +98,7 @@ function handleStreakIncrement() {
 
 function resetStreak() {
     const isDemoted = state.resetStreak();
-    updateDashboardUI();
+    ui.renderDashboard(state);
 
     if (isDemoted) {
         triggerBeltDemotion(currentTier);
@@ -138,28 +138,6 @@ function triggerBeltDemotion(currentTier) {
     setTimeout(() => {
         dom.toast.root.classList.add('hidden');
     }, CONFIG.timing.toastMs);
-}
-
-/* ==================================================================
- * DASHBOARD RENDERING
- * ================================================================== */
-
-function updateDashboardUI() {
-    dom.dashboard.streak.textContent = state.streak;
-    dom.dashboard.max.textContent = state.maxStreak;
-
-    const progressInTier = state.beltProgress % CONFIG.rules.milestoneInterval;
-    const currentTier = Math.floor(state.beltProgress / CONFIG.rules.milestoneInterval);
-    const progressPercent = (progressInTier / CONFIG.rules.milestoneInterval) * 100;
-
-    dom.dashboard.bar.style.width = `${progressPercent}%`;
-
-    const beltName = CONFIG.belts[Math.min(currentTier, CONFIG.belts.length - 1)];
-    dom.dashboard.tier.textContent = beltName;
-    dom.dashboard.tier.className = `text-xs px-2 py-0.5 rounded-full belt-label-${Math.min(currentTier, CONFIG.rules.maxTier)} font-semibold uppercase tracking-wider`;
-
-    const tierClass = `belt-${Math.min(currentTier, CONFIG.rules.maxTier)}`;
-    dom.dashboard.bar.className = `h-full rounded-full transition-all duration-500 ease-out ${tierClass}`;
 }
 
 /* ==================================================================
