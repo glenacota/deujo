@@ -70,7 +70,7 @@ function initApp() {
     ui.renderDashboard(state);
     bindEvents();
     loadNextNoun();
-    nextVerb();
+    loadNextVerb();
 }
 
 /* ==================================================================
@@ -187,19 +187,10 @@ function checkNounAnswer() {
  * VERB PRACTICE
  * ================================================================== */
 
-function nextVerb() {
-    state.current.verb = state.pickNext(verbsData, 'verbs');
-
-    dom.verb.word.textContent = state.current.verb.w;
-    dom.verb.meaning.textContent = `🇬🇧 ${state.current.verb.m}`;
-    Object.values(dom.verb.inputs).forEach((input) => {
-        input.value = '';
-        input.classList.remove(INPUT_ERROR_CLASS, INPUT_SUCCESS_CLASS);
-    });
-
-    if (state.isVerbModalOpen) {
-        ui.renderConjugationTable(state.current.verb);
-    }
+function loadNextVerb() {
+    const verb = state.pickNext(verbsData, 'verbs');
+    state.current.verb = verb;
+    if (verb) ui.renderVerb(verb);
 }
 
 function checkVerbAnswer() {
@@ -227,7 +218,7 @@ function checkVerbAnswer() {
             + CONFIG.persons.map((p) => `${p.label} <strong>${targetForms[PERSON_INDEX[p.key]]}</strong>`).join(', ')
             + '.';
 
-    handleAnswerResult({ isCorrect: allCorrect, message, nextQuestion: nextVerb });
+    handleAnswerResult({ isCorrect: allCorrect, message, nextQuestion: loadNextVerb });
 }
 
 /* ==================================================================
@@ -387,7 +378,7 @@ function bindEvents() {
     dom.noun.skipBtn.addEventListener('click', loadNextNoun);
 
     dom.verb.checkBtn.addEventListener('click', checkVerbAnswer);
-    dom.verb.skipBtn.addEventListener('click', nextVerb);
+    dom.verb.skipBtn.addEventListener('click', loadNextVerb);
 }
 
 /* ==================================================================

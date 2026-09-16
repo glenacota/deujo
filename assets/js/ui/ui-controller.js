@@ -84,6 +84,31 @@ export class UiController {
         dom.noun.plural.classList.toggle('border-rose-500', !isCorrect);
     }
 
+    renderVerb(verb) {
+        dom.verb.word.textContent = verb.w;
+        dom.verb.meaning.textContent = `🇬🇧 ${verb.m}`;
+        Object.values(dom.verb.inputs).forEach((input) => {
+        input.value = '';
+        input.classList.remove('border-rose-500', 'border-emerald-500');
+        });
+    }
+
+    setTenseSelection(tense) {
+        dom.verb.tenseButtons.forEach((btn) => {
+        const active = btn.dataset.tense === tense;
+        btn.classList.toggle('bg-purple-600', active);
+        btn.classList.toggle('text-white', active);
+        btn.classList.toggle('text-slate-600', !active);
+        btn.classList.toggle('dark:text-slate-400', !active);
+        });
+    }
+
+    markVerbInputResult(personKey, isCorrect) {
+        const input = dom.verb.inputs[personKey];
+        input.classList.toggle('border-emerald-500', isCorrect);
+        input.classList.toggle('border-rose-500', !isCorrect);
+    }
+
     renderConjugationTable(verb) {
         dom.modals.verb.title.textContent = verb.w;
         dom.modals.verb.meaning.textContent = `🇬🇧 ${verb.m}`;
