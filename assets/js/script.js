@@ -1,49 +1,16 @@
+// script.js
 'use strict';
 
+import { CONFIG } from './config.js';
+import { AudioEngine } from './services/audio-engine.js';
+import { FxEngine } from './services/fx-engine.js';
+
 /* ==================================================================
- * 1. CONFIGURATION & CONSTANTS
+ * CONFIGURATION & CONSTANTS
  * ================================================================== */
 
-const DATA_URLS = {
-    nouns: './assets/datasets/nouns.json',
-    verbs: './assets/datasets/verbs.json',
-};
-
-const STORAGE_KEYS = {
-    theme: 'dm_theme',
-    streak: 'dm_streak',
-    maxStreak: 'dm_max_streak',
-    beltProgress: 'dm_belt_progress',
-};
-
-const HISTORY_MAX_SIZE = 30;   // how many recently-seen words we avoid repeating
-const HISTORY_RECYCLE_SIZE = 5; // kept entries when the pool is exhausted and reset
-
-const MILESTONE_INTERVAL = 5;     // streak count that triggers a belt promotion
-const MAX_TIER_INDEX = 6;         // caps visual tier styling at belt index 6 (Black Belt)
-const MILESTONE_TOAST_DURATION_MS = 3500;
-
-const BELT_NAMES = [
-    'White Belt', 
-    'Yellow Belt', 
-    'Orange Belt', 
-    'Green Belt', 
-    'Blue Belt', 
-    'Brown Belt', 
-    'Black Belt'
-];
-
-// Canonical person order shared by conjugation data, table rows and inputs.
-const PERSONS = [
-    { key: 'ich', label: 'ich' },
-    { key: 'du', label: 'du' },
-    { key: 'er', label: 'er/sie/es' },
-    { key: 'wir', label: 'wir' },
-    { key: 'ihr', label: 'ihr' },
-    { key: 'sie', label: 'sie/Sie' },
-];
 // e.g. { ich: 0, du: 1, er: 2, wir: 3, ihr: 4, sie: 5 }
-const PERSON_INDEX = Object.fromEntries(PERSONS.map((person, index) => [person.key, index]));
+const PERSON_INDEX = Object.fromEntries(CONFIG.persons.map((person, index) => [person.key, index]));
 
 const FEEDBACK_STYLE = {
     success: 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-900 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-800',
@@ -62,210 +29,12 @@ const TAB_BUTTON_CLASS = {
     inactive: 'flex-1 px-5 py-2 lg:py-3 rounded-lg text-base font-semibold transition-all flex items-center justify-center space-x-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200',
 };
 
-/* ==================================================================
- * 2. AUDIO ENGINE
- *    Tiny Web Audio synthesizer for correct/incorrect/milestone cues.
- * ================================================================== */
 
-class SoundFX {
-    constructor() {
-        this.ctx = null;
-    }
-
-    /** Lazily creates the AudioContext (must happen after a user gesture). */
-    init() {
-        if (!this.ctx) {
-            this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-    }
-
-    playCorrect() {
-        this.init();
-        const now = this.ctx.currentTime;
-        const osc1 = this.ctx.createOscillator();
-        const osc2 = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-
-        osc1.type = 'sine';
-        osc2.type = 'triangle';
-        osc1.frequency.setValueAtTime(523.25, now);        // C5
-        osc1.frequency.setValueAtTime(659.25, now + 0.1);  // E5
-        osc2.frequency.setValueAtTime(1046.50, now + 0.1); // C6
-
-        gain.gain.setValueAtTime(0.15, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-
-        osc1.connect(gain);
-        osc2.connect(gain);
-        gain.connect(this.ctx.destination);
-
-        osc1.start(now);
-        osc2.start(now);
-        osc1.stop(now + 0.35);
-        osc2.stop(now + 0.35);
-    }
-
-    playWrong() {
-        this.init();
-        const now = this.ctx.currentTime;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(180, now);
-        osc.frequency.exponentialRampToValueAtTime(110, now + 0.25);
-
-        gain.gain.setValueAtTime(0.15, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
-
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-
-        osc.start(now);
-        osc.stop(now + 0.25);
-    }
-
-    playDemotion() {
-        this.init();
-        const now = this.ctx.currentTime;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(330, now);
-        osc.frequency.exponentialRampToValueAtTime(165, now + 0.45);
-
-        gain.gain.setValueAtTime(0.15, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
-
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-
-        osc.start(now);
-        osc.stop(now + 0.45);
-    }
-
-    playMilestoneFanfare() {
-        this.init();
-        const now = this.ctx.currentTime;
-        const notes = [440, 554.37, 659.25, 880]; // A major arpeggio
-
-        notes.forEach((freq, i) => {
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
-            const noteTime = now + i * 0.08;
-
-            osc.type = 'square';
-            osc.frequency.setValueAtTime(freq, noteTime);
-
-            gain.gain.setValueAtTime(0.12, noteTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, noteTime + 0.3);
-
-            osc.connect(gain);
-            gain.connect(this.ctx.destination);
-
-            osc.start(noteTime);
-            osc.stop(noteTime + 0.3);
-        });
-    }
-}
+const audio = new AudioEngine();
+const fx = new FxEngine("fireworksCanvas");
 
 /* ==================================================================
- * 3. FIREWORKS ENGINE
- *    Lightweight canvas particle system for milestone celebrations.
- * ================================================================== */
-
-class PixelFireworksEngine {
-    constructor(canvasId) {
-        this.canvas = document.getElementById(canvasId);
-        this.ctx = this.canvas.getContext('2d');
-        this.particles = [];
-        this.animationFrameId = null;
-
-        this.resize();
-        window.addEventListener('resize', () => this.resize());
-    }
-
-    resize() {
-        this.canvas.width = window.innerWidth;
-        this.canvas.height = window.innerHeight;
-    }
-
-    /** Launches a short volley of staggered bursts across the top of the screen. */
-    triggerShow() {
-        const colors = ['#f59e0b', '#10b981', '#06b6d4', '#8b5cf6', '#ec4899', '#efa107', '#ffffff'];
-        const burstCount = 6;
-        const burstDelayMs = 220;
-
-        for (let i = 0; i < burstCount; i++) {
-            setTimeout(() => {
-                const x = Math.random() * (this.canvas.width * 0.7) + this.canvas.width * 0.15;
-                const y = Math.random() * (this.canvas.height * 0.4) + this.canvas.height * 0.1;
-                this.createBurst(x, y, colors);
-            }, i * burstDelayMs);
-        }
-    }
-
-    createBurst(x, y, colors) {
-        const particleCount = 60;
-        const pixelSize = 4;
-
-        for (let i = 0; i < particleCount; i++) {
-            const angle = (Math.PI * 2 * i) / particleCount + Math.random() * 0.2;
-            const speed = Math.random() * 7 + 2;
-
-            this.particles.push({
-                x,
-                y,
-                vx: Math.cos(angle) * speed,
-                vy: Math.sin(angle) * speed,
-                size: Math.random() > 0.5 ? pixelSize : pixelSize * 1.5,
-                color: colors[Math.floor(Math.random() * colors.length)],
-                alpha: 1,
-                decay: Math.random() * 0.02 + 0.015,
-                gravity: 0.12,
-            });
-        }
-
-        if (!this.animationFrameId) {
-            this.animate();
-        }
-    }
-
-    animate() {
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-        for (let i = this.particles.length - 1; i >= 0; i--) {
-            const p = this.particles[i];
-            p.x += p.vx;
-            p.y += p.vy;
-            p.vy += p.gravity;
-            p.alpha -= p.decay;
-
-            if (p.alpha <= 0) {
-                this.particles.splice(i, 1);
-                continue;
-            }
-
-            this.ctx.fillStyle = p.color;
-            this.ctx.globalAlpha = Math.max(0, p.alpha);
-            this.ctx.fillRect(Math.floor(p.x), Math.floor(p.y), p.size, p.size);
-        }
-
-        if (this.particles.length > 0) {
-            this.animationFrameId = requestAnimationFrame(() => this.animate());
-        } else {
-            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-            this.animationFrameId = null;
-        }
-    }
-}
-
-const sfx = new SoundFX();
-const fireworks = new PixelFireworksEngine('fireworksCanvas');
-
-/* ==================================================================
- * 4. APPLICATION STATE
+ * APPLICATION STATE
  * ================================================================== */
 
 /** @type {Array<{w:string,g:string,m:string,p:string}>} */
@@ -274,10 +43,10 @@ let nounsData = [];
 let verbsData = [];
 
 const state = {
-    streak: parseInt(localStorage.getItem(STORAGE_KEYS.streak) || '0', 10),
-    maxStreak: parseInt(localStorage.getItem(STORAGE_KEYS.maxStreak) || '0', 10),
+    streak: parseInt(localStorage.getItem(CONFIG.storage.streak) || '0', 10),
+    maxStreak: parseInt(localStorage.getItem(CONFIG.storage.maxStreak) || '0', 10),
     beltProgress: parseInt(
-        localStorage.getItem(STORAGE_KEYS.beltProgress) || localStorage.getItem(STORAGE_KEYS.streak) || '0',
+        localStorage.getItem(CONFIG.storage.beltProgress) || localStorage.getItem(CONFIG.storage.streak) || '0',
         10,
     ),
 
@@ -297,7 +66,7 @@ const state = {
 };
 
 /* ==================================================================
- * 5. DOM ELEMENT CACHE
+ * DOM ELEMENT CACHE
  * ================================================================== */
 
 const dom = {
@@ -369,11 +138,11 @@ const dom = {
 };
 
 /* ==================================================================
- * 6. THEME (LIGHT / DARK MODE)
+ * THEME (LIGHT / DARK MODE)
  * ================================================================== */
 
 function initTheme() {
-    const storedTheme = localStorage.getItem(STORAGE_KEYS.theme);
+    const storedTheme = localStorage.getItem(CONFIG.storage.theme);
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const isDark = storedTheme === 'dark' || (!storedTheme && prefersDark);
 
@@ -383,7 +152,7 @@ function initTheme() {
 
 function toggleTheme() {
     const isDark = document.documentElement.classList.toggle('dark');
-    localStorage.setItem(STORAGE_KEYS.theme, isDark ? 'dark' : 'light');
+    localStorage.setItem(CONFIG.storage.theme, isDark ? 'dark' : 'light');
     updateThemeUI(isDark);
 }
 
@@ -393,24 +162,24 @@ function updateThemeUI(isDark) {
 }
 
 /* ==================================================================
- * 7. PERSISTENCE (STREAK)
+ * PERSISTENCE (STREAK)
  * ================================================================== */
 
 function saveProgress() {
-    localStorage.setItem(STORAGE_KEYS.streak, state.streak);
-    localStorage.setItem(STORAGE_KEYS.maxStreak, state.maxStreak);
-    localStorage.setItem(STORAGE_KEYS.beltProgress, state.beltProgress);
+    localStorage.setItem(CONFIG.storage.streak, state.streak);
+    localStorage.setItem(CONFIG.storage.maxStreak, state.maxStreak);
+    localStorage.setItem(CONFIG.storage.beltProgress, state.beltProgress);
 }
 
 /* ==================================================================
- * 8. DATA LOADING & BOOTSTRAP
+ * DATA LOADING & BOOTSTRAP
  * ================================================================== */
 
 async function loadVocabularyData() {
     try {
         const [nounsResponse, verbsResponse] = await Promise.all([
-            fetch(DATA_URLS.nouns),
-            fetch(DATA_URLS.verbs),
+            fetch(CONFIG.urls.nouns),
+            fetch(CONFIG.urls.verbs),
         ]);
 
         if (!nounsResponse.ok || !verbsResponse.ok) {
@@ -436,21 +205,21 @@ function initApp() {
 }
 
 /* ==================================================================
- * 9. SPACED-REPETITION SELECTION
+ * SPACED-REPETITION SELECTION
  * ================================================================== */
 
 function pickNextWithSpacedHistory(dataset, history) {
     let available = dataset.filter((item) => !history.includes(item.w));
 
     if (available.length === 0) {
-        history.splice(0, history.length - HISTORY_RECYCLE_SIZE);
+        history.splice(0, history.length - CONFIG.rules.historyRecycle);
         available = dataset.filter((item) => !history.includes(item.w));
     }
 
     const chosen = available[Math.floor(Math.random() * available.length)];
 
     history.push(chosen.w);
-    if (history.length > HISTORY_MAX_SIZE) {
+    if (history.length > CONFIG.rules.historyMax) {
         history.shift();
     }
 
@@ -458,7 +227,7 @@ function pickNextWithSpacedHistory(dataset, history) {
 }
 
 /* ==================================================================
- * 10. STREAK & MILESTONE HANDLING
+ * STREAK & MILESTONE HANDLING
  * ================================================================== */
 
 function handleStreakIncrement() {
@@ -469,34 +238,34 @@ function handleStreakIncrement() {
     saveProgress();
     updateDashboardUI();
 
-    if (state.beltProgress > 0 && state.beltProgress % MILESTONE_INTERVAL === 0) {
+    if (state.beltProgress > 0 && state.beltProgress % CONFIG.rules.milestoneInterval === 0) {
         triggerMilestoneReward();
     } else {
-        sfx.playCorrect();
+        audio.playCorrect();
     }
 }
 
 function resetStreak() {
-    const previousTier = Math.floor(state.beltProgress / MILESTONE_INTERVAL);
+    const previousTier = Math.floor(state.beltProgress / CONFIG.rules.milestoneInterval);
     state.streak = 0;
     state.beltProgress = Math.max(0, state.beltProgress - 1);
     saveProgress();
     updateDashboardUI();
 
-    const currentTier = Math.floor(state.beltProgress / MILESTONE_INTERVAL);
+    const currentTier = Math.floor(state.beltProgress / CONFIG.rules.milestoneInterval);
     if (currentTier < previousTier) {
         triggerBeltDemotion(currentTier);
     } else {
-        sfx.playWrong();
+        audio.playWrong();
     }
 }
 
 function triggerMilestoneReward() {
-    sfx.playMilestoneFanfare();
-    fireworks.triggerShow();
+    audio.playMilestone();
+    fx.triggerShow();
 
-    const currentTier = Math.floor(state.beltProgress / MILESTONE_INTERVAL);
-    const beltName = BELT_NAMES[Math.min(currentTier, BELT_NAMES.length - 1)];
+    const currentTier = Math.floor(state.beltProgress / CONFIG.rules.milestoneInterval);
+    const beltName = CONFIG.belts[Math.min(currentTier, CONFIG.belts.length - 1)];
     dom.milestoneToastCard.className = 'bg-amber-400 text-slate-950 text-base px-6 py-4 rounded-none border-4 border-slate-950 shadow-2xl flex items-center space-x-3 animate-bounce';
     dom.milestoneToastIcon.textContent = '🥋';
     dom.milestoneToastTitle.textContent = 'Belt Promoted!';
@@ -506,12 +275,12 @@ function triggerMilestoneReward() {
 
     setTimeout(() => {
         dom.milestoneToast.classList.add('hidden');
-    }, MILESTONE_TOAST_DURATION_MS);
+    }, CONFIG.timing.toastMs);
 }
 
 function triggerBeltDemotion(currentTier) {
-    const beltName = BELT_NAMES[Math.min(currentTier, BELT_NAMES.length - 1)];
-    sfx.playDemotion();
+    const beltName = CONFIG.belts[Math.min(currentTier, CONFIG.belts.length - 1)];
+    audio.playDemotion();
     dom.milestoneToastCard.className = 'bg-rose-400 text-rose-950 text-base px-6 py-4 rounded-none border-4 border-rose-950 shadow-2xl flex items-center space-x-3';
     dom.milestoneToastIcon.textContent = '🥋';
     dom.milestoneToastTitle.textContent = 'Belt Demoted';
@@ -521,33 +290,33 @@ function triggerBeltDemotion(currentTier) {
 
     setTimeout(() => {
         dom.milestoneToast.classList.add('hidden');
-    }, MILESTONE_TOAST_DURATION_MS);
+    }, CONFIG.timing.toastMs);
 }
 
 /* ==================================================================
- * 11. DASHBOARD RENDERING
+ * DASHBOARD RENDERING
  * ================================================================== */
 
 function updateDashboardUI() {
     dom.streakDisplay.textContent = state.streak;
     dom.maxStreakDisplay.textContent = state.maxStreak;
 
-    const progressInTier = state.beltProgress % MILESTONE_INTERVAL;
-    const currentTier = Math.floor(state.beltProgress / MILESTONE_INTERVAL);
-    const progressPercent = (progressInTier / MILESTONE_INTERVAL) * 100;
+    const progressInTier = state.beltProgress % CONFIG.rules.milestoneInterval;
+    const currentTier = Math.floor(state.beltProgress / CONFIG.rules.milestoneInterval);
+    const progressPercent = (progressInTier / CONFIG.rules.milestoneInterval) * 100;
 
     dom.progressBar.style.width = `${progressPercent}%`;
 
-    const beltName = BELT_NAMES[Math.min(currentTier, BELT_NAMES.length - 1)];
+    const beltName = CONFIG.belts[Math.min(currentTier, CONFIG.belts.length - 1)];
     dom.tierLabel.textContent = beltName;
-    dom.tierLabel.className = `text-xs px-2 py-0.5 rounded-full belt-label-${Math.min(currentTier, MAX_TIER_INDEX)} font-semibold uppercase tracking-wider`;
+    dom.tierLabel.className = `text-xs px-2 py-0.5 rounded-full belt-label-${Math.min(currentTier, CONFIG.rules.maxTier)} font-semibold uppercase tracking-wider`;
 
-    const tierClass = `belt-${Math.min(currentTier, MAX_TIER_INDEX)}`;
+    const tierClass = `belt-${Math.min(currentTier, CONFIG.rules.maxTier)}`;
     dom.progressBar.className = `h-full rounded-full transition-all duration-500 ease-out ${tierClass}`;
 }
 
 /* ==================================================================
- * 12. NOUN PRACTICE
+ * NOUN PRACTICE
  * ================================================================== */
 
 function nextNoun() {
@@ -611,7 +380,7 @@ function checkNounAnswer() {
 }
 
 /* ==================================================================
- * 13. VERB PRACTICE
+ * VERB PRACTICE
  * ================================================================== */
 
 function nextVerb() {
@@ -651,14 +420,14 @@ function checkVerbAnswer() {
     const message = allCorrect
         ? `Excellent! Perfect conjugation for "${state.currentVerb.w}"!`
         : 'Correct answer: '
-            + PERSONS.map((p) => `${p.label} <strong>${targetForms[PERSON_INDEX[p.key]]}</strong>`).join(', ')
+            + CONFIG.persons.map((p) => `${p.label} <strong>${targetForms[PERSON_INDEX[p.key]]}</strong>`).join(', ')
             + '.';
 
     handleAnswerResult({ isCorrect: allCorrect, message, nextQuestion: nextVerb });
 }
 
 /* ==================================================================
- * 14. CONJUGATION & NOUN TABLE MODALS ("Teach Me!")
+ * CONJUGATION & NOUN TABLE MODALS ("Teach Me!")
  * ================================================================== */
 
 function renderConjugationModal() {
@@ -672,7 +441,7 @@ function renderConjugationModal() {
     const praet = verb.praet || [];
     const perf = verb.perf || [];
 
-    dom.modalTableBody.innerHTML = PERSONS.map((person, index) => `
+    dom.modalTableBody.innerHTML = CONFIG.persons.map((person, index) => `
         <tr class="hover:bg-slate-100 dark:hover:bg-slate-800/40 transition-colors">
             <td class="py-2.5 px-3 font-sans font-bold text-slate-500 dark:text-slate-400 text-xs">${person.label}</td>
             <td class="py-2.5 px-3 text-emerald-600 dark:text-emerald-300 font-medium">${pres[index] || '-'}</td>
@@ -723,7 +492,7 @@ function setModalVisibility(modal, isVisible) {
 }
 
 /* ==================================================================
- * 15. SHARED UI HELPERS
+ * SHARED UI HELPERS
  * ================================================================== */
 
 function showFeedback(htmlContent, colorClasses, nextQuestion) {
@@ -816,7 +585,7 @@ function handleEnterKey(event) {
 }
 
 /* ==================================================================
- * 16. EVENT BINDING
+ * EVENT BINDING
  * ================================================================== */
 
 function bindEvents() {
@@ -897,7 +666,7 @@ function bindEvents() {
 }
 
 /* ==================================================================
- * 17. BOOTSTRAP
+ * BOOTSTRAP
  * ================================================================== */
 
 window.addEventListener('load', loadVocabularyData);
