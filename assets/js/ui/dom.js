@@ -33,7 +33,7 @@ export const dom = {
     genderButtons: Array.from(document.querySelectorAll('.gender-btn')),
     checkBtn: byId('checkNounBtn'),
     skipBtn: byId('skipNounBtn'),
-    teachBtn: byId('toggleNounTableBtn'),
+    teachBtn: byId('teachMeNounBtn'),
   },
 
   verb: {
@@ -43,7 +43,7 @@ export const dom = {
     inputs: Object.fromEntries(CONFIG.persons.map((p) => [p.key, byId(`conj_${p.key}`)])),
     checkBtn: byId('checkVerbBtn'),
     skipBtn: byId('skipVerbBtn'),
-    teachBtn: byId('toggleTableBtn'),
+    teachBtn: byId('teachMeVerbBtn'),
   },
 
   toast: {
