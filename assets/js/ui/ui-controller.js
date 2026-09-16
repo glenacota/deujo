@@ -6,6 +6,7 @@ import { Storage } from '../services/storage.js';
 import { dom } from './dom.js';
 
 export class UiController {
+    #toastTimer = null;
     #shareStatusTimer = null;
   
     initTheme() {
@@ -120,6 +121,25 @@ export class UiController {
                 <td class="py-2 px-3">${verb.perf[index] ?? '—'}</td>
             </tr>
         `).join('');
+    }
+
+    showToast(isPromotion, tier, streak) {
+        const beltName = CONFIG.belts[Math.min(tier, CONFIG.belts.length - 1)];
+        if (isPromotion) {
+            dom.toast.card.className = 'bg-amber-400 text-slate-950 px-6 py-4 border-4 border-slate-950 shadow-2xl flex items-center space-x-3 animate-bounce';
+            dom.toast.title.textContent = 'Belt Promoted!';
+            dom.toast.text.textContent = `🔥 Streak ${streak}! Promoted to ${beltName}!`;
+            dom.toast.effect.textContent = '🎉';
+        } else {
+            dom.toast.card.className = 'bg-rose-400 text-rose-950 px-6 py-4 border-4 border-rose-950 shadow-2xl flex items-center space-x-3';
+            dom.toast.title.textContent = 'Belt Demoted';
+            dom.toast.text.textContent = `Progress dropped to ${beltName}.`;
+            dom.toast.effect.textContent = '🚧';
+        }
+        
+        dom.toast.root.classList.remove('hidden');
+        clearTimeout(this.#toastTimer);
+        this.#toastTimer = setTimeout(() => dom.toast.root.classList.add('hidden'), CONFIG.timing.toastMs);
     }
 
     async shareProgress(state) {

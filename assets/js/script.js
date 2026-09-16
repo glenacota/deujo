@@ -78,11 +78,13 @@ function initApp() {
  * ================================================================== */
 
 function handleStreakIncrement() {
-    state.incrementStreak();
+    const isPromoted = state.incrementStreak();
     ui.renderDashboard(state);
 
-    if (state.beltProgress > 0 && state.beltProgress % CONFIG.rules.milestoneInterval === 0) {
-        triggerMilestoneReward();
+    if (isPromoted) {
+        audio.playMilestone();
+        fx.triggerShow();
+        ui.showToast(true, state.getCurrentTier(), state.streak);
     } else {
         audio.playCorrect();
     }
@@ -93,44 +95,13 @@ function resetStreak() {
     ui.renderDashboard(state);
 
     if (isDemoted) {
-        triggerBeltDemotion(currentTier);
+        audio.playDemotion();
+        ui.showToast(false, state.getCurrentTier());
     } else {
         audio.playWrong();
     }
 }
 
-function triggerMilestoneReward() {
-    audio.playMilestone();
-    fx.triggerShow();
-
-    const currentTier = state.getCurrentTier();
-    const beltName = CONFIG.belts[Math.min(currentTier, CONFIG.belts.length - 1)];
-    dom.toast.card.className = 'bg-amber-400 text-slate-950 text-base px-6 py-4 rounded-none border-4 border-slate-950 shadow-2xl flex items-center space-x-3 animate-bounce';
-    dom.toast.icon.textContent = '🥋';
-    dom.toast.title.textContent = 'Belt Promoted!';
-    dom.toast.text.textContent = `🔥 Streak ${state.streak}! Promoted to ${beltName}!`;
-    dom.toast.effect.textContent = '🎉';
-    dom.toast.root.classList.remove('hidden');
-
-    setTimeout(() => {
-        dom.toast.root.classList.add('hidden');
-    }, CONFIG.timing.toastMs);
-}
-
-function triggerBeltDemotion(currentTier) {
-    const beltName = CONFIG.belts[Math.min(currentTier, CONFIG.belts.length - 1)];
-    audio.playDemotion();
-    dom.toast.card.className = 'bg-rose-400 text-rose-950 text-base px-6 py-4 rounded-none border-4 border-rose-950 shadow-2xl flex items-center space-x-3';
-    dom.toast.icon.textContent = '🥋';
-    dom.toast.title.textContent = 'Belt Demoted';
-    dom.toast.text.textContent = `Belt progress dropped to ${beltName}.`;
-    dom.toast.effect.textContent = '🚧';
-    dom.toast.root.classList.remove('hidden');
-
-    setTimeout(() => {
-        dom.toast.root.classList.add('hidden');
-    }, CONFIG.timing.toastMs);
-}
 
 /* ==================================================================
  * NOUN PRACTICE
