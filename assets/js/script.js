@@ -4,6 +4,7 @@
 import { CONFIG } from './config.js';
 import { AudioEngine } from './services/audio-engine.js';
 import { FxEngine } from './services/fx-engine.js';
+import { Storage } from './services/storage.js';
 import { dom } from './ui/dom.js';
 
 /* ==================================================================
@@ -44,20 +45,17 @@ let nounsData = [];
 let verbsData = [];
 
 const state = {
-    streak: parseInt(localStorage.getItem(CONFIG.storage.streak) || '0', 10),
-    maxStreak: parseInt(localStorage.getItem(CONFIG.storage.maxStreak) || '0', 10),
-    beltProgress: parseInt(
-        localStorage.getItem(CONFIG.storage.beltProgress) || localStorage.getItem(CONFIG.storage.streak) || '0',
-        10,
-    ),
+    streak: Storage.getNumber(CONFIG.storage.streak),
+    maxStreak: Storage.getNumber(CONFIG.storage.maxStreak),
+    beltProgress: Storage.getNumber(CONFIG.storage.beltProgress, Storage.getNumber(CONFIG.storage.streak)),
 
     selectedGender: null,
-    selectedTense: 'pres', // 'pres' | 'praet' | 'perf'
+    selectedTense: 'pres',
 
     currentNoun: null,
     currentVerb: null,
 
-    activeTab: 'nouns', // 'nouns' | 'verbs'
+    activeTab: 'nouns',
     isVerbModalOpen: false,
     isNounModalOpen: false,
     feedbackNext: null,
@@ -71,7 +69,7 @@ const state = {
  * ================================================================== */
 
 function initTheme() {
-    const storedTheme = localStorage.getItem(CONFIG.storage.theme);
+    const storedTheme = Storage.getTheme();
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const isDark = storedTheme === 'dark' || (!storedTheme && prefersDark);
 
@@ -81,7 +79,7 @@ function initTheme() {
 
 function toggleTheme() {
     const isDark = document.documentElement.classList.toggle('dark');
-    localStorage.setItem(CONFIG.storage.theme, isDark ? 'dark' : 'light');
+    Storage.setTheme(isDark ? 'dark' : 'light');
     updateThemeUI(isDark);
 }
 
@@ -95,9 +93,9 @@ function updateThemeUI(isDark) {
  * ================================================================== */
 
 function saveProgress() {
-    localStorage.setItem(CONFIG.storage.streak, state.streak);
-    localStorage.setItem(CONFIG.storage.maxStreak, state.maxStreak);
-    localStorage.setItem(CONFIG.storage.beltProgress, state.beltProgress);
+    Storage.setNumber(CONFIG.storage.streak, state.streak);
+    Storage.setNumber(CONFIG.storage.maxStreak, state.maxStreak);
+    Storage.setNumber(CONFIG.storage.beltProgress, state.beltProgress);
 }
 
 /* ==================================================================
