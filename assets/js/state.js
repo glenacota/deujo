@@ -8,9 +8,6 @@ export class GameState {
   streak;
   maxStreak;
   beltProgress;
-  feedbackNext;
-  isVerbModalOpen = false;
-  isNounModalOpen = false;
   activeTab = 'nouns';
   current = { noun: null, verb: null, gender: null, tense: 'pres' };
   history = { nouns: [], verbs: [] };

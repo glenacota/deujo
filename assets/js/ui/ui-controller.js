@@ -8,7 +8,10 @@ import { dom } from './dom.js';
 export class UiController {
     #toastTimer = null;
     #shareStatusTimer = null;
-  
+    #feedbackSuccessStyle = 'bg-emerald-50 dark:bg-emerald-950 border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-100';
+    #feedbackErrorStyle = 'bg-rose-50 dark:bg-rose-950 border-rose-300 dark:border-rose-800 text-rose-900 dark:text-rose-100';
+    #feedbackWarningStyle = 'bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-800';
+
     initTheme() {
         const stored = Storage.getTheme();
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -49,8 +52,8 @@ export class UiController {
     #applyTabStyle(btn, active) {
         const base = 'flex-1 px-5 py-2 lg:py-3 rounded-lg text-base font-semibold transition-all flex items-center justify-center space-x-2';
         btn.className = active
-        ? `${base} bg-indigo-600 text-white shadow-md`
-        : `${base} text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200`;
+            ? `${base} bg-indigo-600 text-white shadow-md`
+            : `${base} text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200`;
     }
 
     renderNoun(noun) {
@@ -74,15 +77,9 @@ export class UiController {
     #setGenderActive(btn, active) {
         btn.setAttribute('aria-pressed', String(active));
         btn.classList.toggle('ring-2', active);
-        btn.classList.toggle('ring-offset-2', active);
         btn.classList.toggle('ring-indigo-500', active);
         btn.classList.toggle('bg-indigo-100', active);
         btn.classList.toggle('dark:bg-indigo-950/60', active);
-    }
-
-    markNounPluralResult(isCorrect) {
-        dom.noun.plural.classList.toggle('border-emerald-500', isCorrect);
-        dom.noun.plural.classList.toggle('border-rose-500', !isCorrect);
     }
 
     renderVerb(verb) {
@@ -102,12 +99,6 @@ export class UiController {
         btn.classList.toggle('text-slate-600', !active);
         btn.classList.toggle('dark:text-slate-400', !active);
         });
-    }
-
-    markVerbInputResult(personKey, isCorrect) {
-        const input = dom.verb.inputs[personKey];
-        input.classList.toggle('border-emerald-500', isCorrect);
-        input.classList.toggle('border-rose-500', !isCorrect);
     }
 
     renderConjugationTable(verb) {
@@ -136,6 +127,24 @@ export class UiController {
         return Object.values(dom.modals)
         .map((m) => m.root)
         .find((root) => root && !root.classList.contains('hidden')) ?? null;
+    }
+
+    showFeedback(result, message) {
+        window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+        let panelClasses = `w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border `;
+        if (CONFIG.feedbackType.Success === result) {
+            panelClasses += this.#feedbackSuccessStyle;
+        } else if (CONFIG.feedbackType.Error === result) {
+            panelClasses += this.#feedbackErrorStyle;
+        } else {
+            panelClasses += this.#feedbackWarningStyle;
+        }
+        dom.modals.feedback.panel.className = panelClasses;
+
+        dom.modals.feedback.title.textContent = result === CONFIG.feedbackType.Success ? '✅ Correct!' : '❌ Try again!';
+        dom.modals.feedback.content.innerHTML = message;
+        this.openModal(dom.modals.feedback.root);
+        dom.modals.feedback.continueBtn.focus();
     }
 
     showToast(isPromotion, tier, streak) {

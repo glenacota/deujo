@@ -30,4 +30,5 @@ export const CONFIG = Object.freeze({
     { key: 'ihr', label: 'ihr' },
     { key: 'sie', label: 'sie/Sie' },
   ],
+  feedbackType: { Success: 'Success', Error: 'Error', Warning: 'Warning' }
 });
