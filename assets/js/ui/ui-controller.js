@@ -6,7 +6,8 @@ import { Storage } from '../services/storage.js';
 import { dom } from './dom.js';
 
 export class UiController {
-
+    #shareStatusTimer = null;
+  
     initTheme() {
         const stored = Storage.getTheme();
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -49,6 +50,31 @@ export class UiController {
         btn.className = active
         ? `${base} bg-indigo-600 text-white shadow-md`
         : `${base} text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200`;
+    }
+
+    async shareProgress(state) {
+        const tier = state.getCurrentTier();
+        const text = [
+            `🥋🇩🇪 I'm a ${CONFIG.belts[tier]} on Deujo.`,
+            `Can you beat my ${state.maxStreak}-answer streak of flawless German mastery?`,
+            'Join in: https://deujo.glenacota.me'
+        ].join('\n');
+        try {
+        if (navigator.share) {
+            await navigator.share({text});
+        } else if (navigator.clipboard) {
+            await navigator.clipboard.writeText(text);
+            this.#announceShare('Copied to clipboard!');
+        }
+        } catch {
+        // User cancelled the native share sheet - not an error worth surfacing.
+        }
+    }
+
+    #announceShare(message) {
+        dom.share.status.textContent = message;
+        clearTimeout(this.#shareStatusTimer);
+        this.#shareStatusTimer = setTimeout(() => { dom.share.status.textContent = ''; }, CONFIG.timing.toastMs);
     }
   
 }

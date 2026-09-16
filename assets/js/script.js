@@ -324,52 +324,6 @@ function showFeedback(htmlContent, colorClasses, nextQuestion) {
     setModalVisibility(dom.modals.feedback.root, true);
 }
 
-function getShareMessage() {
-    return [
-        `🥋🇩🇪 I'm a ${dom.dashboard.tier.textContent} in the Deujo now.`,
-        `Can you beat my ${state.maxStreak} streak of flawless German mastery?`,
-        'Join in: https://deujo.glenacota.me'
-    ].join('\n');
-}
-
-async function copyShareText(text) {
-    if (navigator.clipboard) {
-        await navigator.clipboard.writeText(text);
-        return;
-    }
-
-    const textArea = document.createElement('textarea');
-    textArea.value = text;
-    textArea.setAttribute('readonly', '');
-    textArea.style.position = 'fixed';
-    textArea.style.opacity = '0';
-    document.body.appendChild(textArea);
-    textArea.select();
-    document.execCommand('copy');
-    textArea.remove();
-}
-
-async function shareResult() {
-    const shareData = {
-        text: `${getShareMessage()}`,
-    };
-
-    try {
-        if (navigator.share) {
-            await navigator.share(shareData);
-            dom.share.status.textContent = 'Result shared!';
-            return;
-        }
-
-        await copyShareText(shareData.text);
-        dom.share.status.textContent = 'Result copied to clipboard!';
-    } catch (error) {
-        if (error.name !== 'AbortError') {
-            dom.share.status.textContent = 'Sharing is unavailable right now.';
-        }
-    }
-}
-
 function closeFeedbackModal() {
     setModalVisibility(dom.modals.feedback.root, false);
     const nextQuestion = state.feedbackNext;
@@ -423,7 +377,7 @@ function bindEvents() {
         if (e.target === dom.modals.feedback.root) closeFeedbackModal();
     });
     dom.modals.feedback.continueBtn.addEventListener('click', closeFeedbackModal);
-    dom.share.btn.addEventListener('click', shareResult);
+    dom.share.btn.addEventListener('click', () => ui.shareProgress(state));
 
     window.addEventListener('keydown', (e) => {
         if (e.key === '1') setTab('nouns');
