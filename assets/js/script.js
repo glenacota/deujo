@@ -6,6 +6,7 @@ import { AudioEngine } from './services/audio-engine.js';
 import { FxEngine } from './services/fx-engine.js';
 import { Storage } from './services/storage.js';
 import { dom } from './ui/dom.js';
+import { UiController } from './ui/ui-controller.js';
 
 /* ==================================================================
  * CONFIGURATION & CONSTANTS
@@ -34,6 +35,7 @@ const TAB_BUTTON_CLASS = {
 
 const audio = new AudioEngine();
 const fx = new FxEngine("fireworksCanvas");
+const ui = new UiController();
 
 /* ==================================================================
  * APPLICATION STATE
@@ -63,30 +65,6 @@ const state = {
     nounHistory: [],
     verbHistory: [],
 };
-
-/* ==================================================================
- * THEME (LIGHT / DARK MODE)
- * ================================================================== */
-
-function initTheme() {
-    const storedTheme = Storage.getTheme();
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const isDark = storedTheme === 'dark' || (!storedTheme && prefersDark);
-
-    document.documentElement.classList.toggle('dark', isDark);
-    updateThemeUI(isDark);
-}
-
-function toggleTheme() {
-    const isDark = document.documentElement.classList.toggle('dark');
-    Storage.setTheme(isDark ? 'dark' : 'light');
-    updateThemeUI(isDark);
-}
-
-function updateThemeUI(isDark) {
-    dom.theme.icon.textContent = isDark ? '🌙' : '☀️';
-    dom.theme.label.textContent = isDark ? 'Dark Mode' : 'Light Mode';
-}
 
 /* ==================================================================
  * PERSISTENCE (STREAK)
@@ -124,7 +102,7 @@ async function loadVocabularyData() {
 }
 
 function initApp() {
-    initTheme();
+    ui.initTheme();
     updateDashboardUI();
     bindEvents();
     nextNoun();
@@ -516,7 +494,7 @@ function handleEnterKey(event) {
  * ================================================================== */
 
 function bindEvents() {
-    dom.theme.toggleBtn.addEventListener('click', toggleTheme);
+    dom.theme.toggleBtn.addEventListener('click', ui.toggleTheme);
 
     dom.tabs.nouns.addEventListener('click', () => switchTab('nouns'));
     dom.tabs.verbs.addEventListener('click', () => switchTab('verbs'));
