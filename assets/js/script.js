@@ -1,4 +1,4 @@
-// script.js
+// app.js
 'use strict';
 
 import { CONFIG } from './config.js';
@@ -8,258 +8,222 @@ import { GameState } from './state.js';
 import { dom } from './ui/dom.js';
 import { UiController } from './ui/ui-controller.js';
 
-/* ==================================================================
- * CONFIGURATION & CONSTANTS
- * ================================================================== */
+class App {
+    #audio;
+    #fx;
+    #state;
+    #ui;
+    #datasets = { nouns: [], verbs: [] };
+    #personIndex;
 
-// e.g. { ich: 0, du: 1, er: 2, wir: 3, ihr: 4, sie: 5 }
-const PERSON_INDEX = Object.fromEntries(CONFIG.persons.map((person, index) => [person.key, index]));
+    constructor() {
+        this.#audio = new AudioEngine();
+        this.#fx = new FxEngine('fireworksCanvas');
+        this.#state = new GameState();
+        this.#ui = new UiController();
+        this.#personIndex = Object.fromEntries(
+            CONFIG.persons.map((person, index) => [person.key, index])
+        );
+    }
 
-const audio = new AudioEngine();
-const fx = new FxEngine("fireworksCanvas");
+    async bootstrap() {
+        try {
+            const [nounsResponse, verbsResponse] = await Promise.all([
+                fetch(CONFIG.urls.nouns),
+                fetch(CONFIG.urls.verbs),
+            ]);
+            if (!nounsResponse.ok || !verbsResponse.ok) {
+                throw new Error('Failed to load JSON datasets.');
+            }
+            this.#datasets.nouns = await nounsResponse.json();
+            this.#datasets.verbs = await verbsResponse.json();
+            this.#init();
+        } catch (error) {
+            console.error('Error loading language datasets:', error);
+            alert('Could not load vocabulary data. Please check your network or local server.');
+        }
+    }
 
-const state = new GameState();
-const ui = new UiController();
+    #init() {
+        this.#ui.initTheme();
+        this.#ui.renderDashboard(this.#state);
+        this.#bindEvents();
+        this.#loadNextNoun();
+        this.#loadNextVerb();
+    }
 
-/* ==================================================================
- * APPLICATION STATE
- * ================================================================== */
+    #handleFeedback(isCorrect, message) {
+        const feedbackType = isCorrect ? CONFIG.feedbackType.Success : CONFIG.feedbackType.Error;
+        this.#ui.showFeedback(feedbackType, message);
 
-/** @type {Array<{w:string,g:string,m:string,p:string}>} */
-let nounsData = [];
-/** @type {Array<{w:string,m:string,pres:string[],praet:string[],perf:string[]}>} */
-let verbsData = [];
+        if (isCorrect) {
+            const isPromoted = this.#state.incrementStreak();
+            this.#ui.renderDashboard(this.#state);
 
-/* ==================================================================
- * DATA LOADING & BOOTSTRAP
- * ================================================================== */
+            if (isPromoted) {
+                this.#audio.playMilestone();
+                this.#fx.triggerShow();
+                this.#ui.showToast(true, this.#state.getCurrentTier(), this.#state.streak);
+            } else {
+                this.#audio.playCorrect();
+            }
+        } else {
+            const isDemoted = this.#state.resetStreak();
+            this.#ui.renderDashboard(this.#state);
 
-async function loadVocabularyData() {
-    try {
-        const [nounsResponse, verbsResponse] = await Promise.all([
-            fetch(CONFIG.urls.nouns),
-            fetch(CONFIG.urls.verbs),
-        ]);
+            if (isDemoted) {
+                this.#audio.playDemotion();
+                this.#ui.showToast(false, this.#state.getCurrentTier());
+            } else {
+                this.#audio.playWrong();
+            }
+        }
+    }
 
-        if (!nounsResponse.ok || !verbsResponse.ok) {
-            throw new Error('Failed to load JSON datasets.');
+    #loadNextNoun() {
+        const noun = this.#state.pickNext(this.#datasets.nouns, 'nouns');
+        this.#state.current.noun = noun;
+        this.#state.current.gender = null;
+        if (noun) this.#ui.renderNoun(noun);
+    }
+
+    #checkNounAnswer() {
+        const noun = this.#state.current.noun;
+        if (!noun) return;
+
+        const userGender = this.#state.current.gender;
+        const userPlural = dom.noun.plural.value.trim();
+
+        if (!userGender) {
+            this.#ui.showFeedback(CONFIG.feedbackType.Warning, '⚠️ Please select a gender (der, die, or das).');
+            return;
         }
 
-        nounsData = await nounsResponse.json();
-        verbsData = await verbsResponse.json();
+        const isGenderCorrect = userGender === noun.g;
+        const hasNoPlural = !noun.p;
+        const isPluralCorrect = hasNoPlural || (userPlural.toLowerCase() === noun.p.toLowerCase());
+        const pluralText = hasNoPlural ? 'no plural' : `die ${noun.p}`;
 
-        initApp();
-    } catch (error) {
-        console.error('Error loading language datasets:', error);
-        alert('Could not load vocabulary data. Please check your network or local server.');
-    }
-}
+        const isCorrect = isGenderCorrect && isPluralCorrect;
+        const answer = `<span class="font-extrabold underline">${noun.g}</span> ${noun.w}, Plural: <span class="font-extrabold underline">${pluralText}</span>`;
+        const message = isCorrect ? `Excellent: ${answer}` : `Correct answer: ${answer}`;
 
-function initApp() {
-    ui.initTheme();
-    ui.renderDashboard(state);
-    bindEvents();
-    loadNextNoun();
-    loadNextVerb();
-}
-
-/* ==================================================================
- * STREAK & MILESTONE HANDLING
- * ================================================================== */
-
-function handleStreakIncrement() {
-    const isPromoted = state.incrementStreak();
-    ui.renderDashboard(state);
-
-    if (isPromoted) {
-        audio.playMilestone();
-        fx.triggerShow();
-        ui.showToast(true, state.getCurrentTier(), state.streak);
-    } else {
-        audio.playCorrect();
-    }
-}
-
-function resetStreak() {
-    const isDemoted = state.resetStreak();
-    ui.renderDashboard(state);
-
-    if (isDemoted) {
-        audio.playDemotion();
-        ui.showToast(false, state.getCurrentTier());
-    } else {
-        audio.playWrong();
-    }
-}
-
-/* ==================================================================
- * NOUN PRACTICE
- * ================================================================== */
-
-function loadNextNoun() {
-    const noun = state.pickNext(nounsData, 'nouns');
-    state.current.noun = noun;
-    state.current.gender = null;
-    if (noun) ui.renderNoun(noun);
-}
-
-function checkNounAnswer() {
-    if (!state.current.noun) return;
-
-    const userGender = state.current.gender;
-    const userPlural = dom.noun.plural.value.trim();
-
-    if (!userGender) {
-        handleAnswerResult(CONFIG.feedbackType.Warning,  '⚠️ Please select a gender (der, die, or das).')
-        return;
+        this.#handleFeedback(isCorrect, message);
+        this.#loadNextNoun();
     }
 
-    const isGenderCorrect = userGender === state.current.noun.g;
-    /* determine if the noun has no plural and validate accordingly */
-    const hasNoPlural = !state.current.noun.p;
-    const isPluralCorrect = hasNoPlural || (userPlural.toLowerCase() === state.current.noun.p.toLowerCase());
-    const pluralText = hasNoPlural ? 'no plural' : `die ${state.current.noun.p}`;
-    /* evaluate answer */
-    const isCorrect = isGenderCorrect && isPluralCorrect;
-    const answer = `<span class="font-extrabold underline">${state.current.noun.g}</span> ${state.current.noun.w}, Plural: <span class="font-extrabold underline">${pluralText}</span>`;
-    const message = isCorrect ? `Excellent: ${answer}` : `Correct answer: ${answer}`;
-
-    handleAnswerResult(isCorrect ? CONFIG.feedbackType.Success : CONFIG.feedbackType.Error, message);
-    loadNextNoun();
-}
-
-/* ==================================================================
- * VERB PRACTICE
- * ================================================================== */
-
-function loadNextVerb() {
-    const verb = state.pickNext(verbsData, 'verbs');
-    state.current.verb = verb;
-    if (verb) {
-        ui.renderVerb(verb);
-        ui.renderConjugationTable(verb);
-    }
-}
-
-function checkVerbAnswer() {
-    if (!state.current.verb) return;
-
-    const targetForms = state.current.verb[state.current.tense];
-    if (!targetForms) return;
-
-    /* evaluate answer */
-    let allCorrect = true;
-    Object.entries(dom.verb.inputs).forEach(([person, input]) => {
-        const userValue = input.value.trim().toLowerCase();
-        const expected = targetForms[PERSON_INDEX[person]].toLowerCase();
-        const isCorrect = userValue === expected;
-
-        if (!isCorrect) allCorrect = false;
-    });
-
-    const message = allCorrect
-        ? `Excellent! Perfect conjugation for "${state.current.verb.w}"!`
-        : 'Correct answer: '
-            + CONFIG.persons.map((p) => `${p.label} <strong>${targetForms[PERSON_INDEX[p.key]]}</strong>`).join(', ')
-            + '.';
-
-    handleAnswerResult(allCorrect ? CONFIG.feedbackType.Success : CONFIG.feedbackType.Error, message);
-    loadNextVerb();
-}
-
-/* ==================================================================
- * SHARED UI HELPERS
- * ================================================================== */
-
-function handleAnswerResult(answerResult, answerMessage) {
-    ui.showFeedback(answerResult, answerMessage);
-    if (answerResult === CONFIG.feedbackType.Success) {
-        handleStreakIncrement();
-    } else {
-        resetStreak();
-    }
-}
-
-function setTab(tab) {
-    state.activeTab = tab;
-    ui.switchTab(tab);
-}
-
-function handleEnterKey(event) {
-    event.preventDefault();
-    const openModal = ui.getOpenModal();
-
-    if (!openModal) {
-        const checkButton = state.activeTab === 'nouns' ? dom.noun.checkBtn : dom.verb.checkBtn;
-        checkButton.click();
-    } else {
-        ui.closeModal(openModal);
-    }
-}
-
-/* ==================================================================
- * EVENT BINDING
- * ================================================================== */
-
-function bindEvents() {
-    dom.theme.toggleBtn.addEventListener('click', ui.toggleTheme);
-
-    dom.tabs.nouns.addEventListener('click', () => setTab('nouns'));
-    dom.tabs.verbs.addEventListener('click', () => setTab('verbs'));
-
-    dom.verb.teachBtn.addEventListener('click', () => ui.openModal(dom.modals.verb.root));
-    dom.modals.verb.closeBtn.addEventListener('click', () => ui.closeModal(dom.modals.verb.root));
-    dom.modals.verb.root.addEventListener('click', (e) => {
-        if (e.target === dom.modals.verb.root) ui.closeModal(dom.modals.verb.root);
-    });
-
-    dom.noun.teachBtn.addEventListener('click', () => ui.openModal(dom.modals.noun.root));
-    dom.modals.noun.closeBtn.addEventListener('click', () => ui.closeModal(dom.modals.noun.root));
-    dom.modals.noun.root.addEventListener('click', (e) => {
-        if (e.target === dom.modals.noun.root) ui.closeModal(dom.modals.noun.root);
-    });
-
-    dom.modals.feedback.root.addEventListener('click', (e) => {
-        if (e.target === dom.modals.feedback.root) ui.closeModal(dom.modals.feedback.root);
-    });
-    dom.modals.feedback.continueBtn.addEventListener('click', () => ui.closeModal(dom.modals.feedback.root));
-    dom.share.btn.addEventListener('click', () => ui.shareProgress(state));
-
-    window.addEventListener('keydown', (e) => {
-        if (e.key === '1') setTab('nouns');
-        if (e.key === '2') setTab('verbs');
-        if (e.key === '?') {
-            const btn = state.activeTab === 'nouns' ? dom.noun.teachBtn : dom.verb.teachBtn;
-            btn.click();
+    #loadNextVerb() {
+        const verb = this.#state.pickNext(this.#datasets.verbs, 'verbs');
+        this.#state.current.verb = verb;
+        if (verb) {
+            this.#ui.renderVerb(verb);
+            this.#ui.renderConjugationTable(verb);
         }
-        if (e.key === 'Enter' || e.key === 'Return') {
-            handleEnterKey(e);
+    }
+
+    #checkVerbAnswer() {
+        const verb = this.#state.current.verb;
+        if (!verb) return;
+
+        const targetForms = verb[this.#state.current.tense];
+        if (!targetForms) return;
+
+        let allCorrect = true;
+        Object.entries(dom.verb.inputs).forEach(([person, input]) => {
+            const userValue = input.value.trim().toLowerCase();
+            const expected = targetForms[this.#personIndex[person]].toLowerCase();
+            if (userValue !== expected) allCorrect = false;
+        });
+
+        const message = allCorrect
+            ? `Excellent! Perfect conjugation for "${verb.w}"!`
+            : 'Correct answer: '
+                + CONFIG.persons.map((p) => `${p.label} <strong>${targetForms[this.#personIndex[p.key]]}</strong>`).join(', ')
+                + '.';
+
+        this.#handleFeedback(allCorrect, message);
+        this.#loadNextVerb();
+    }
+
+    #setTab(tab) {
+        this.#state.activeTab = tab;
+        this.#ui.switchTab(tab);
+    }
+
+    #handleEnterKey(event) {
+        event.preventDefault();
+        const openModal = this.#ui.getOpenModal();
+
+        if (!openModal) {
+            if (this.#state.activeTab === 'nouns') {
+                this.#checkNounAnswer();
+            } else {
+                this.#checkVerbAnswer();
+            }
+        } else {
+            this.#ui.closeModal(openModal);
         }
-    });
+    }
 
-    dom.verb.tenseButtons.forEach((btn) =>
-      btn.addEventListener('click', () => {
-        state.current.tense = btn.dataset.tense;
-        ui.setTenseSelection(btn.dataset.tense);
-      })
-    );
+    #bindEvents() {
+        dom.theme.toggleBtn.addEventListener('click', () => this.#ui.toggleTheme());
 
-    dom.noun.genderButtons.forEach((btn) =>
-      btn.addEventListener('click', () => {
-        state.current.gender = btn.dataset.gender;
-        ui.setGenderSelection(btn.dataset.gender);
-      })
-    );
+        dom.tabs.nouns.addEventListener('click', () => this.#setTab('nouns'));
+        dom.tabs.verbs.addEventListener('click', () => this.#setTab('verbs'));
 
-    dom.noun.checkBtn.addEventListener('click', checkNounAnswer);
-    dom.noun.skipBtn.addEventListener('click', loadNextNoun);
+        dom.verb.teachBtn.addEventListener('click', () => this.#ui.openModal(dom.modals.verb.root));
+        dom.modals.verb.closeBtn.addEventListener('click', () => this.#ui.closeModal(dom.modals.verb.root));
+        dom.modals.verb.root.addEventListener('click', (e) => {
+            if (e.target === dom.modals.verb.root) this.#ui.closeModal(dom.modals.verb.root);
+        });
 
-    dom.verb.checkBtn.addEventListener('click', checkVerbAnswer);
-    dom.verb.skipBtn.addEventListener('click', loadNextVerb);
+        dom.noun.teachBtn.addEventListener('click', () => this.#ui.openModal(dom.modals.noun.root));
+        dom.modals.noun.closeBtn.addEventListener('click', () => this.#ui.closeModal(dom.modals.noun.root));
+        dom.modals.noun.root.addEventListener('click', (e) => {
+            if (e.target === dom.modals.noun.root) this.#ui.closeModal(dom.modals.noun.root);
+        });
+
+        dom.modals.feedback.root.addEventListener('click', (e) => {
+            if (e.target === dom.modals.feedback.root) this.#ui.closeModal(dom.modals.feedback.root);
+        });
+        dom.modals.feedback.continueBtn.addEventListener('click', () => this.#ui.closeModal(dom.modals.feedback.root));
+        dom.share.btn.addEventListener('click', () => this.#ui.shareProgress(this.#state));
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === '1') this.#setTab('nouns');
+            if (e.key === '2') this.#setTab('verbs');
+            if (e.key === '?') {
+                const btn = this.#state.activeTab === 'nouns' ? dom.noun.teachBtn : dom.verb.teachBtn;
+                btn.click();
+            }
+            if (e.key === 'Enter' || e.key === 'Return') {
+                this.#handleEnterKey(e);
+            }
+        });
+
+        dom.verb.tenseButtons.forEach((btn) =>
+            btn.addEventListener('click', () => {
+                this.#state.current.tense = btn.dataset.tense;
+                this.#ui.setTenseSelection(btn.dataset.tense);
+            })
+        );
+
+        dom.noun.genderButtons.forEach((btn) =>
+            btn.addEventListener('click', () => {
+                this.#state.current.gender = btn.dataset.gender;
+                this.#ui.setGenderSelection(btn.dataset.gender);
+            })
+        );
+
+        dom.noun.checkBtn.addEventListener('click', () => this.#checkNounAnswer());
+        dom.noun.skipBtn.addEventListener('click', () => this.#loadNextNoun());
+
+        dom.verb.checkBtn.addEventListener('click', () => this.#checkVerbAnswer());
+        dom.verb.skipBtn.addEventListener('click', () => this.#loadNextVerb());
+    }
 }
 
-/* ==================================================================
- * BOOTSTRAP
- * ================================================================== */
-
-window.addEventListener('load', loadVocabularyData);
+window.addEventListener('load', () => {
+    const app = new App();
+    app.bootstrap();
+});

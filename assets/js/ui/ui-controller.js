@@ -86,24 +86,23 @@ export class UiController {
         dom.verb.word.textContent = verb.w;
         dom.verb.meaning.textContent = `🇬🇧 ${verb.m}`;
         Object.values(dom.verb.inputs).forEach((input) => {
-        input.value = '';
-        input.classList.remove('border-rose-500', 'border-emerald-500');
+            input.value = '';
+            input.classList.remove('border-rose-500', 'border-emerald-500');
         });
     }
 
     setTenseSelection(tense) {
         dom.verb.tenseButtons.forEach((btn) => {
-        const active = btn.dataset.tense === tense;
-        btn.classList.toggle('bg-purple-600', active);
-        btn.classList.toggle('text-white', active);
-        btn.classList.toggle('text-slate-600', !active);
-        btn.classList.toggle('dark:text-slate-400', !active);
+            const active = btn.dataset.tense === tense;
+            btn.classList.toggle('bg-purple-600', active);
+            btn.classList.toggle('text-white', active);
+            btn.classList.toggle('text-slate-600', !active);
+            btn.classList.toggle('dark:text-slate-400', !active);
         });
     }
 
     renderConjugationTable(verb) {
         dom.modals.verb.title.textContent = verb.w;
-        dom.modals.verb.meaning.textContent = `🇬🇧 ${verb.m}`;
         dom.modals.verb.tableBody.innerHTML = CONFIG.persons.map((person, index) => `
             <tr>
                 <td class="py-2 px-3 font-bold">${person.label}</td>
@@ -125,8 +124,8 @@ export class UiController {
     /** @returns {HTMLElement|null} the currently open modal root, if any */
     getOpenModal() {
         return Object.values(dom.modals)
-        .map((m) => m.root)
-        .find((root) => root && !root.classList.contains('hidden')) ?? null;
+            .map((m) => m.root)
+            .find((root) => root && !root.classList.contains('hidden')) ?? null;
     }
 
     showFeedback(result, message) {

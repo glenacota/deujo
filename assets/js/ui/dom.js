@@ -61,7 +61,6 @@ export const dom = {
       title: byId('modalVerbTitle'),
       closeBtn: byId('closeVerbModalBtn'),
       tableBody: byId('modalTableBody'),
-      meaning: byId('modalVerbMeaning'),
     },
     noun: {
       root: byId('nounModal'),
