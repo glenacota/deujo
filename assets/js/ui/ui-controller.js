@@ -8,9 +8,6 @@ import { dom } from './dom.js';
 export class UiController {
     #toastTimer = null;
     #shareStatusTimer = null;
-    #feedbackSuccessStyle = 'bg-emerald-50 dark:bg-emerald-950 border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-100';
-    #feedbackErrorStyle = 'bg-rose-50 dark:bg-rose-950 border-rose-300 dark:border-rose-800 text-rose-900 dark:text-rose-100';
-    #feedbackWarningStyle = 'bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-800';
 
     initTheme() {
         const stored = Storage.getTheme();
@@ -49,17 +46,22 @@ export class UiController {
         this.#applyTabStyle(dom.tabs.verbs, !isNouns);
     }
 
-    #applyTabStyle(btn, active) {
-        const base = 'flex-1 px-5 py-2 lg:py-3 rounded-lg text-base font-semibold transition-all flex items-center justify-center space-x-2';
-        btn.className = active
-            ? `${base} bg-indigo-600 text-white shadow-md`
-            : `${base} text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200`;
+    #applyTabStyle(buttonElement, isActive) {
+        const activeClasses = ['bg-indigo-600', 'text-white', 'shadow-md'];
+        const inactiveClasses = ['text-slate-600', 'dark:text-slate-400', 'hover:text-slate-900', 'dark:hover:text-slate-200'];
+
+        if (isActive) {
+            buttonElement.classList.remove(...inactiveClasses);
+            buttonElement.classList.add(...activeClasses);
+        } else {
+            buttonElement.classList.remove(...activeClasses);
+            buttonElement.classList.add(...inactiveClasses);
+        }
     }
 
     renderNoun(noun) {
         dom.noun.word.textContent = noun.w;
         dom.noun.meaning.textContent = `🇬🇧 ${noun.m}`;
-
         dom.noun.plural.value = '';
         
         const hasPlural = Boolean(noun.p);
@@ -71,7 +73,9 @@ export class UiController {
     }
 
     setGenderSelection(gender) {
-        dom.noun.genderButtons.forEach((btn) => this.#setGenderActive(btn, btn.dataset.gender === gender));
+        dom.noun.genderButtons.forEach((btn) => 
+            this.#setGenderActive(btn, btn.dataset.gender === gender)
+        );
     }
 
     #setGenderActive(btn, active) {
@@ -130,24 +134,25 @@ export class UiController {
 
     showFeedback(result, message) {
         window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-        let panelClasses = `w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border `;
-        if (CONFIG.feedbackType.Success === result) {
-            panelClasses += this.#feedbackSuccessStyle;
-        } else if (CONFIG.feedbackType.Error === result) {
-            panelClasses += this.#feedbackErrorStyle;
-        } else {
-            panelClasses += this.#feedbackWarningStyle;
-        }
-        dom.modals.feedback.panel.className = panelClasses;
 
+        const basePanelClasses = 'w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border ';
+        const themeStyles = {
+            [CONFIG.feedbackType.Success]: 'bg-emerald-50 dark:bg-emerald-950 border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-100',
+            [CONFIG.feedbackType.Error]: 'bg-rose-50 dark:bg-rose-950 border-rose-300 dark:border-rose-800 text-rose-900 dark:text-rose-100',
+            [CONFIG.feedbackType.Warning]: 'bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-800',
+        };
+
+        dom.modals.feedback.panel.className = basePanelClasses + (themeStyles[result] ?? themeStyles[CONFIG.feedbackType.Warning]);
         dom.modals.feedback.title.textContent = result === CONFIG.feedbackType.Success ? '✅ Correct!' : '❌ Try again!';
         dom.modals.feedback.content.innerHTML = message;
+
         this.openModal(dom.modals.feedback.root);
         dom.modals.feedback.continueBtn.focus();
     }
 
     showToast(isPromotion, tier, streak) {
         const beltName = CONFIG.belts[Math.min(tier, CONFIG.belts.length - 1)];
+
         if (isPromotion) {
             dom.toast.card.className = 'bg-amber-400 text-slate-950 px-6 py-4 border-4 border-slate-950 shadow-2xl flex items-center space-x-3 animate-bounce';
             dom.toast.title.textContent = 'Belt Promoted!';
@@ -187,7 +192,9 @@ export class UiController {
     #announceShare(message) {
         dom.share.status.textContent = message;
         clearTimeout(this.#shareStatusTimer);
-        this.#shareStatusTimer = setTimeout(() => { dom.share.status.textContent = ''; }, CONFIG.timing.toastMs);
+        this.#shareStatusTimer = setTimeout(() => {
+            dom.share.status.textContent = '';
+        }, CONFIG.timing.toastMs);
     }
   
 }
