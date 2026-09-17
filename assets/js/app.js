@@ -201,6 +201,9 @@ class App {
                 const btn = this.#state.activeTab === 'nouns' ? dom.noun.teachBtn : dom.verb.teachBtn;
                 btn.click();
             }
+            if (e.key === '/') {
+                this.#state.activeTab === 'nouns' ? this.#loadNextNoun() : this.#loadNextVerb();
+            }
             if (e.key === 'Enter' || e.key === 'Return') {
                 this.#handleEnterKey(e);
             }
