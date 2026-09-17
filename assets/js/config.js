@@ -8,6 +8,7 @@ export const CONFIG = Object.freeze({
   },
   storage: {
     theme: 'dm_theme',
+    mute: 'dm_mute',
     streak: 'dm_streak',
     maxStreak: 'dm_max_streak',
     belt: 'dm_belt_progress',

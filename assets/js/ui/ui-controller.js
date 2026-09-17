@@ -28,6 +28,17 @@ export class UiController {
         if (dom.theme.label) dom.theme.label.textContent = isDark ? 'Dark Mode' : 'Light Mode';
     }
 
+    toggleMute(isMuted) {
+        if (!dom.mute?.toggleBtn) return;
+
+        dom.mute.icon.textContent = isMuted ? '🔇' : '🔊';
+        if (dom.mute.label) {
+            dom.mute.label.textContent = isMuted ? 'Muted' : 'Sound On';
+        }
+        dom.mute.toggleBtn.setAttribute('aria-label', isMuted ? 'Enable sound' : 'Mute sound');
+        dom.mute.toggleBtn.title = isMuted ? 'Enable sound' : 'Mute sound';
+    }
+
     renderDashboard(state) {
         const tier = state.getCurrentTier();
         dom.dashboard.streak.textContent = state.streak;

@@ -46,6 +46,7 @@ class App {
 
     #init() {
         this.#ui.initTheme();
+        this.#ui.toggleMute(this.#audio.isMuted());
         this.#ui.renderDashboard(this.#state);
         this.#bindEvents();
         this.#loadNextNoun();
@@ -167,6 +168,10 @@ class App {
 
     #bindEvents() {
         dom.theme.toggleBtn.addEventListener('click', () => this.#ui.toggleTheme());
+        dom.mute.toggleBtn.addEventListener('click', () => {
+            const isMuted = this.#audio.toggleMute();
+            this.#ui.toggleMute(isMuted);
+        });
 
         dom.tabs.nouns.addEventListener('click', () => this.#setTab('nouns'));
         dom.tabs.verbs.addEventListener('click', () => this.#setTab('verbs'));

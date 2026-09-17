@@ -4,10 +4,29 @@
 // the AudioContext on first use, since browsers refuse to start one before
 // a user gesture - and resumes it if the tab suspended it in the background
 
+import { Storage } from './storage.js';
+import { CONFIG} from '../config.js';
+
 export class AudioEngine {
   #ctx = null;
+  #muted = Storage.getBoolean(CONFIG.storage.mute, false);
+
+  isMuted() {
+    return this.#muted;
+  }
+
+  setMuted(muted) {
+    this.#muted = Boolean(muted);
+  }
+
+  toggleMute() {
+    this.#muted = !this.#muted;
+    Storage.setBoolean(CONFIG.storage.mute, this.#muted);
+    return this.#muted;
+  }
 
   #ensureContext() {
+    if (this.#muted) return null;
     if (!this.#ctx) {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       this.#ctx = AudioCtx ? new AudioCtx() : null;
@@ -20,7 +39,7 @@ export class AudioEngine {
 
   #playTone(type, freq, rampTo, duration, gainStart) {
     const ctx = this.#ensureContext();
-    if (!ctx) return; // WebAudio unsupported - sound is decoration, fail silently
+    if (!ctx) return; // WebAudio unsupported or muted - sound is decoration, fail silently
 
     const now = ctx.currentTime;
     const osc = ctx.createOscillator();

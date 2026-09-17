@@ -12,6 +12,12 @@ export const dom = {
     label: byId('themeLabel'),
   },
 
+  mute: {
+    toggleBtn: byId('muteToggleBtn'),
+    icon: byId('muteIcon'),
+    label: byId('muteLabel'),
+  },
+
   dashboard: {
     streak: byId('streakDisplay'),
     max: byId('maxStreakDisplay'),
