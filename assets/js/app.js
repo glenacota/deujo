@@ -49,6 +49,7 @@ class App {
         this.#ui.toggleMute(this.#audio.isMuted());
         this.#ui.renderDashboard(this.#state);
         this.#bindEvents();
+        this.#setTab(this.#state.activeTab);
         this.#loadNextNoun();
         this.#loadNextVerb();
     }
@@ -147,7 +148,7 @@ class App {
     }
 
     #setTab(tab) {
-        this.#state.activeTab = tab;
+        this.#state.setActiveTab(tab);
         this.#ui.switchTab(tab);
     }
 

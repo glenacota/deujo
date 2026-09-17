@@ -9,6 +9,7 @@ export const CONFIG = Object.freeze({
   storage: {
     theme: 'dm_theme',
     mute: 'dm_mute',
+    tab: 'dm_active_tab',
     streak: 'dm_streak',
     maxStreak: 'dm_max_streak',
     belt: 'dm_belt_progress',

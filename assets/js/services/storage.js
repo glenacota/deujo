@@ -40,6 +40,14 @@ export const Storage = {
     safeSet(key, String(Boolean(value)));
   },
 
+  getString(key, fallback = '') {
+    return safeGet(key) ?? fallback;
+  },
+
+  setString(key, value) {
+    safeSet(key, value);
+  },
+
   getTheme() {
     return safeGet(CONFIG.storage.theme);
   },

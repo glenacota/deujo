@@ -16,6 +16,17 @@ export class GameState {
     this.streak = Storage.getNumber(CONFIG.storage.streak);
     this.maxStreak = Storage.getNumber(CONFIG.storage.maxStreak);
     this.beltProgress = Storage.getNumber(CONFIG.storage.belt, this.streak);
+
+    const storedTab = Storage.getString(CONFIG.storage.tab, 'nouns');
+    if (storedTab === 'nouns' || storedTab === 'verbs') {
+      this.activeTab = storedTab;
+    }
+  }
+
+  setActiveTab(tab) {
+    if (tab !== 'nouns' && tab !== 'verbs') return;
+    this.activeTab = tab;
+    Storage.setString(CONFIG.storage.tab, tab);
   }
 
   #persist() {
