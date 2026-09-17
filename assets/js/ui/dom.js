@@ -32,6 +32,11 @@ export const dom = {
     verbSection: byId('verbSection'),
   },
 
+  actions: {
+    nouns: byId('nounActions'),
+    verbs: byId('verbActions'),
+  },
+
   noun: {
     word: byId('nounWord'),
     meaning: byId('nounMeaning'),

@@ -53,6 +53,8 @@ export class UiController {
         const isNouns = tab === 'nouns';
         dom.tabs.nounSection.classList.toggle('hidden', !isNouns);
         dom.tabs.verbSection.classList.toggle('hidden', isNouns);
+        dom.actions.nouns.classList.toggle('hidden', !isNouns);
+        dom.actions.verbs.classList.toggle('hidden', isNouns);
         this.#applyTabStyle(dom.tabs.nouns, isNouns);
         this.#applyTabStyle(dom.tabs.verbs, !isNouns);
     }
