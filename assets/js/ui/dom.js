@@ -21,7 +21,6 @@ export const dom = {
   dashboard: {
     streak: byId('streakDisplay'),
     max: byId('maxStreakDisplay'),
-    bar: byId('progressBar'),
     tier: byId('tierLabel'),
   },
 

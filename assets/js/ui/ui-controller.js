@@ -44,9 +44,9 @@ export class UiController {
         dom.dashboard.streak.textContent = state.streak;
         dom.dashboard.max.textContent = state.maxStreak;
         dom.dashboard.tier.textContent = CONFIG.belts[tier];
-        dom.dashboard.tier.className = `text-xs px-2 py-0.5 rounded-full belt-label-${tier} font-semibold uppercase tracking-wider`;
-        dom.dashboard.bar.style.width = `${state.getTierProgressPct()}%`;
-        dom.dashboard.bar.className = `h-full rounded-full transition-all duration-500 ease-out belt-${tier}`;
+        dom.dashboard.tier.dataset.label = CONFIG.belts[tier];
+        dom.dashboard.tier.className = `w-full tier-label text-xs px-2 py-0.5 rounded-full belt-label-${tier} font-semibold uppercase tracking-wider`;
+        dom.dashboard.tier.style.setProperty('--tier-progress', `${state.getTierProgressPct()}%`);
     }
 
     switchTab(tab) {
