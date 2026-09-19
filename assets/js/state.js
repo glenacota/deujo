@@ -8,23 +8,27 @@ export class GameState {
   streak;
   maxStreak;
   beltProgress;
-  activeTab = 'nouns';
-  current = { noun: null, verb: null, gender: null, tense: 'pres' };
-  history = { nouns: [], verbs: [] };
+  activeTab = '';
+  current = {};   // kata id -> current item
+  history = {};   // kata id -> recently seen words
 
-  constructor() {
+  constructor(kataIds = []) {
     this.streak = Storage.getNumber(CONFIG.storage.streak);
     this.maxStreak = Storage.getNumber(CONFIG.storage.maxStreak);
     this.beltProgress = Storage.getNumber(CONFIG.storage.belt, this.streak);
 
-    const storedTab = Storage.getString(CONFIG.storage.tab, 'nouns');
-    if (storedTab === 'nouns' || storedTab === 'verbs') {
-      this.activeTab = storedTab;
-    }
+    kataIds.forEach((id) => {
+      this.current[id] = null;
+      this.history[id] = [];
+    });
+
+    this.activeTab = kataIds[0] ?? '';
+    const storedTab = Storage.getString(CONFIG.storage.tab, this.activeTab);
+    if (kataIds.includes(storedTab)) this.activeTab = storedTab;
   }
 
   setActiveTab(tab) {
-    if (tab !== 'nouns' && tab !== 'verbs') return;
+    if (!(tab in this.history)) return;
     this.activeTab = tab;
     Storage.setString(CONFIG.storage.tab, tab);
   }

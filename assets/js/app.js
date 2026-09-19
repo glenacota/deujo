@@ -5,6 +5,7 @@ import { CONFIG } from './config.js';
 import { AudioEngine } from './services/audio-engine.js';
 import { FxEngine } from './services/fx-engine.js';
 import { GameState } from './state.js';
+import { loadKatas } from './katas/registry.js';
 import { dom } from './ui/dom.js';
 import { UiController } from './ui/ui-controller.js';
 
@@ -13,30 +14,29 @@ class App {
     #fx;
     #state;
     #ui;
-    #datasets = { nouns: [], verbs: [] };
-    #personIndex;
+    #katas = [];
+    #entries = new Map(); // kata id -> { kata, dataset }
 
     constructor() {
         this.#audio = new AudioEngine();
         this.#fx = new FxEngine('fireworksCanvas');
-        this.#state = new GameState();
         this.#ui = new UiController();
-        this.#personIndex = Object.fromEntries(
-            CONFIG.persons.map((person, index) => [person.key, index])
-        );
     }
 
     async bootstrap() {
         try {
-            const [nounsResponse, verbsResponse] = await Promise.all([
-                fetch(CONFIG.urls.nouns),
-                fetch(CONFIG.urls.verbs),
-            ]);
-            if (!nounsResponse.ok || !verbsResponse.ok) {
-                throw new Error('Failed to load JSON datasets.');
-            }
-            this.#datasets.nouns = await nounsResponse.json();
-            this.#datasets.verbs = await verbsResponse.json();
+            this.#katas = await loadKatas();
+            const datasets = await Promise.all(
+                this.#katas.map(async (kata) => {
+                    const response = await fetch(kata.datasetUrl);
+                    if (!response.ok) throw new Error(`Failed to load dataset for "${kata.id}".`);
+                    return response.json();
+                })
+            );
+            this.#katas.forEach((kata, i) =>
+                this.#entries.set(kata.id, { kata: kata, dataset: datasets[i] })
+            );
+            this.#state = new GameState(this.#katas.map((p) => p.id));
             this.#init();
         } catch (error) {
             console.error('Error loading language datasets:', error);
@@ -48,10 +48,10 @@ class App {
         this.#ui.initTheme();
         this.#ui.toggleMute(this.#audio.isMuted());
         this.#ui.renderDashboard(this.#state);
+        this.#katas.forEach((kata) => kata.mount?.());
         this.#bindEvents();
         this.#setTab(this.#state.activeTab);
-        this.#loadNextNoun();
-        this.#loadNextVerb();
+        this.#katas.forEach((kata) => this.#loadNext(kata.id));
     }
 
     #handleFeedback(isCorrect, message) {
@@ -82,74 +82,32 @@ class App {
         }
     }
 
-    #loadNextNoun() {
-        const noun = this.#state.pickNext(this.#datasets.nouns, 'nouns');
-        this.#state.current.noun = noun;
-        this.#state.current.gender = null;
-        if (noun) this.#ui.renderNoun(noun);
+    #loadNext(id) {
+        const { kata, dataset } = this.#entries.get(id);
+        const item = this.#state.pickNext(dataset, id);
+        this.#state.current[id] = item;
+        if (item) kata.render(item);
     }
 
-    #checkNounAnswer() {
-        const noun = this.#state.current.noun;
-        if (!noun) return;
+    #check(id) {
+        const { kata } = this.#entries.get(id);
+        const item = this.#state.current[id];
+        if (!item) return;
 
-        const userGender = this.#state.current.gender;
-        const userPlural = dom.noun.plural.value.trim();
-
-        if (!userGender) {
-            this.#ui.showFeedback(CONFIG.feedbackType.Warning, '⚠️ Please select a gender (der, die, or das).');
+        const result = kata.check(item);
+        if (!result) return;
+        if (result.warning) {
+            this.#ui.showFeedback(CONFIG.feedbackType.Warning, result.warning);
             return;
         }
 
-        const isGenderCorrect = userGender === noun.g;
-        const hasNoPlural = !noun.p;
-        const isPluralCorrect = hasNoPlural || (userPlural.toLowerCase() === noun.p.toLowerCase());
-        const pluralText = hasNoPlural ? 'no plural' : `die ${noun.p}`;
-
-        const isCorrect = isGenderCorrect && isPluralCorrect;
-        const answer = `<span class="font-extrabold underline">${noun.g}</span> ${noun.w}, Plural: <span class="font-extrabold underline">${pluralText}</span>`;
-        const message = isCorrect ? `Excellent: ${answer}` : `Correct answer: ${answer}`;
-
-        this.#handleFeedback(isCorrect, message);
-        this.#loadNextNoun();
-    }
-
-    #loadNextVerb() {
-        const verb = this.#state.pickNext(this.#datasets.verbs, 'verbs');
-        this.#state.current.verb = verb;
-        if (verb) {
-            this.#ui.renderVerb(verb);
-            this.#ui.renderConjugationTable(verb);
-        }
-    }
-
-    #checkVerbAnswer() {
-        const verb = this.#state.current.verb;
-        if (!verb) return;
-
-        const targetForms = verb[this.#state.current.tense];
-        if (!targetForms) return;
-
-        let allCorrect = true;
-        Object.entries(dom.verb.inputs).forEach(([person, input]) => {
-            const userValue = input.value.trim().toLowerCase();
-            const expected = targetForms[this.#personIndex[person]].toLowerCase();
-            if (userValue !== expected) allCorrect = false;
-        });
-
-        const message = allCorrect
-            ? `Excellent! Perfect conjugation for "${verb.w}"!`
-            : 'Correct answer: '
-                + CONFIG.persons.map((p) => `${p.label} <strong>${targetForms[this.#personIndex[p.key]]}</strong>`).join(', ')
-                + '.';
-
-        this.#handleFeedback(allCorrect, message);
-        this.#loadNextVerb();
+        this.#handleFeedback(result.correct, result.message);
+        this.#loadNext(id);
     }
 
     #setTab(tab) {
         this.#state.setActiveTab(tab);
-        this.#ui.switchTab(tab);
+        this.#ui.switchTab(this.#katas, tab);
     }
 
     #handleEnterKey(event) {
@@ -157,11 +115,7 @@ class App {
         const openModal = this.#ui.getOpenModal();
 
         if (!openModal) {
-            if (this.#state.activeTab === 'nouns') {
-                this.#checkNounAnswer();
-            } else {
-                this.#checkVerbAnswer();
-            }
+            this.#check(this.#state.activeTab);
         } else {
             this.#ui.closeModal(openModal);
         }
@@ -174,19 +128,17 @@ class App {
             this.#ui.toggleMute(isMuted);
         });
 
-        dom.tabs.nouns.addEventListener('click', () => this.#setTab('nouns'));
-        dom.tabs.verbs.addEventListener('click', () => this.#setTab('verbs'));
+        this.#katas.forEach(({ id, el }) => {
+            el.tab.addEventListener('click', () => this.#setTab(id));
+            el.checkBtn.addEventListener('click', () => this.#check(id));
+            el.skipBtn.addEventListener('click', () => this.#loadNext(id));
 
-        dom.verb.teachBtn.addEventListener('click', () => this.#ui.openModal(dom.modals.verb.root));
-        dom.modals.verb.closeBtn.addEventListener('click', () => this.#ui.closeModal(dom.modals.verb.root));
-        dom.modals.verb.root.addEventListener('click', (e) => {
-            if (e.target === dom.modals.verb.root) this.#ui.closeModal(dom.modals.verb.root);
-        });
-
-        dom.noun.teachBtn.addEventListener('click', () => this.#ui.openModal(dom.modals.noun.root));
-        dom.modals.noun.closeBtn.addEventListener('click', () => this.#ui.closeModal(dom.modals.noun.root));
-        dom.modals.noun.root.addEventListener('click', (e) => {
-            if (e.target === dom.modals.noun.root) this.#ui.closeModal(dom.modals.noun.root);
+            if (!el.modal) return;
+            el.teachBtn?.addEventListener('click', () => this.#ui.openModal(el.modal));
+            el.modalCloseBtn?.addEventListener('click', () => this.#ui.closeModal(el.modal));
+            el.modal.addEventListener('click', (e) => {
+                if (e.target === el.modal) this.#ui.closeModal(el.modal);
+            });
         });
 
         dom.modals.feedback.root.addEventListener('click', (e) => {
@@ -196,39 +148,14 @@ class App {
         dom.share.btn.addEventListener('click', () => this.#ui.shareProgress(this.#state));
 
         window.addEventListener('keydown', (e) => {
-            if (e.key === '1') this.#setTab('nouns');
-            if (e.key === '2') this.#setTab('verbs');
-            if (e.key === '?') {
-                const btn = this.#state.activeTab === 'nouns' ? dom.noun.teachBtn : dom.verb.teachBtn;
-                btn.click();
-            }
-            if (e.key === '/') {
-                this.#state.activeTab === 'nouns' ? this.#loadNextNoun() : this.#loadNextVerb();
-            }
+            const slot = Number(e.key);
+            if (slot >= 1 && slot <= this.#katas.length) this.#setTab(this.#katas[slot - 1].id);
+            if (e.key === '?') this.#entries.get(this.#state.activeTab)?.kata.el.teachBtn?.click();
+            if (e.key === '/') this.#loadNext(this.#state.activeTab);
             if (e.key === 'Enter' || e.key === 'Return') {
                 this.#handleEnterKey(e);
             }
         });
-
-        dom.verb.tenseButtons.forEach((btn) =>
-            btn.addEventListener('click', () => {
-                this.#state.current.tense = btn.dataset.tense;
-                this.#ui.setTenseSelection(btn.dataset.tense);
-            })
-        );
-
-        dom.noun.genderButtons.forEach((btn) =>
-            btn.addEventListener('click', () => {
-                this.#state.current.gender = btn.dataset.gender;
-                this.#ui.setGenderSelection(btn.dataset.gender);
-            })
-        );
-
-        dom.noun.checkBtn.addEventListener('click', () => this.#checkNounAnswer());
-        dom.noun.skipBtn.addEventListener('click', () => this.#loadNextNoun());
-
-        dom.verb.checkBtn.addEventListener('click', () => this.#checkVerbAnswer());
-        dom.verb.skipBtn.addEventListener('click', () => this.#loadNextVerb());
     }
 }
 

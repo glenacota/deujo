@@ -1,8 +1,6 @@
 // ui/dom.js
 // Single place that knows about element IDs
 
-import { CONFIG } from '../config.js';
-
 const byId = (id) => document.getElementById(id);
 
 export const dom = {
@@ -24,38 +22,6 @@ export const dom = {
     tier: byId('tierLabel'),
   },
 
-  tabs: {
-    nouns: byId('tabNouns'),
-    verbs: byId('tabVerbs'),
-    nounSection: byId('nounSection'),
-    verbSection: byId('verbSection'),
-  },
-
-  actions: {
-    nouns: byId('nounActions'),
-    verbs: byId('verbActions'),
-  },
-
-  noun: {
-    word: byId('nounWord'),
-    meaning: byId('nounMeaning'),
-    plural: byId('pluralInput'),
-    genderButtons: Array.from(document.querySelectorAll('.gender-btn')),
-    checkBtn: byId('checkNounBtn'),
-    skipBtn: byId('skipNounBtn'),
-    teachBtn: byId('teachMeNounBtn'),
-  },
-
-  verb: {
-    word: byId('verbInfinitive'),
-    meaning: byId('verbMeaning'),
-    tenseButtons: Array.from(document.querySelectorAll('.tense-btn')),
-    inputs: Object.fromEntries(CONFIG.persons.map((p) => [p.key, byId(`conj_${p.key}`)])),
-    checkBtn: byId('checkVerbBtn'),
-    skipBtn: byId('skipVerbBtn'),
-    teachBtn: byId('teachMeVerbBtn'),
-  },
-
   toast: {
     root: byId('milestoneToast'),
     icon: byId('milestoneToastIcon'),
@@ -66,16 +32,6 @@ export const dom = {
   },
 
   modals: {
-    verb: {
-      root: byId('verbModal'),
-      title: byId('modalVerbTitle'),
-      closeBtn: byId('closeVerbModalBtn'),
-      tableBody: byId('modalTableBody'),
-    },
-    noun: {
-      root: byId('nounModal'),
-      closeBtn: byId('closeNounModalBtn'),
-    },
     feedback: {
       root: byId('feedbackModal'),
       panel: byId('feedbackModalPanel'),

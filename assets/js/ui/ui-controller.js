@@ -49,14 +49,13 @@ export class UiController {
         dom.dashboard.tier.style.setProperty('--tier-progress', `${state.getTierProgressPct()}%`);
     }
 
-    switchTab(tab) {
-        const isNouns = tab === 'nouns';
-        dom.tabs.nounSection.classList.toggle('hidden', !isNouns);
-        dom.tabs.verbSection.classList.toggle('hidden', isNouns);
-        dom.actions.nouns.classList.toggle('hidden', !isNouns);
-        dom.actions.verbs.classList.toggle('hidden', isNouns);
-        this.#applyTabStyle(dom.tabs.nouns, isNouns);
-        this.#applyTabStyle(dom.tabs.verbs, !isNouns);
+    switchTab(katas, activeId) {
+        katas.forEach(({ id, el }) => {
+            const isActive = id === activeId;
+            el.section.classList.toggle('hidden', !isActive);
+            el.actions.classList.toggle('hidden', !isActive);
+            this.#applyTabStyle(el.tab, isActive);
+        });
     }
 
     #applyTabStyle(buttonElement, isActive) {
@@ -72,64 +71,6 @@ export class UiController {
         }
     }
 
-    renderNoun(noun) {
-        dom.noun.word.textContent = noun.w;
-        dom.noun.meaning.textContent = `🇬🇧 ${noun.m}`;
-        dom.noun.plural.value = '';
-        
-        const hasPlural = Boolean(noun.p);
-        dom.noun.plural.disabled = !hasPlural;
-        dom.noun.plural.placeholder = hasPlural ? 'e.g. Kinder' : 'no plural';
-        
-        dom.noun.plural.classList.remove('border-rose-500', 'border-emerald-500');
-        dom.noun.genderButtons.forEach((btn) => this.#setGenderActive(btn, false));
-    }
-
-    setGenderSelection(gender) {
-        dom.noun.genderButtons.forEach((btn) => 
-            this.#setGenderActive(btn, btn.dataset.gender === gender)
-        );
-    }
-
-    #setGenderActive(btn, active) {
-        btn.setAttribute('aria-pressed', String(active));
-        btn.classList.toggle('ring-2', active);
-        btn.classList.toggle('ring-indigo-500', active);
-        btn.classList.toggle('bg-indigo-100', active);
-        btn.classList.toggle('dark:bg-indigo-950/60', active);
-    }
-
-    renderVerb(verb) {
-        dom.verb.word.textContent = verb.w;
-        dom.verb.meaning.textContent = `🇬🇧 ${verb.m}`;
-        Object.values(dom.verb.inputs).forEach((input) => {
-            input.value = '';
-            input.classList.remove('border-rose-500', 'border-emerald-500');
-        });
-    }
-
-    setTenseSelection(tense) {
-        dom.verb.tenseButtons.forEach((btn) => {
-            const active = btn.dataset.tense === tense;
-            btn.classList.toggle('bg-purple-600', active);
-            btn.classList.toggle('text-white', active);
-            btn.classList.toggle('text-slate-600', !active);
-            btn.classList.toggle('dark:text-slate-400', !active);
-        });
-    }
-
-    renderConjugationTable(verb) {
-        dom.modals.verb.title.textContent = verb.w;
-        dom.modals.verb.tableBody.innerHTML = CONFIG.persons.map((person, index) => `
-            <tr>
-                <td class="py-2 px-3 font-bold">${person.label}</td>
-                <td class="py-2 px-3">${verb.pres[index] ?? '—'}</td>
-                <td class="py-2 px-3">${verb.praet[index] ?? '—'}</td>
-                <td class="py-2 px-3">${verb.perf[index] ?? '—'}</td>
-            </tr>
-        `).join('');
-    }
-
     openModal(modalElement) {
         modalElement.classList.remove('hidden');
     }
@@ -140,9 +81,8 @@ export class UiController {
 
     /** @returns {HTMLElement|null} the currently open modal root, if any */
     getOpenModal() {
-        return Object.values(dom.modals)
-            .map((m) => m.root)
-            .find((root) => root && !root.classList.contains('hidden')) ?? null;
+        return Array.from(document.querySelectorAll('.modal-backdrop'))
+            .find((root) => !root.classList.contains('hidden')) ?? null;
     }
 
     showFeedback(result, message) {
