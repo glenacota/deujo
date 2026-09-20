@@ -16,10 +16,20 @@ export const dom = {
     label: byId('muteLabel'),
   },
 
+  dashboardHome: {
+    view: byId('dashboardView'),
+  },
+
   dashboard: {
     streak: byId('streakDisplay'),
     max: byId('maxStreakDisplay'),
     tier: byId('tierLabel'),
+    
+  },
+
+  focus: {
+    view: byId('focusView'),
+    backBtn: byId('backToMenuBtn'),
   },
 
   toast: {

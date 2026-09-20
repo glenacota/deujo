@@ -351,7 +351,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl leading-none text-slate-900 dark:text-slate-100 uppercase"><span class="font-extrabold">Deu</span>jo</h1>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 hidden sm:block"><span class="font-extrabold">Deu</span>tsch-Do<span class="font-extrabold">jo</span></p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 block"><span class="font-extrabold">Deu</span>tsch-Do<span class="font-extrabold">jo</span></p>
                 </div>
             </div>
 
@@ -386,19 +386,34 @@
     </header>
 
     <main class="max-w-4xl mx-auto px-4 pt-1 lg:pt-3 pb-3 lg:pb-10 flex-grow w-full flex flex-col">
-        <!-- Navigation Tabs -->
-        <div class="w-full mb-0 lg:mb-4">
-            <div class="w-full bg-slate-200 dark:bg-slate-950/80 p-1 rounded-xl border border-slate-300 dark:border-slate-800 flex gap-1">
-                <button id="tabNouns" type="button" class="flex-1 px-5 py-1 lg:py-3 rounded-lg text-base font-semibold transition-all flex items-center justify-center space-x-2 bg-indigo-600 text-white shadow-md">
-                    <kbd class="hidden sm:inline-block px-1.5 py-0.5 mr-2 text-xs bg-indigo-200 dark:bg-indigo-900/80 text-indigo-800 dark:text-indigo-200 rounded border border-indigo-300 dark:border-indigo-700/60 font-mono">1</kbd>
-                    <span class="font-thin">Train <span class="font-black">Nouns</span></span>
+        <!-- Dashboard: Kata Selection Grid -->
+        <div id="dashboardView" class="w-full mb-0 lg:mb-4">
+            <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 px-1">Select your Training Kata</p>
+            <div class="grid grid-cols-2 gap-3">
+                <button id="tabNouns" type="button" class="text-left p-4 rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-950/80 hover:border-indigo-500 hover:shadow-lg transition-all active:scale-[0.99]">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-2xl">🥋</span>
+                        <kbd class="hidden sm:inline-block px-1.5 py-0.5 text-[10px] bg-slate-200 dark:bg-slate-900/80 text-slate-600 dark:text-slate-300 rounded border border-slate-300 dark:border-slate-700/60 font-mono">1</kbd>
+                    </div>
+                    <div class="font-black text-lg text-slate-900 dark:text-white">Nouns</div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Gender &amp; Plural</div>
                 </button>
-                <button id="tabVerbs" type="button" class="flex-1 px-5 py-1 lg:py-3 rounded-lg text-base font-semibold transition-all flex items-center justify-center space-x-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200">
-                    <kbd class="hidden sm:inline-block px-1.5 py-0.5 mr-2 text-xs bg-slate-200 dark:bg-slate-900/80 text-slate-800 dark:text-slate-200 rounded border border-slate-300 dark:border-slate-700/60 font-mono">2</kbd>
-                    <span class="font-thin">Train <span class="font-black">Verbs</span></span>
+                <button id="tabVerbs" type="button" class="text-left p-4 rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-950/80 hover:border-purple-500 hover:shadow-lg transition-all active:scale-[0.99]">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-2xl">🥋</span>
+                        <kbd class="hidden sm:inline-block px-1.5 py-0.5 text-[10px] bg-slate-200 dark:bg-slate-900/80 text-slate-600 dark:text-slate-300 rounded border border-slate-300 dark:border-slate-700/60 font-mono">2</kbd>
+                    </div>
+                    <div class="font-black text-lg text-slate-900 dark:text-white">Verbs</div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Conjugation</div>
                 </button>
             </div>
         </div>
+
+        <!-- Focus Mode -->
+        <div id="focusView" class="hidden">
+        <button id="backToMenuBtn" type="button" class="mb-3 inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors">
+            <span aria-hidden="true">←</span> Back to Menu
+        </button>
 
         <!-- NOUN KATA -->
         <section id="nounSection" class="py-4 lg:py-6 px-6 relative overflow-hidden transition-colors duration-200">
@@ -521,6 +536,7 @@
                 </div>
             </div>
         </div>
+        </div><!-- /#focusView -->
     </main>
 
     <footer class="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 py-2 text-sm text-slate-500 transition-colors duration-200">

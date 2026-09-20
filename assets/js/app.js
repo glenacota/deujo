@@ -16,6 +16,7 @@ class App {
     #ui;
     #katas = [];
     #entries = new Map(); // kata id -> { kata, dataset }
+    #focusModeActive = false;
 
     constructor() {
         this.#audio = new AudioEngine();
@@ -50,7 +51,7 @@ class App {
         this.#ui.renderDashboard(this.#state);
         this.#katas.forEach((kata) => kata.mount?.());
         this.#bindEvents();
-        this.#setTab(this.#state.activeTab);
+        this.#ui.showDashboard();
         this.#katas.forEach((kata) => this.#loadNext(kata.id));
     }
 
@@ -110,6 +111,17 @@ class App {
         this.#ui.switchTab(this.#katas, tab);
     }
 
+    #enterKata(id) {
+        this.#setTab(id);
+        this.#focusModeActive = true;
+        this.#ui.showFocusMode();
+    }
+
+    #exitToMenu() {
+        this.#focusModeActive = false;
+        this.#ui.showDashboard();
+    }
+
     #handleEnterKey(event) {
         event.preventDefault();
         const openModal = this.#ui.getOpenModal();
@@ -129,7 +141,7 @@ class App {
         });
 
         this.#katas.forEach(({ id, el }) => {
-            el.tab.addEventListener('click', () => this.#setTab(id));
+            el.tab.addEventListener('click', () => this.#enterKata(id));
             el.checkBtn.addEventListener('click', () => this.#check(id));
             el.skipBtn.addEventListener('click', () => this.#loadNext(id));
 
@@ -146,15 +158,18 @@ class App {
         });
         dom.modals.feedback.continueBtn.addEventListener('click', () => this.#ui.closeModal(dom.modals.feedback.root));
         dom.share.btn.addEventListener('click', () => this.#ui.shareProgress(this.#state));
+        dom.focus.backBtn.addEventListener('click', () => this.#exitToMenu());
 
         window.addEventListener('keydown', (e) => {
             const slot = Number(e.key);
-            if (slot >= 1 && slot <= this.#katas.length) this.#setTab(this.#katas[slot - 1].id);
+            if (slot >= 1 && slot <= this.#katas.length) this.#enterKata(this.#katas[slot - 1].id);
+            if (!this.#focusModeActive) return;
             if (e.key === '?') this.#entries.get(this.#state.activeTab)?.kata.el.teachBtn?.click();
             if (e.key === '/') this.#loadNext(this.#state.activeTab);
             if (e.key === 'Enter' || e.key === 'Return') {
                 this.#handleEnterKey(e);
             }
+            if (e.key === 'Escape') this.#exitToMenu();
         });
     }
 }

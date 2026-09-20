@@ -49,26 +49,22 @@ export class UiController {
         dom.dashboard.tier.style.setProperty('--tier-progress', `${state.getTierProgressPct()}%`);
     }
 
+    showDashboard() {
+        dom.dashboardHome.view.classList.remove('hidden');
+        dom.focus.view.classList.add('hidden');
+    }
+
+    showFocusMode() {
+        dom.dashboardHome.view.classList.add('hidden');
+        dom.focus.view.classList.remove('hidden');
+    }
+
     switchTab(katas, activeId) {
         katas.forEach(({ id, el }) => {
             const isActive = id === activeId;
             el.section.classList.toggle('hidden', !isActive);
             el.actions.classList.toggle('hidden', !isActive);
-            this.#applyTabStyle(el.tab, isActive);
         });
-    }
-
-    #applyTabStyle(buttonElement, isActive) {
-        const activeClasses = ['bg-indigo-600', 'text-white', 'shadow-md'];
-        const inactiveClasses = ['text-slate-600', 'dark:text-slate-400', 'hover:text-slate-900', 'dark:hover:text-slate-200'];
-
-        if (isActive) {
-            buttonElement.classList.remove(...inactiveClasses);
-            buttonElement.classList.add(...activeClasses);
-        } else {
-            buttonElement.classList.remove(...activeClasses);
-            buttonElement.classList.add(...inactiveClasses);
-        }
     }
 
     openModal(modalElement) {
