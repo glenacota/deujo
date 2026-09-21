@@ -356,18 +356,22 @@
             </div>
 
             <!-- Right Half: Stats & Integrated Progress Bar -->
-            <div class="flex items-center justify-end gap-3 text-sm min-w-[150px]">
-                <div class="flex items-right justify-end gap-3">
-                    <div class="flex items-center space-x-1" title="Current Streak">
-                        <span class="text-xs">🔥</span>
-                        <span id="streakDisplay" class="font-bold text-slate-800 dark:text-slate-200">1</span>
-                        <span class="text-[10px] text-slate-400 font-bold hidden md:inline uppercase">Streak</span>
+            <div class="flex flex-col items-end justify-center gap-1.5 text-sm min-w-[150px]">
+                <div id="headerStats" class="hidden">
+                    <div class="flex items-right justify-end gap-3">
+                        <div class="flex items-center space-x-1" title="Current Streak">
+                            <span class="text-xs">🔥</span>
+                            <span id="streakDisplay" class="font-bold text-slate-800 dark:text-slate-200">0</span>
+                            <span class="text-[10px] text-slate-400 font-bold hidden md:inline uppercase">Streak</span>
+                        </div>
+                        <div class="flex items-center space-x-1" title="Personal Record">
+                            <span class="text-xs">🏆</span>
+                            <span id="maxStreakDisplay" class="font-bold text-slate-800 dark:text-slate-200">0</span>
+                            <span class="text-[10px] text-slate-400 font-bold hidden md:inline uppercase">Max</span>
+                        </div>
                     </div>
-                    <div class="flex items-center space-x-1" title="Personal Record">
-                        <span class="text-xs">🏆</span>
-                        <span id="maxStreakDisplay" class="font-bold text-slate-800 dark:text-slate-200">1</span>
-                        <span class="text-[10px] text-slate-400 font-bold hidden md:inline uppercase">Max</span>
-                    </div>
+                    <span id="headerBeltBar" class="belt-label block lg:w-full w-3/5 mt-1.5 text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider text-center" data-label="White Belt">White Belt</span>
+                </div>
             </div>
         </div>
     </header>
@@ -407,11 +411,7 @@
                 <span class="mx-2 text-slate-300 dark:text-slate-600">/</span>
                 <span id="focusKataName" class="text-slate-900 text-base font-extrabold dark:text-slate-200 mr-3">Nouns</span>
                 
-            </div>
-            <div class="flex items-right gap-2">
-                🥋
-                <span id="focusKataBelt" class="belt-label text-[10px] px-2 py-0.5 rounded-full font-semibold">White Belt</span>
-            </div>            
+            </div>        
         </div>
 
         <!-- NOUN KATA -->

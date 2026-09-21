@@ -39,14 +39,29 @@ export class UiController {
         dom.mute.toggleBtn.title = isMuted ? 'Enable sound' : 'Mute sound';
     }
 
-    renderDashboard(state) {
-        dom.dashboard.streak.textContent = state.streak;
-        dom.dashboard.max.textContent = state.maxStreak;
-    }
-
     showDashboard() {
         dom.dashboardHome.view.classList.remove('hidden');
         dom.focus.view.classList.add('hidden');
+        this.hideHeaderStats();
+    }
+
+    showHeaderStats() {
+        dom.header.stats.className = 'flex flex-col items-end gap-1.5 w-full';
+    }
+
+    hideHeaderStats() {
+        dom.header.stats.className = 'hidden';
+    }
+
+    renderHeaderStats(kataId, state) {
+        dom.header.streak.textContent = state.streakByKata[kataId] ?? 0;
+        dom.header.max.textContent = state.maxStreakByKata[kataId] ?? 0;
+        this.#applyBeltBadge(
+            dom.header.beltBar,
+            state.getCurrentBelt(kataId),
+            state.getBeltProgressPct(kataId),
+            'block lg:w-full w-4/5 text-[10px] px-2 py-0.5 text-center'
+        );
     }
 
     #applyBeltBadge(el, belt, pct, sizeClasses) {
@@ -69,20 +84,16 @@ export class UiController {
         });
     }
 
-    /** Updates the "which kata / which belt" indicator inside focus mode. */
+    /** Updates the kata name in focus mode and the belt/streak stats in the header. */
     renderFocusHeader(kata, state) {
         dom.focus.kataName.textContent = kata.id.charAt(0).toUpperCase() + kata.id.slice(1);
-        this.#applyBeltBadge(
-            dom.focus.kataBelt,
-            state.getCurrentBelt(kata.id),
-            state.getBeltProgressPct(kata.id),
-            'text-xs px-2 py-0.5'
-        );
+        this.renderHeaderStats(kata.id, state);
      }
 
     showFocusMode() {
         dom.dashboardHome.view.classList.add('hidden');
         dom.focus.view.classList.remove('hidden');
+        this.showHeaderStats();
     }
 
     switchTab(katas, activeId) {
@@ -145,11 +156,12 @@ export class UiController {
         this.#toastTimer = setTimeout(() => dom.toast.root.classList.add('hidden'), CONFIG.timing.toastMs);
     }
 
-    async shareProgress(state) {
-        const belt = state.getCurrentBelt();
+    async shareProgress(state, kataId) {
+        const belt = state.getCurrentBelt(kataId);
+        const kataName = kataId.charAt(0).toUpperCase() + kataId.slice(1);
         const text = [
-            `🥋🇩🇪 I'm a ${CONFIG.belts[belt]} on Deujo.`,
-            `Can you beat my ${state.maxStreak}-answer streak of flawless German mastery?`,
+            `🥋🇩🇪 I'm a ${CONFIG.belts[belt]} in the ${kataName} kata on Deujo.`,
+            `Can you beat my ${state.maxStreakByKata[kataId]}-answer streak of flawless German mastery?`,
             'Join in: https://deujo.glenacota.me'
         ].join('\n');
         try {

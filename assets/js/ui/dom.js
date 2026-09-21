@@ -20,18 +20,17 @@ export const dom = {
     view: byId('dashboardView'),
   },
 
-  dashboard: {
+  header: {
+    stats: byId('headerStats'),
     streak: byId('streakDisplay'),
     max: byId('maxStreakDisplay'),
-    belt: byId('beltLabel'),
-    
+    beltBar: byId('headerBeltBar'),
   },
 
   focus: {
     view: byId('focusView'),
     backBtn: byId('backToMenuBtn'),
     kataName: byId('focusKataName'),
-    kataBelt: byId('focusKataBelt'),
   },
 
   toast: {

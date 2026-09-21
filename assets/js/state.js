@@ -7,19 +7,20 @@ import { Storage } from './services/storage.js';
 export class GameState {
   streak;
   maxStreak;
+  streakByKata = {};
+  maxStreakByKata = {};
   beltProgress = {};
   activeTab = '';
   current = {};   // kata id -> current item
   history = {};   // kata id -> recently seen words
 
   constructor(kataIds = []) {
-    this.streak = Storage.getNumber(CONFIG.storage.streak);
-    this.maxStreak = Storage.getNumber(CONFIG.storage.maxStreak);
-
     kataIds.forEach((id) => {
       this.current[id] = null;
       this.history[id] = [];
       this.beltProgress[id] = Storage.getNumber(this.#beltKey(id));
+      this.streakByKata[id] = Storage.getNumber(this.#streakKey(id));
+      this.maxStreakByKata[id] = Storage.getNumber(this.#maxStreakKey(id));
     });
 
     this.activeTab = kataIds[0] ?? '';
@@ -31,6 +32,14 @@ export class GameState {
     return `${CONFIG.storage.belt}_${kataId}`;
   }
 
+  #streakKey(kataId) {
+    return `${CONFIG.storage.streak}_${kataId}`;
+  }
+
+  #maxStreakKey(kataId) {
+    return `${CONFIG.storage.maxStreak}_${kataId}`;
+  }
+
   setActiveTab(tab) {
     if (!(tab in this.history)) return;
     this.activeTab = tab;
@@ -38,15 +47,15 @@ export class GameState {
   }
 
   #persist(kataId) {
-    Storage.setNumber(CONFIG.storage.streak, this.streak);
-    Storage.setNumber(CONFIG.storage.maxStreak, this.maxStreak);
+    Storage.setNumber(this.#streakKey(kataId), this.streakByKata[kataId]);
+    Storage.setNumber(this.#maxStreakKey(kataId), this.maxStreakByKata[kataId]);
     Storage.setNumber(this.#beltKey(kataId), this.beltProgress[kataId]);
   }
 
   /** @returns {boolean} true if this answer completed a milestone (belt promotion) */
   incrementStreak(kataId) {
-    this.streak++;
-    this.maxStreak = Math.max(this.maxStreak, this.streak);
+    this.streakByKata[kataId]++;
+    this.maxStreakByKata[kataId] = Math.max(this.maxStreakByKata[kataId], this.streakByKata[kataId]);
     this.beltProgress[kataId]++;
     this.#persist(kataId);
     return this.beltProgress[kataId] % CONFIG.rules.milestoneInterval === 0;
@@ -55,7 +64,7 @@ export class GameState {
   /** @returns {boolean} true if this mistake dropped the player into a lower belt */
   resetStreak(kataId) {
     const prevBelt = this.getCurrentBelt(kataId);
-    this.streak = 0;
+    this.streakByKata[kataId] = 0;
     this.beltProgress[kataId] = Math.max(0, this.beltProgress[kataId] - 1);
     this.#persist(kataId);
     return this.getCurrentBelt(kataId) < prevBelt;

@@ -48,7 +48,6 @@ class App {
     #init() {
         this.#ui.initTheme();
         this.#ui.toggleMute(this.#audio.isMuted());
-        this.#ui.renderDashboard(this.#state);
         this.#ui.renderKataBelts(this.#katas, this.#state);
         this.#katas.forEach((kata) => {
             kata.mount?.();
@@ -87,7 +86,6 @@ class App {
     }
 
     #renderProgress(id) {
-        this.#ui.renderDashboard(this.#state);
         this.#ui.renderKataBelts(this.#katas, this.#state);
         if (this.#state.activeTab === id) {
             this.#ui.renderFocusHeader(this.#entries.get(id).kata, this.#state);
@@ -169,7 +167,7 @@ class App {
             if (e.target === dom.modals.feedback.root) this.#ui.closeModal(dom.modals.feedback.root);
         });
         dom.modals.feedback.continueBtn.addEventListener('click', () => this.#ui.closeModal(dom.modals.feedback.root));
-        dom.share.btn.addEventListener('click', () => this.#ui.shareProgress(this.#state));
+        dom.share.btn.addEventListener('click', () => this.#ui.shareProgress(this.#state, this.#state.activeTab));
         dom.focus.backBtn.addEventListener('click', () => this.#exitToMenu());
 
         window.addEventListener('keydown', (e) => {
