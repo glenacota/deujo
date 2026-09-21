@@ -60,7 +60,7 @@ export class UiController {
             dom.header.beltBar,
             state.getCurrentBelt(kataId),
             state.getBeltProgressPct(kataId),
-            'block lg:w-full w-4/5 text-[10px] px-2 py-0.5 text-center'
+            'block lg:w-full w-3/5 text-[10px] px-2 py-0 text-center'
         );
     }
 
