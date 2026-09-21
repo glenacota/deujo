@@ -66,7 +66,7 @@ class App {
             if (isPromoted) {
                 this.#audio.playMilestone();
                 this.#fx.triggerShow();
-                this.#ui.showToast(true, this.#state.getCurrentTier(), this.#state.streak);
+                this.#ui.showToast(true, this.#state.getCurrentBelt(), this.#state.streak);
             } else {
                 this.#audio.playCorrect();
             }
@@ -76,7 +76,7 @@ class App {
 
             if (isDemoted) {
                 this.#audio.playDemotion();
-                this.#ui.showToast(false, this.#state.getCurrentTier());
+                this.#ui.showToast(false, this.#state.getCurrentBelt());
             } else {
                 this.#audio.playWrong();
             }

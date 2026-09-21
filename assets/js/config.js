@@ -13,8 +13,8 @@ export const CONFIG = Object.freeze({
   rules: {
     historyMax: 30,       // how many recently-seen words we remember, per topic
     historyRecycle: 5,    // how much history survives once the pool is exhausted
-    milestoneInterval: 5, // belt points needed to advance one tier
-    maxTier: 6,           // index of the last belt (Black Belt)
+    milestoneInterval: 5, // belt points needed to advance one belt
+    maxBelt: 6,           // index of the last belt (Black Belt)
   },
   timing: {
     toastMs: 3500,

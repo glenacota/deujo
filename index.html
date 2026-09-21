@@ -182,22 +182,22 @@
         .belt-label-5 { background: linear-gradient(90deg, var(--belt-5-from), var(--belt-5-to)); color: #fff7ed; }
         .belt-label-6 { background: linear-gradient(90deg, var(--belt-6-from), var(--belt-6-to)); color: #f8fafc; }
 
-        .tier-label {
+        .belt-label {
             position: relative;
             display: inline-block;
             overflow: hidden;
             color: transparent;
             background: linear-gradient(
                 90deg,
-                var(--tier-fill-from) 0%,
-                var(--tier-fill-to) var(--tier-progress),
-                var(--tier-rest) var(--tier-progress),
-                var(--tier-rest) 100%
+                var(--belt-fill-from) 0%,
+                var(--belt-fill-to) var(--belt-progress),
+                var(--belt-rest) var(--belt-progress),
+                var(--belt-rest) 100%
             );
         }
 
-        .tier-label::before,
-        .tier-label::after {
+        .belt-label::before,
+        .belt-label::after {
             position: absolute;
             inset: 0;
             display: flex;
@@ -208,26 +208,26 @@
             pointer-events: none;
         }
 
-        .tier-label::before {
-            color: var(--tier-fill-text);
-            clip-path: inset(0 calc(100% - var(--tier-progress)) 0 0);
+        .belt-label::before {
+            color: var(--belt-fill-text);
+            clip-path: inset(0 calc(100% - var(--belt-progress)) 0 0);
         }
 
-        .tier-label::after {
-            color: var(--tier-rest-text);
-            clip-path: inset(0 0 0 var(--tier-progress));
+        .belt-label::after {
+            color: var(--belt-rest-text);
+            clip-path: inset(0 0 0 var(--belt-progress));
         }
 
-        .belt-label-0 { --tier-fill-from: var(--belt-0-from); --tier-fill-to: var(--belt-0-to); --tier-fill-text: #0f172a; }
-        .belt-label-1 { --tier-fill-from: var(--belt-1-from); --tier-fill-to: var(--belt-1-to); --tier-fill-text: #713f12; }
-        .belt-label-2 { --tier-fill-from: var(--belt-2-from); --tier-fill-to: var(--belt-2-to); --tier-fill-text: #7c2d12; }
-        .belt-label-3 { --tier-fill-from: var(--belt-3-from); --tier-fill-to: var(--belt-3-to); --tier-fill-text: #064e3b; }
-        .belt-label-4 { --tier-fill-from: var(--belt-4-from); --tier-fill-to: var(--belt-4-to); --tier-fill-text: #082f49; }
-        .belt-label-5 { --tier-fill-from: var(--belt-5-from); --tier-fill-to: var(--belt-5-to); --tier-fill-text: #fff7ed; }
-        .belt-label-6 { --tier-fill-from: var(--belt-6-from); --tier-fill-to: var(--belt-6-to); --tier-fill-text: #f8fafc; }
+        .belt-label-0 { --belt-fill-from: var(--belt-0-from); --belt-fill-to: var(--belt-0-to); --belt-fill-text: #0f172a; }
+        .belt-label-1 { --belt-fill-from: var(--belt-1-from); --belt-fill-to: var(--belt-1-to); --belt-fill-text: #713f12; }
+        .belt-label-2 { --belt-fill-from: var(--belt-2-from); --belt-fill-to: var(--belt-2-to); --belt-fill-text: #7c2d12; }
+        .belt-label-3 { --belt-fill-from: var(--belt-3-from); --belt-fill-to: var(--belt-3-to); --belt-fill-text: #064e3b; }
+        .belt-label-4 { --belt-fill-from: var(--belt-4-from); --belt-fill-to: var(--belt-4-to); --belt-fill-text: #082f49; }
+        .belt-label-5 { --belt-fill-from: var(--belt-5-from); --belt-fill-to: var(--belt-5-to); --belt-fill-text: #fff7ed; }
+        .belt-label-6 { --belt-fill-from: var(--belt-6-from); --belt-fill-to: var(--belt-6-to); --belt-fill-text: #f8fafc; }
 
-        .tier-label { --tier-rest: #334155; --tier-rest-text: #f8fafc; }
-        html:not(.dark) .tier-label { --tier-rest: #e2e8f0; --tier-rest-text: #334155; }
+        .belt-label { --belt-rest: #334155; --belt-rest-text: #f8fafc; }
+        html:not(.dark) .belt-label { --belt-rest: #e2e8f0; --belt-rest-text: #334155; }
 
         .pixel-border {
             box-shadow:
@@ -374,7 +374,7 @@
 
                 <!-- Bottom Row: Integrated Progress Bar -->
                 <div class="flex items-center gap-2 group relative cursor-help w-full" tabindex="0">
-                    <span id="tierLabel" class="w-full tier-label text-xs px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider">White Belt</span>
+                    <span id="beltLabel" class="w-full belt-label text-xs px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider">White Belt</span>
                     <div class="absolute right-0 top-full mt-2 hidden group-hover:block p-4 bg-slate-900 border-indigo-200 dark:border-indigo-900/60 rounded-xl bg-indigo-50 dark:bg-indigo-900 border text-slate-100 text-xs rounded shadow-xl z-50">
                         <p class="mb-2">Each belt = 5 correct answers.</p>
                         <p>Belts: ⚪ 🟡 🟠 🟢 🔵 🟤 ⚫</p>

@@ -40,13 +40,13 @@ export class UiController {
     }
 
     renderDashboard(state) {
-        const tier = state.getCurrentTier();
+        const belt = state.getCurrentBelt();
         dom.dashboard.streak.textContent = state.streak;
         dom.dashboard.max.textContent = state.maxStreak;
-        dom.dashboard.tier.textContent = CONFIG.belts[tier];
-        dom.dashboard.tier.dataset.label = CONFIG.belts[tier];
-        dom.dashboard.tier.className = `w-full tier-label text-xs px-2 py-0.5 rounded-full belt-label-${tier} font-semibold uppercase tracking-wider`;
-        dom.dashboard.tier.style.setProperty('--tier-progress', `${state.getTierProgressPct()}%`);
+        dom.dashboard.belt.textContent = CONFIG.belts[belt];
+        dom.dashboard.belt.dataset.label = CONFIG.belts[belt];
+        dom.dashboard.belt.className = `w-full belt-label text-xs px-2 py-0.5 rounded-full belt-label-${belt} font-semibold uppercase tracking-wider`;
+        dom.dashboard.belt.style.setProperty('--belt-progress', `${state.getBeltProgressPct()}%`);
     }
 
     showDashboard() {
@@ -99,8 +99,8 @@ export class UiController {
         dom.modals.feedback.continueBtn.focus();
     }
 
-    showToast(isPromotion, tier, streak) {
-        const beltName = CONFIG.belts[Math.min(tier, CONFIG.belts.length - 1)];
+    showToast(isPromotion, belt, streak) {
+        const beltName = CONFIG.belts[Math.min(belt, CONFIG.belts.length - 1)];
 
         if (isPromotion) {
             dom.toast.card.className = 'bg-amber-400 text-slate-950 px-6 py-4 border-4 border-slate-950 shadow-2xl flex items-center space-x-3 animate-bounce';
@@ -120,9 +120,9 @@ export class UiController {
     }
 
     async shareProgress(state) {
-        const tier = state.getCurrentTier();
+        const belt = state.getCurrentBelt();
         const text = [
-            `🥋🇩🇪 I'm a ${CONFIG.belts[tier]} on Deujo.`,
+            `🥋🇩🇪 I'm a ${CONFIG.belts[belt]} on Deujo.`,
             `Can you beat my ${state.maxStreak}-answer streak of flawless German mastery?`,
             'Join in: https://deujo.glenacota.me'
         ].join('\n');

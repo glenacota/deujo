@@ -23,7 +23,7 @@ export const dom = {
   dashboard: {
     streak: byId('streakDisplay'),
     max: byId('maxStreakDisplay'),
-    tier: byId('tierLabel'),
+    belt: byId('beltLabel'),
     
   },
 

@@ -48,23 +48,23 @@ export class GameState {
     return this.beltProgress % CONFIG.rules.milestoneInterval === 0;
   }
 
-  /** @returns {boolean} true if this mistake dropped the player into a lower tier */
+  /** @returns {boolean} true if this mistake dropped the player into a lower belt */
   resetStreak() {
-    const prevTier = this.getCurrentTier();
+    const prevBelt = this.getCurrentBelt();
     this.streak = 0;
     this.beltProgress = Math.max(0, this.beltProgress - 1);
     this.#persist();
-    return this.getCurrentTier() < prevTier;
+    return this.getCurrentBelt() < prevBelt;
   }
 
-  getCurrentTier() {
+  getCurrentBelt() {
     return Math.min(
       Math.floor(this.beltProgress / CONFIG.rules.milestoneInterval),
-      CONFIG.rules.maxTier
+      CONFIG.rules.maxBelt
     );
   }
 
-  getTierProgressPct() {
+  getBeltProgressPct() {
     return ((this.beltProgress % CONFIG.rules.milestoneInterval) / CONFIG.rules.milestoneInterval) * 100;
   }
 
