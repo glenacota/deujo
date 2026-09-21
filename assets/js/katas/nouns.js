@@ -10,6 +10,7 @@ const el = {
     checkBtn: byId('checkNounBtn'),
     skipBtn: byId('skipNounBtn'),
     teachBtn: byId('teachMeNounBtn'),
+    cardBelt: byId('beltNouns'),
     modal: byId('nounModal'),
     modalCloseBtn: byId('closeNounModalBtn'),
     word: byId('nounWord'),

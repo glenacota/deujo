@@ -40,19 +40,45 @@ export class UiController {
     }
 
     renderDashboard(state) {
-        const belt = state.getCurrentBelt();
         dom.dashboard.streak.textContent = state.streak;
         dom.dashboard.max.textContent = state.maxStreak;
-        dom.dashboard.belt.textContent = CONFIG.belts[belt];
-        dom.dashboard.belt.dataset.label = CONFIG.belts[belt];
-        dom.dashboard.belt.className = `w-full belt-label text-xs px-2 py-0.5 rounded-full belt-label-${belt} font-semibold uppercase tracking-wider`;
-        dom.dashboard.belt.style.setProperty('--belt-progress', `${state.getBeltProgressPct()}%`);
     }
 
     showDashboard() {
         dom.dashboardHome.view.classList.remove('hidden');
         dom.focus.view.classList.add('hidden');
     }
+
+    #applyBeltBadge(el, belt, pct, sizeClasses) {
+        if (!el) return;
+        el.textContent = CONFIG.belts[belt];
+        el.dataset.label = CONFIG.belts[belt];
+        el.className = `belt-label rounded-full belt-label-${belt} font-semibold uppercase tracking-wider ${sizeClasses}`;
+        el.style.setProperty('--belt-progress', `${pct}%`);
+    }
+
+    /** Updates the belt badge shown on every kata card in the dashboard. */
+    renderKataBelts(katas, state) {
+        katas.forEach((kata) => {
+            this.#applyBeltBadge(
+                kata.el.cardBelt,
+                state.getCurrentBelt(kata.id),
+                state.getBeltProgressPct(kata.id),
+                'block w-full text-[10px] px-2 py-0.5'
+            );
+        });
+    }
+
+    /** Updates the "which kata / which belt" indicator inside focus mode. */
+    renderFocusHeader(kata, state) {
+        dom.focus.kataName.textContent = kata.id.charAt(0).toUpperCase() + kata.id.slice(1);
+        this.#applyBeltBadge(
+            dom.focus.kataBelt,
+            state.getCurrentBelt(kata.id),
+            state.getBeltProgressPct(kata.id),
+            'text-xs px-2 py-0.5'
+        );
+     }
 
     showFocusMode() {
         dom.dashboardHome.view.classList.add('hidden');

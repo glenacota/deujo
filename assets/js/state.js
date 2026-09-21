@@ -7,7 +7,7 @@ import { Storage } from './services/storage.js';
 export class GameState {
   streak;
   maxStreak;
-  beltProgress;
+  beltProgress = {};
   activeTab = '';
   current = {};   // kata id -> current item
   history = {};   // kata id -> recently seen words
@@ -15,16 +15,20 @@ export class GameState {
   constructor(kataIds = []) {
     this.streak = Storage.getNumber(CONFIG.storage.streak);
     this.maxStreak = Storage.getNumber(CONFIG.storage.maxStreak);
-    this.beltProgress = Storage.getNumber(CONFIG.storage.belt, this.streak);
 
     kataIds.forEach((id) => {
       this.current[id] = null;
       this.history[id] = [];
+      this.beltProgress[id] = Storage.getNumber(this.#beltKey(id));
     });
 
     this.activeTab = kataIds[0] ?? '';
     const storedTab = Storage.getString(CONFIG.storage.tab, this.activeTab);
     if (kataIds.includes(storedTab)) this.activeTab = storedTab;
+  }
+
+  #beltKey(kataId) {
+    return `${CONFIG.storage.belt}_${kataId}`;
   }
 
   setActiveTab(tab) {
@@ -33,39 +37,39 @@ export class GameState {
     Storage.setString(CONFIG.storage.tab, tab);
   }
 
-  #persist() {
+  #persist(kataId) {
     Storage.setNumber(CONFIG.storage.streak, this.streak);
     Storage.setNumber(CONFIG.storage.maxStreak, this.maxStreak);
-    Storage.setNumber(CONFIG.storage.belt, this.beltProgress);
+    Storage.setNumber(this.#beltKey(kataId), this.beltProgress[kataId]);
   }
 
   /** @returns {boolean} true if this answer completed a milestone (belt promotion) */
-  incrementStreak() {
+  incrementStreak(kataId) {
     this.streak++;
     this.maxStreak = Math.max(this.maxStreak, this.streak);
-    this.beltProgress++;
-    this.#persist();
-    return this.beltProgress % CONFIG.rules.milestoneInterval === 0;
+    this.beltProgress[kataId]++;
+    this.#persist(kataId);
+    return this.beltProgress[kataId] % CONFIG.rules.milestoneInterval === 0;
   }
 
   /** @returns {boolean} true if this mistake dropped the player into a lower belt */
-  resetStreak() {
-    const prevBelt = this.getCurrentBelt();
+  resetStreak(kataId) {
+    const prevBelt = this.getCurrentBelt(kataId);
     this.streak = 0;
-    this.beltProgress = Math.max(0, this.beltProgress - 1);
-    this.#persist();
-    return this.getCurrentBelt() < prevBelt;
+    this.beltProgress[kataId] = Math.max(0, this.beltProgress[kataId] - 1);
+    this.#persist(kataId);
+    return this.getCurrentBelt(kataId) < prevBelt;
   }
 
-  getCurrentBelt() {
+  getCurrentBelt(kataId) {
     return Math.min(
-      Math.floor(this.beltProgress / CONFIG.rules.milestoneInterval),
+      Math.floor(this.beltProgress[kataId] / CONFIG.rules.milestoneInterval),
       CONFIG.rules.maxBelt
     );
   }
 
-  getBeltProgressPct() {
-    return ((this.beltProgress % CONFIG.rules.milestoneInterval) / CONFIG.rules.milestoneInterval) * 100;
+  getBeltProgressPct(kataId) {
+    return ((this.beltProgress[kataId] % CONFIG.rules.milestoneInterval) / CONFIG.rules.milestoneInterval) * 100;
   }
 
   /** Picks a random item the player hasn't seen recently */

@@ -49,37 +49,48 @@ class App {
         this.#ui.initTheme();
         this.#ui.toggleMute(this.#audio.isMuted());
         this.#ui.renderDashboard(this.#state);
-        this.#katas.forEach((kata) => kata.mount?.());
+        this.#ui.renderKataBelts(this.#katas, this.#state);
+        this.#katas.forEach((kata) => {
+            kata.mount?.();
+            this.#loadNext(kata.id);
+        });
         this.#bindEvents();
         this.#ui.showDashboard();
-        this.#katas.forEach((kata) => this.#loadNext(kata.id));
     }
 
-    #handleFeedback(isCorrect, message) {
+    #handleFeedback(id, isCorrect, message) {
         const feedbackType = isCorrect ? CONFIG.feedbackType.Success : CONFIG.feedbackType.Error;
         this.#ui.showFeedback(feedbackType, message);
 
         if (isCorrect) {
-            const isPromoted = this.#state.incrementStreak();
-            this.#ui.renderDashboard(this.#state);
+            const isPromoted = this.#state.incrementStreak(id);
+            this.#renderProgress(id);
 
             if (isPromoted) {
                 this.#audio.playMilestone();
                 this.#fx.triggerShow();
-                this.#ui.showToast(true, this.#state.getCurrentBelt(), this.#state.streak);
+                this.#ui.showToast(true, this.#state.getCurrentBelt(id), this.#state.streak);
             } else {
                 this.#audio.playCorrect();
             }
         } else {
-            const isDemoted = this.#state.resetStreak();
-            this.#ui.renderDashboard(this.#state);
+            const isDemoted = this.#state.resetStreak(id);
+            this.#renderProgress(id);
 
             if (isDemoted) {
                 this.#audio.playDemotion();
-                this.#ui.showToast(false, this.#state.getCurrentBelt());
+                this.#ui.showToast(false, this.#state.getCurrentBelt(id));
             } else {
                 this.#audio.playWrong();
             }
+        }
+    }
+
+    #renderProgress(id) {
+        this.#ui.renderDashboard(this.#state);
+        this.#ui.renderKataBelts(this.#katas, this.#state);
+        if (this.#state.activeTab === id) {
+            this.#ui.renderFocusHeader(this.#entries.get(id).kata, this.#state);
         }
     }
 
@@ -102,7 +113,7 @@ class App {
             return;
         }
 
-        this.#handleFeedback(result.correct, result.message);
+        this.#handleFeedback(id, result.correct, result.message);
         this.#loadNext(id);
     }
 
@@ -114,6 +125,7 @@ class App {
     #enterKata(id) {
         this.#setTab(id);
         this.#focusModeActive = true;
+        this.#ui.renderFocusHeader(this.#entries.get(id).kata, this.#state);
         this.#ui.showFocusMode();
     }
 

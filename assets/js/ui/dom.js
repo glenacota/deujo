@@ -30,6 +30,8 @@ export const dom = {
   focus: {
     view: byId('focusView'),
     backBtn: byId('backToMenuBtn'),
+    kataName: byId('focusKataName'),
+    kataBelt: byId('focusKataBelt'),
   },
 
   toast: {

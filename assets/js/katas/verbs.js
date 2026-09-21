@@ -19,6 +19,7 @@ const el = {
     checkBtn: byId('checkVerbBtn'),
     skipBtn: byId('skipVerbBtn'),
     teachBtn: byId('teachMeVerbBtn'),
+    cardBelt: byId('beltVerbs'),
     modal: byId('verbModal'),
     modalCloseBtn: byId('closeVerbModalBtn'),
     modalTitle: byId('modalVerbTitle'),
