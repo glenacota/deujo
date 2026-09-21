@@ -342,39 +342,39 @@
     </div>
 
     <header class="border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md sticky top-0 z-30 transition-colors duration-200">
-        <div class="max-w-4xl mx-auto px-4 py-2.5 flex items-center justify-between gap-4">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
             
             <!-- Left Half: Original Brand & Subtitle -->
             <div class="flex items-center space-x-3 shrink-0">
-                <div class="w-12 h-12 rounded-xl flex items-center justify-center font-black text-xl text-white shadow-lg shadow-indigo-500/30 german-flag-bg">
-                    <img src="./assets/logo.png" alt="Deujo: Deutsch-Dojo">
+                <div class="w-12 h-12 mr-1 rounded-xl flex items-center justify-center font-black text-xl text-white shadow-lg shadow-indigo-500/30 german-flag-bg">
+                    <img src="./assets/logo.png" title="Deujo: Deutsch-Dojo" aria-label="Deujo: Deutsch-Dojo">
                 </div>
                 <div>
-                    <h1 class="text-2xl mt-2 leading-none text-slate-900 dark:text-slate-100 uppercase"><span class="font-extrabold">Deu</span>jo</h1>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 block"><span class="font-extrabold">Deu</span>tsch-Do<span class="font-extrabold">jo</span></p>
+                    <h1 class="text-3xl dark:text-slate-100 uppercase"><span class="font-extrabold">Deu</span>jo</h1>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 block"><span class="font-extrabold">Deu</span>tsch-Do<span class="font-extrabold">jo</span></p>
                 </div>
             </div>
 
             <!-- Right Half: Stats & Integrated Progress Bar -->
             <div class="flex items-center justify-end gap-3 text-sm min-w-[150px]">
-                <div class="flex items-center space-x-1 cursor-help" title="Current Streak">
-                    <span class="text-xs">🔥</span>
-                    <span id="streakDisplay" class="font-bold text-slate-800 dark:text-slate-200">1</span>
-                    <span class="text-[10px] text-slate-400 font-bold hidden md:inline uppercase">Streak</span>
-                </div>
-                <div class="flex items-center space-x-1 cursor-help" title="Personal Record">
-                    <span class="text-xs">🏆</span>
-                    <span id="maxStreakDisplay" class="font-bold text-slate-800 dark:text-slate-200">1</span>
-                    <span class="text-[10px] text-slate-400 font-bold hidden md:inline uppercase">Max</span>
-                </div>
+                <div class="flex items-right justify-end gap-3">
+                    <div class="flex items-center space-x-1" title="Current Streak">
+                        <span class="text-xs">🔥</span>
+                        <span id="streakDisplay" class="font-bold text-slate-800 dark:text-slate-200">1</span>
+                        <span class="text-[10px] text-slate-400 font-bold hidden md:inline uppercase">Streak</span>
+                    </div>
+                    <div class="flex items-center space-x-1" title="Personal Record">
+                        <span class="text-xs">🏆</span>
+                        <span id="maxStreakDisplay" class="font-bold text-slate-800 dark:text-slate-200">1</span>
+                        <span class="text-[10px] text-slate-400 font-bold hidden md:inline uppercase">Max</span>
+                    </div>
             </div>
         </div>
     </header>
 
     <main class="max-w-4xl mx-auto px-4 pt-1 lg:pt-3 pb-3 lg:pb-10 flex-grow w-full flex flex-col">
         <!-- Dashboard: Kata Selection Grid -->
-        <div id="dashboardView" class="w-full mb-0 lg:mb-4">
-            <p class="uppercase text-slate-900 text-base font-semibold dark:text-slate-200 my-3 px-1">Select your Training Kata</p>
+        <div id="dashboardView" class="w-full mb-0 mt-10 lg:mb-4">
             <div class="grid grid-cols-2 gap-3">
                 <button id="tabNouns" type="button" class="text-left p-4 rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-950/80 hover:border-indigo-500 hover:shadow-lg transition-all active:scale-[0.99]">
                     <div class="flex items-center lg:mb-2">
@@ -402,16 +402,16 @@
                 
                 <button id="backToMenuBtn" type="button" class="flex text-xs px-2 py-0.5 bg-indigo-200 dark:bg-indigo-900/80 text-indigo-800 dark:text-indigo-200 rounded border border-indigo-300 dark:border-indigo-700/60 transition-colors">
                     <svg class="w-3.5 h-3.5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path></svg>
-                    KATAS
+                    DOJO
                 </button>
                 <span class="mx-2 text-slate-300 dark:text-slate-600">/</span>
-                <span id="focusKataName" class="text-slate-900 text-base font-semibold dark:text-slate-200 mr-3">Nouns</span>
+                <span id="focusKataName" class="text-slate-900 text-base font-extrabold dark:text-slate-200 mr-3">Nouns</span>
                 
             </div>
             <div class="flex items-right gap-2">
                 🥋
                 <span id="focusKataBelt" class="belt-label text-[10px] px-2 py-0.5 rounded-full font-semibold">White Belt</span>
-            </div>
+            </div>            
         </div>
 
         <!-- NOUN KATA -->
