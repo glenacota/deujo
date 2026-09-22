@@ -179,7 +179,6 @@ class App {
         window.addEventListener('keydown', (e) => {
             const slot = Number(e.key);
             if (slot >= 1 && slot <= this.#katas.length) this.#enterKata(this.#katas[slot - 1].id);
-            if (e.key === '!') dom.howTo.btn.click();
             if (e.key === 'Enter' || e.key === 'Return') {
                 this.#handleEnterKey(e);
             }
