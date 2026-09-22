@@ -21,7 +21,6 @@ export const dom = {
   },
 
   header: {
-    stats: byId('headerStats'),
     streak: byId('streakDisplay'),
     max: byId('maxStreakDisplay'),
     beltBar: byId('headerBeltBar'),

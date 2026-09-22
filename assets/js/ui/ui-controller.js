@@ -42,15 +42,6 @@ export class UiController {
     showDashboard() {
         dom.dashboardHome.view.classList.remove('hidden');
         dom.focus.view.classList.add('hidden');
-        this.hideHeaderStats();
-    }
-
-    showHeaderStats() {
-        dom.header.stats.className = 'flex flex-col items-end gap-1.5 w-full';
-    }
-
-    hideHeaderStats() {
-        dom.header.stats.className = 'hidden';
     }
 
     renderHeaderStats(kataId, state) {
@@ -60,7 +51,7 @@ export class UiController {
             dom.header.beltBar,
             state.getCurrentBelt(kataId),
             state.getBeltProgressPct(kataId),
-            'block lg:w-full w-3/5 text-[10px] px-2 py-0 text-center'
+            'text-[10px] px-2 py-0.5 my-1 text-center'
         );
     }
 
@@ -79,7 +70,7 @@ export class UiController {
                 kata.el.cardBelt,
                 state.getCurrentBelt(kata.id),
                 state.getBeltProgressPct(kata.id),
-                'block w-full text-[10px] px-2 py-0.5'
+                'block text-[10px] px-2 py-0.5'
             );
         });
     }
