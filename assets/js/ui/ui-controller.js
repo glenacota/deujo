@@ -84,7 +84,6 @@ export class UiController {
     showFocusMode() {
         dom.dashboardHome.view.classList.add('hidden');
         dom.focus.view.classList.remove('hidden');
-        this.showHeaderStats();
     }
 
     switchTab(katas, activeId) {

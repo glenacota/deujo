@@ -136,10 +136,10 @@ class App {
         event.preventDefault();
         const openModal = this.#ui.getOpenModal();
 
-        if (!openModal) {
-            this.#check(this.#state.activeTab);
+        if (this.#focusModeActive) {
+            openModal ? this.#ui.closeModal(openModal) : this.#check(this.#state.activeTab);
         } else {
-            this.#ui.closeModal(openModal);
+            if (openModal) this.#ui.closeModal(openModal);
         }
     }
 
@@ -170,15 +170,21 @@ class App {
         dom.share.btn.addEventListener('click', () => this.#ui.shareProgress(this.#state, this.#state.activeTab));
         dom.focus.backBtn.addEventListener('click', () => this.#exitToMenu());
 
+        dom.howTo.btn.addEventListener('click', () => this.#ui.openModal(dom.howTo.modal));
+        dom.howTo.closeBtn.addEventListener('click', () => this.#ui.closeModal(dom.howTo.modal));
+        dom.howTo.modal.addEventListener('click', (e) => {
+            if (e.target === dom.howTo.modal) this.#ui.closeModal(dom.howTo.modal);
+        });
+
         window.addEventListener('keydown', (e) => {
             const slot = Number(e.key);
             if (slot >= 1 && slot <= this.#katas.length) this.#enterKata(this.#katas[slot - 1].id);
-            if (!this.#focusModeActive) return;
-            if (e.key === '?') this.#entries.get(this.#state.activeTab)?.kata.el.teachBtn?.click();
-            if (e.key === '/') this.#loadNext(this.#state.activeTab);
+            if (e.key === '!') dom.howTo.btn.click();
             if (e.key === 'Enter' || e.key === 'Return') {
                 this.#handleEnterKey(e);
             }
+            if (e.key === '?' && this.#focusModeActive) this.#entries.get(this.#state.activeTab)?.kata.el.teachBtn?.click();
+            if (e.key === '/') this.#loadNext(this.#state.activeTab);
             if (e.key === 'Escape') this.#exitToMenu();
         });
     }
