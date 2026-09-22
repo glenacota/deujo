@@ -16,6 +16,10 @@ export const dom = {
     label: byId('muteLabel'),
   },
 
+  buyMeCoffee: {
+    btn: byId('buyMeCoffee'),
+  },
+
   dashboardHome: {
     view: byId('dashboardView'),
   },

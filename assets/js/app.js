@@ -169,6 +169,8 @@ class App {
         dom.modals.feedback.continueBtn.addEventListener('click', () => this.#ui.closeModal(dom.modals.feedback.root));
         dom.share.btn.addEventListener('click', () => this.#ui.shareProgress(this.#state, this.#state.activeTab));
         dom.focus.backBtn.addEventListener('click', () => this.#exitToMenu());
+        
+        dom.buyMeCoffee.btn.addEventListener('click', () => window.open('https://ko-fi.com/A6C827EN29', '_blank'));
 
         dom.howTo.btn.addEventListener('click', () => this.#ui.openModal(dom.howTo.modal));
         dom.howTo.closeBtn.addEventListener('click', () => this.#ui.closeModal(dom.howTo.modal));
