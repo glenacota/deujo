@@ -57,8 +57,8 @@ export class UiController {
 
     #applyBeltBadge(el, belt, pct, sizeClasses) {
         if (!el) return;
-        el.textContent = CONFIG.belts[belt];
-        el.dataset.label = CONFIG.belts[belt];
+        el.textContent = `${CONFIG.belts[belt]}\xa0\xa0\xa0belt`;
+        el.dataset.label = `${CONFIG.belts[belt]}\xa0\xa0\xa0belt`;
         el.className = `belt-label rounded-full belt-label-${belt} font-semibold uppercase tracking-wider ${sizeClasses}`;
         el.style.setProperty('--belt-progress', `${pct}%`);
     }
