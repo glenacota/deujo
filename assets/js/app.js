@@ -187,7 +187,16 @@ class App {
             }
             if (e.key === '?' && this.#focusModeActive) dom.actions.helpBtn.click();
             if (e.key === '/') this.#loadNext(this.#state.activeTab);
-            if (e.key === 'Escape') this.#exitToMenu();
+
+            const target = e.target;
+            const isTyping =
+                target instanceof HTMLInputElement ||
+                target instanceof HTMLTextAreaElement ||
+                target.isContentEditable;
+            if (e.key === 'Backspace' && this.#focusModeActive && !isTyping) {
+                e.preventDefault();
+                this.#exitToMenu();
+            }
         });
     }
 }
