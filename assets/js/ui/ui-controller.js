@@ -62,8 +62,8 @@ export class UiController {
 
     #applyBeltBadge(el, belt, pct, sizeClasses) {
         if (!el) return;
-        el.textContent = `${CONFIG.belts[belt]}\xa0\xa0\xa0belt`;
-        el.dataset.label = `${CONFIG.belts[belt]}\xa0\xa0\xa0belt`;
+        el.textContent = `${CONFIG.belts.labels[belt]}\xa0\xa0\xa0belt`;
+        el.dataset.label = `${CONFIG.belts.icons[belt]}\xa0\xa0\xa0belt`;
         el.className = `belt-label rounded-full belt-label-${belt} font-semibold uppercase tracking-wider ${sizeClasses}`;
         el.style.setProperty('--belt-progress', `${pct}%`);
     }
@@ -115,7 +115,8 @@ export class UiController {
     }
 
     showToast(isPromotion, belt, streak) {
-        const beltName = CONFIG.belts[Math.min(belt, CONFIG.belts.length - 1)];
+        const beltIndex = Math.min(belt, CONFIG.belts.labels.length - 1);
+        const beltName = `${CONFIG.belts.icons[beltIndex]} ${CONFIG.belts.labels[beltIndex]}`;
 
         if (isPromotion) {
             dom.toast.card.className = 'bg-amber-400 text-slate-950 px-6 py-4 border-4 border-slate-950 shadow-2xl flex items-center space-x-3 animate-bounce';
@@ -138,7 +139,7 @@ export class UiController {
         const belt = state.getCurrentBelt(kataId);
         const kataName = kataId.charAt(0).toUpperCase() + kataId.slice(1);
         const text = [
-            `🥋🇩🇪 I'm a ${CONFIG.belts[belt]} in the ${kataName} kata on Deujo.`,
+            `🥋🇩🇪 I'm a ${CONFIG.belts.labels[belt]} in the ${kataName} kata on Deujo.`,
             `Can you beat my ${state.maxStreakByKata[kataId]}-answer streak of flawless German mastery?`,
             'Join in: https://deujo.glenacota.me'
         ].join('\n');

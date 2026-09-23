@@ -19,6 +19,9 @@ export const CONFIG = Object.freeze({
   timing: {
     toastMs: 3500,
   },
-  belts: ['⚪️', '🟡', '🟠', '🟢', '🔵', '🟤', '⚫️'],
+  belts: {
+    icons: ['⚪️', '🟡', '🟠', '🟢', '🔵', '🟤', '⚫️'],
+    labels: ["White", "Yellow", "Orange", "Green", "Blue", "Brown", "Black"],
+  },
   feedbackType: { Success: 'Success', Error: 'Error', Warning: 'Warning' }
 });
