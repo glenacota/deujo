@@ -15,10 +15,6 @@ export class AudioEngine {
     return this.#muted;
   }
 
-  setMuted(muted) {
-    this.#muted = Boolean(muted);
-  }
-
   toggleMute() {
     this.#muted = !this.#muted;
     Storage.setBoolean(CONFIG.storage.mute, this.#muted);

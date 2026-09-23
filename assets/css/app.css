@@ -20,16 +20,6 @@
 
 canvas#fireworksCanvas { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 60; }
 
-dialog.modal-dialog {
-    margin: auto;
-    padding: 1rem;
-    border: none;
-    background: transparent;
-    max-width: 100vw;
-    max-height: 100vh;
-}
-dialog.modal-dialog::backdrop { background: rgb(2 6 23 / 0.8); backdrop-filter: blur(12px); }
-
 .modal-panel {
     display: flex; flex-direction: column; width: 100%; max-width: 42rem; max-height: 90vh; overflow: hidden;
     border: 1px solid rgb(226 232 240); border-radius: 1rem; background: white; box-shadow: 0 25px 50px -12px rgb(15 23 42 / 0.25);
@@ -95,7 +85,5 @@ html.dark .modal-key { border-color: rgb(51 65 85); background: rgb(30 41 59); c
 .belt-label-6 { --belt-fill-from: var(--belt-6-from); --belt-fill-to: var(--belt-6-to); --belt-fill-text: #f8fafc; }
 .belt-label { --belt-rest: #334155; --belt-rest-text: #f8fafc; }
 html:not(.dark) .belt-label { --belt-rest: #e2e8f0; --belt-rest-text: #334155; }
-
-.pixel-border { box-shadow: -4px 0 0 0 #000, 4px 0 0 0 #000, 0 -4px 0 0 #000, 0 4px 0 0 #000; }
 
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }

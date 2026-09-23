@@ -72,9 +72,4 @@ export class FxEngine {
     }
     this.#frameId = this.#particles.length > 0 ? requestAnimationFrame(() => this.#animate()) : null;
   }
-
-  destroy() {
-    window.removeEventListener('resize', this.#resizeHandler);
-    if (this.#frameId) cancelAnimationFrame(this.#frameId);
-  }
 }
