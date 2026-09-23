@@ -35,10 +35,10 @@
                 </div>
                 <div>
                     <p class="hidden lg:block text-sm text-slate-500 dark:text-slate-400"><span class="font-extrabold">Deu</span>tsch-Do<span class="font-extrabold">jo</span></p>
-                    <h1 class="lg:text-3xl text-2xl leading-2 dark:text-slate-100 uppercase"><span class="font-extrabold">Deu</span>jo</h1>
+                    <h1 class="lg:text-3xl text-2xl dark:text-slate-100 uppercase"><span class="font-extrabold">Deu</span>jo</h1>
                 </div>
             </div>
-            <div class="flex items-end justify-center gap-1.5 lg:text-xs text-[10px]">
+            <div class="flex items-center justify-center gap-1.5 lg:text-xs text-[10px]">
                 <button id="howToBtn" type="button" data-modal-open="howToModal" aria-label="How to Play" title="How to play (!)" class="bg-white dark:bg-slate-950/80 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900 p-1.5 lg:px-3 lg:py-2 rounded-xl border border-slate-300 dark:border-slate-800 shadow-md transition-all flex items-center space-x-2 font-semibold">
                     <kbd class="sm:inline-block text-sm lg:px-0.5 px-1 lg:py-0 py-0.5 leading-none bg-black dark:bg-white text-white dark:text-black rounded-xl">ℹ</kbd>
                     <span class="hidden lg:block">How To</span>
@@ -86,26 +86,26 @@
                 <span id="focusKataName" class="text-slate-900 text-base font-extrabold dark:text-slate-200 mr-3">Nouns</span>
                 
             </div>      
-            <div class="flex items-right justify-end lg:gap-3 gap-2 lg:text-xs text-[10px]">
+                <div class="flex items-center justify-end lg:gap-3 gap-2 lg:text-xs text-[10px]">
                 <div class="flex items-center space-x-1" title="Current Streak">
-                    <span class="">🔥</span>
+                    <span>🔥</span>
                     <span id="streakDisplay" class="font-bold text-slate-800 dark:text-slate-200">0</span>
                     <span class="text-slate-400 font-bold hidden md:inline uppercase">Streak</span>
                 </div>
-                <div class="flex items-center justify-end space-x-1" title="Personal Record">
-                    <span class="">🏆</span>
+                <div class="flex items-center space-x-1" title="Personal Record">
+                    <span>🏆</span>
                     <span id="maxStreakDisplay" class="font-bold text-slate-800 dark:text-slate-200">0</span>
                     <span class="text-slate-400 font-bold hidden md:inline uppercase">Max</span>
                 </div>
-                <div class="flex items-center justify-end space-x-1">
-                    <span class="">🥋</span>
+                <div class="flex items-center space-x-1">
+                    <span>🥋</span>
                     <span id="headerBeltBar" class="belt-label text-[10px] px-2 py-0.5 my-1 rounded-full font-semibold uppercase tracking-wider text-center" data-label="White Belt">White Belt</span>
                 </div>
             </div>  
         </div>
 
         <!-- NOUN KATA -->
-        <section id="nounSection" class="p-6 relative overflow-hidden transition-colors duration-200">
+        <section id="nounSection" class="p-6">
             <!-- Target Word Display -->
             <div class="text-center mt-4 mb-8 lg:mb-10">
                 <h2 id="nounWord" class="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight">Loading...</h2>
@@ -115,7 +115,7 @@
             <!-- Gender Selection Buttons -->
             <div class="max-w-xl mx-auto mb-6">
                 <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Select Noun Gender</label>
-                <div class="grid grid-cols-3 gap-3 max-w-xl mx-auto">
+                <div class="grid grid-cols-3 gap-3">
                     <button type="button" data-gender="der" class="gender-btn py-1 lg:py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-200 dark:bg-slate-950/80 text-blue-600 dark:text-blue-400 font-bold text-base hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500" aria-pressed="false">
                         der
                     </button>
@@ -137,7 +137,7 @@
         </section>
 
         <!-- VERB KATA -->
-        <section id="verbSection" class="py-8 px-6 relative overflow-hidden hidden transition-colors duration-200">
+        <section id="verbSection" class="hidden px-6 py-8">
             <!-- Target Verb Display -->
             <div class="text-center mt-4 mb-8 lg:mb-10">
                 <h2 id="verbInfinitive" class="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight">gehen</h2>
@@ -161,27 +161,27 @@
                 <span class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Fill in the Conjugations</span>
             </div>
             <div class="grid grid-cols-1 gap-1.5 lg:gap-3 max-w-xl mx-auto mb-6">
-                <div class="bg-slate-50 dark:bg-slate-900/80 flex items-center justify-between space-x-5">
+                    <div class="bg-slate-50 dark:bg-slate-900/80 flex items-center space-x-5">
                     <span class="text-sm font-bold text-purple-600 dark:text-purple-400 w-20">ich</span>
                     <input type="text" id="conj_ich" placeholder="e.g. gehe" autocomplete="off" class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-1 lg:py-1.5 text-lg text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-purple-500">
                 </div>
-                <div class="bg-slate-50 dark:bg-slate-900/80 flex items-center justify-between space-x-5">
+                <div class="bg-slate-50 dark:bg-slate-900/80 flex items-center space-x-5">
                     <span class="text-sm font-bold text-purple-600 dark:text-purple-400 w-20">du</span>
                     <input type="text" id="conj_du" placeholder="e.g. gehst" autocomplete="off" class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-1 lg:py-1.5 text-lg text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-purple-500">
                 </div>
-                <div class="bg-slate-50 dark:bg-slate-900/80 flex items-center justify-between space-x-5">
+                <div class="bg-slate-50 dark:bg-slate-900/80 flex items-center space-x-5">
                     <span class="text-sm font-bold text-purple-600 dark:text-purple-400 w-20">er/sie/es</span>
                     <input type="text" id="conj_er" placeholder="e.g. geht" autocomplete="off" class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-1 lg:py-1.5 text-lg text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-purple-500">
                 </div>
-                <div class="bg-slate-50 dark:bg-slate-900/80 flex items-center justify-between space-x-5">
+                <div class="bg-slate-50 dark:bg-slate-900/80 flex items-center space-x-5">
                     <span class="text-sm font-bold text-purple-600 dark:text-purple-400 w-20">wir</span>
                     <input type="text" id="conj_wir" placeholder="e.g. gehen" autocomplete="off" class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-1 lg:py-1.5 text-lg text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-purple-500">
                 </div>
-                <div class="bg-slate-50 dark:bg-slate-900/80 flex items-center justify-between space-x-5">
+                <div class="bg-slate-50 dark:bg-slate-900/80 flex items-center space-x-5">
                     <span class="text-sm font-bold text-purple-600 dark:text-purple-400 w-20">ihr</span>
                     <input type="text" id="conj_ihr" placeholder="e.g. geht" autocomplete="off" class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-1 lg:py-1.5 text-lg text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-purple-500">
                 </div>
-                <div class="bg-slate-50 dark:bg-slate-900/80 flex items-center justify-between space-x-5">
+                <div class="bg-slate-50 dark:bg-slate-900/80 flex items-center space-x-5">
                     <span class="text-sm font-bold text-purple-600 dark:text-purple-400 w-20">sie/Sie</span>
                     <input type="text" id="conj_sie" placeholder="e.g. gehen" autocomplete="off" class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-1 lg:py-1.5 text-lg text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-purple-500">
                 </div>
@@ -231,7 +231,7 @@
     <footer class="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 py-2 text-sm text-slate-500 transition-colors duration-200">
         <div class="max-w-4xl mx-auto px-4 flex items-center justify-between gap-3">
             <p class="text-center sm:text-left">
-                <a href="https://github.com/glenacota/deujo" target="_blank" rel="noopener noreferrer" class="gap-1 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors">
+                    <a href="https://github.com/glenacota/deujo" target="_blank" rel="noopener noreferrer" class="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors">
                     <svg class="w-3.5 h-3.5 fill-current inline" viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
                     <b>glenacota/deujo</b>
                 </a> &bull; 2026
