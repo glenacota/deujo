@@ -27,144 +27,11 @@
 
 <body class="bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-100 min-h-screen font-sans flex flex-col justify-between selection:bg-indigo-500 selection:text-white transition-colors duration-200">
 
-    <canvas id="fireworksCanvas"></canvas>
-
-    <!-- Milestone Banner Toast -->
-    <div id="milestoneToast" class="fixed top-8 left-1/2 -translate-x-1/2 z-[60] hidden transition-all transform duration-300">
-        <div id="milestoneToastCard" class="bg-amber-400 text-slate-950 text-base sm:text-sm px-6 py-4 rounded-none border-4 border-slate-950 shadow-2xl flex items-center space-x-3 animate-bounce">
-            <span id="milestoneToastIcon" class="text-xl">🥋</span>
-            <div>
-                <div id="milestoneToastTitle" class="font-bold uppercase tracking-wider">Belt Promoted!</div>
-                <div id="milestoneToastText" class="opacity-90">New Karate Belt Unlocked!</div>
-            </div>
-            <span id="milestoneToastEffect" class="text-xl">🎉</span>
-        </div>
-    </div>
-
-    <!-- Answer Feedback Modal -->
-    <div id="feedbackModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="feedbackModalTitle">
-        <div id="feedbackModalPanel" class="w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
-            <div class="flex items-center justify-between px-5 py-4">
-                <h2 id="feedbackModalTitle" class="text-lg font-bold text-center"></h2>
-            </div>
-            <div id="feedbackModalContent" class="px-5 py-6 text-center text-sm leading-relaxed"></div>
-            <div class="px-5 pb-5 flex justify-center">
-                <button id="feedbackContinueBtn" type="button" data-modal-close data-modal-initial-focus class="min-h-11 w-full sm:w-auto px-8 py-3 rounded-xl bg-black/10 hover:bg-black/20 border border-current/20 font-bold text-sm transition-colors active:scale-[0.98]" aria-label="Continue to the next word">Continue</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Conjugation Table Modal -->
-    <div id="verbModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modalVerbTitle">
-        <div class="modal-panel">
-            <div class="modal-header">
-                <h3 id="modalVerbTitle" class="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-3">
-                    gehen
-                </h3>
-                <button type="button" data-modal-close data-modal-initial-focus class="modal-close" aria-label="Close conjugation table">
-                    ✕
-                </button>
-            </div>
-            <div class="p-6 overflow-y-auto">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs lg:text-sm border-collapse">
-                        <thead>
-                            <tr class="border-b border-slate-200 dark:border-slate-800 text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
-                                <th class="py-3 px-3">Person</th>
-                                <th class="py-3 px-3">Präsens</th>
-                                <th class="py-3 px-3">Präteritum</th>
-                                <th class="py-3 px-3">Perfekt</th>
-                            </tr>
-                        </thead>
-                        <tbody id="modalTableBody" class="divide-y divide-slate-100 dark:divide-slate-800/60 font-mono"></tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="modal-footer">
-                Press <kbd class="modal-key">Esc</kbd> to close
-            </div>
-        </div>
-    </div>
-
-    <!-- Noun Teach Me Modal -->
-    <div id="nounModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="nounModalTitle">
-        <div class="modal-panel">
-            <div class="modal-header">
-                <h3 id="nounModalTitle" class="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-3">
-                    Plural Rules
-                </h3>
-                <button type="button" data-modal-close data-modal-initial-focus class="modal-close" aria-label="Close noun rules">
-                    ✕
-                </button>
-            </div>
-            <div class="p-6 overflow-y-auto space-y-4 text-sm text-slate-700 dark:text-slate-300">
-                <div class="p-4 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900/60 font-medium text-indigo-900 dark:text-indigo-200">
-                    ☠️ <strong class="text-indigo-600 dark:text-indigo-400">No single rule applies to all nouns</strong>. Every German noun has a specific plural form that must be learned along with its gender and singular form.
-                </div>
-                <ul>
-                    <li class="px-4 py-2">
-                        Feminine nouns usually take <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">-en</code> (or <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">-n</code> if ending in <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">-e</code>, <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">-el</code>, <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">-er</code>); almost none take an umlaut. <span class="italic text-slate-500">(e.g., die Frau → die Frauen)</span>.
-                    </li>
-                    <li class="px-4 py-2">
-                        Masculine & neuter nouns usually take <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">-e</code>, frequently with an umlaut on <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">a, o, u</code> <span class="italic text-slate-500">(e.g., der Baum → die Bäume)</span>.
-                    </li>
-                    <li class="px-4 py-2">
-                        -er, -el, -en endings usually take no extra ending; masculine/neuter often add an umlaut <span class="italic text-slate-500">(e.g., der Apfel → die Äpfel; das Zimmer → die Zimmer)</span>.
-                    </li>
-                    <li class="px-4 py-2">
-                        Vowels (<code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">a, o, u, i, y</code>) endings & many foreign words usually take an <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">-s</code> with no umlaut <span class="italic text-slate-500">(e.g., das Auto → die Autos)</span>.
-                    </li>
-                    <li class="px-4 py-2">
-                        Short neuter nouns usually take <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">-er</code> with an umlaut <span class="italic text-slate-500">(e.g., das Kind → die Kinder; das Buch → die Bücher)</span>.
-                    </li>
-                    <li class="px-4 py-2">
-                        Nouns ending in <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">-e</code>, <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">-ant</code>, <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">-ent</code>, <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">-ist</code>, <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">-or</code> for people/occupations almost always add <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">-n</code> or <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">-en</code> <span class="italic text-slate-500">(e.g., der Student → die Studenten)</span>.
-                    </li>
-                </ul>
-            </div>
-            <div class="modal-footer">
-                Press <kbd class="modal-key">Esc</kbd> to close
-            </div>
-        </div>
-    </div>
-
-    <!-- How To Play Modal -->
-    <div id="howToModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="howToModalTitle">
-        <div class="modal-panel">
-            <div class="modal-header">
-                <h3 id="howToModalTitle" class="text-2xl font-black text-slate-900 dark:text-white">How to Play</h3>
-                <button type="button" data-modal-close data-modal-initial-focus class="modal-close" aria-label="Close how to play">✕</button>
-            </div>
-            <div class="p-6 overflow-y-auto space-y-5 text-sm text-slate-700 dark:text-slate-300">
-                <div>
-                    <p>The <strong class="font-extrabold">DEUjo</strong> offers exercises - called <em>katas</em> - for different grammar areas (nouns, verbs, ...). Pick a kata on the landing page and start training.</p>
-                </div>
-                <div>
-                    <h4 class="font-bold text-slate-900 dark:text-white mb-1">Scoring</h4>
-                    <p>Each correct answer builds your streak and belt progress: ⚪ 🟡 🟠 🟢 🔵 🟤 ⚫. Every 5 correct answers earn you the next belt. Progress is tracked separately for each kata and saved locally.</p>
-                </div>
-                <div>
-                    <h4 class="font-bold text-slate-900 dark:text-white mb-1">Hotkeys</h4>
-                    <ul class="space-y-1">
-                        <li><kbd class="modal-key">1</kbd>&ndash;<kbd class="modal-key">8</kbd> Jump to a kata</li>
-                        <li><kbd class="modal-key">Enter</kbd> Check answer</li>
-                        <li><kbd class="modal-key">/</kbd> Skip current word</li>
-                        <li><kbd class="modal-key">?</kbd> Open kata tips</li>
-                        <li><kbd class="modal-key">Esc</kbd> Back to the landing page</li>
-                    </ul>
-                </div>
-            </div>
-            <div class="modal-footer">
-                Press <kbd class="modal-key">Esc</kbd> to close
-            </div>
-        </div>
-    </div>
-
     <header class="border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md sticky top-0 z-30 transition-colors duration-200">
         <div class="max-w-4xl mx-auto px-4 lg:py-2 py-1 flex items-center justify-between gap-4">
             <div class="flex items-center space-x-3 shrink-0">
                 <div class="lg:w-14 lg:h-14 w-8 h-8 my-2 lg:mr-1 mr-0.5 rounded-xl flex items-center justify-center font-black text-xl text-white shadow-lg shadow-indigo-500/30 german-flag-bg">
-                    <img src="./assets/logo.png" title="Deujo: Deutsch-Dojo" aria-label="Deujo: Deutsch-Dojo">
+                    <img src="./assets/logo.png" class="rounded-xl border border-slate-300 dark:border-slate-800 " title="Deujo: Deutsch-Dojo" aria-label="Deujo: Deutsch-Dojo">
                 </div>
                 <div>
                     <p class="hidden lg:block text-sm text-slate-500 dark:text-slate-400"><span class="font-extrabold">Deu</span>tsch-Do<span class="font-extrabold">jo</span></p>
@@ -383,6 +250,139 @@
             </div>
         </div>
     </footer>
+
+    <canvas id="fireworksCanvas"></canvas>
+
+    <!-- Milestone Banner Toast -->
+    <div id="milestoneToast" class="fixed top-8 left-1/2 -translate-x-1/2 z-[60] hidden transition-all transform duration-300">
+        <div id="milestoneToastCard" class="bg-amber-400 text-slate-950 text-base sm:text-sm px-6 py-4 rounded-none border-4 border-slate-950 shadow-2xl flex items-center space-x-3 animate-bounce">
+            <span id="milestoneToastIcon" class="text-xl">🥋</span>
+            <div>
+                <div id="milestoneToastTitle" class="font-bold uppercase tracking-wider">Belt Promoted!</div>
+                <div id="milestoneToastText" class="opacity-90">New Karate Belt Unlocked!</div>
+            </div>
+            <span id="milestoneToastEffect" class="text-xl">🎉</span>
+        </div>
+    </div>
+
+    <!-- Answer Feedback Modal -->
+    <div id="feedbackModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="feedbackModalTitle">
+        <div id="feedbackModalPanel" class="w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
+            <div class="flex items-center justify-between px-5 py-4">
+                <h2 id="feedbackModalTitle" class="text-lg font-bold text-center"></h2>
+            </div>
+            <div id="feedbackModalContent" class="px-5 py-6 text-center text-sm leading-relaxed"></div>
+            <div class="px-5 pb-5 flex justify-center">
+                <button id="feedbackContinueBtn" type="button" data-modal-close data-modal-initial-focus class="min-h-11 w-full sm:w-auto px-8 py-3 rounded-xl bg-black/10 hover:bg-black/20 border border-current/20 font-bold text-sm transition-colors active:scale-[0.98]" aria-label="Continue to the next word">Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conjugation Table Modal -->
+    <div id="verbModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modalVerbTitle">
+        <div class="modal-panel">
+            <div class="modal-header">
+                <h3 id="modalVerbTitle" class="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-3">
+                    gehen
+                </h3>
+                <button type="button" data-modal-close data-modal-initial-focus class="modal-close" aria-label="Close conjugation table">
+                    ✕
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs lg:text-sm border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-200 dark:border-slate-800 text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
+                                <th class="py-3 px-3">Person</th>
+                                <th class="py-3 px-3">Präsens</th>
+                                <th class="py-3 px-3">Präteritum</th>
+                                <th class="py-3 px-3">Perfekt</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modalTableBody" class="divide-y divide-slate-100 dark:divide-slate-800/60 font-mono"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                Press <kbd class="modal-key">Esc</kbd> to close
+            </div>
+        </div>
+    </div>
+
+    <!-- Noun Teach Me Modal -->
+    <div id="nounModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="nounModalTitle">
+        <div class="modal-panel">
+            <div class="modal-header">
+                <h3 id="nounModalTitle" class="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-3">
+                    Plural Rules
+                </h3>
+                <button type="button" data-modal-close data-modal-initial-focus class="modal-close" aria-label="Close noun rules">
+                    ✕
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto space-y-4 text-sm text-slate-700 dark:text-slate-300">
+                <div class="p-4 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900/60 font-medium text-indigo-900 dark:text-indigo-200">
+                    ☠️ <strong class="text-indigo-600 dark:text-indigo-400">No single rule applies to all nouns</strong>. Every German noun has a specific plural form that must be learned along with its gender and singular form.
+                </div>
+                <ul>
+                    <li class="px-4 py-2">
+                        Feminine nouns usually take <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">-en</code> (or <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">-n</code> if ending in <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">-e</code>, <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">-el</code>, <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">-er</code>); almost none take an umlaut. <span class="italic text-slate-500">(e.g., die Frau → die Frauen)</span>.
+                    </li>
+                    <li class="px-4 py-2">
+                        Masculine & neuter nouns usually take <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">-e</code>, frequently with an umlaut on <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">a, o, u</code> <span class="italic text-slate-500">(e.g., der Baum → die Bäume)</span>.
+                    </li>
+                    <li class="px-4 py-2">
+                        -er, -el, -en endings usually take no extra ending; masculine/neuter often add an umlaut <span class="italic text-slate-500">(e.g., der Apfel → die Äpfel; das Zimmer → die Zimmer)</span>.
+                    </li>
+                    <li class="px-4 py-2">
+                        Vowels (<code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">a, o, u, i, y</code>) endings & many foreign words usually take an <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">-s</code> with no umlaut <span class="italic text-slate-500">(e.g., das Auto → die Autos)</span>.
+                    </li>
+                    <li class="px-4 py-2">
+                        Short neuter nouns usually take <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">-er</code> with an umlaut <span class="italic text-slate-500">(e.g., das Kind → die Kinder; das Buch → die Bücher)</span>.
+                    </li>
+                    <li class="px-4 py-2">
+                        Nouns ending in <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">-e</code>, <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">-ant</code>, <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">-ent</code>, <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">-ist</code>, <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">-or</code> for people/occupations almost always add <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">-n</code> or <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">-en</code> <span class="italic text-slate-500">(e.g., der Student → die Studenten)</span>.
+                    </li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                Press <kbd class="modal-key">Esc</kbd> to close
+            </div>
+        </div>
+    </div>
+
+    <!-- How To Play Modal -->
+    <div id="howToModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="howToModalTitle">
+        <div class="modal-panel">
+            <div class="modal-header">
+                <h3 id="howToModalTitle" class="text-2xl font-black text-slate-900 dark:text-white">How to Play</h3>
+                <button type="button" data-modal-close data-modal-initial-focus class="modal-close" aria-label="Close how to play">✕</button>
+            </div>
+            <div class="p-6 overflow-y-auto space-y-5 text-sm text-slate-700 dark:text-slate-300">
+                <div>
+                    <p>The <strong class="font-extrabold">DEUjo</strong> offers exercises - called <em>katas</em> - for different grammar areas (nouns, verbs, ...). Pick a kata on the landing page and start training.</p>
+                </div>
+                <div>
+                    <h4 class="font-bold text-slate-900 dark:text-white mb-1">Scoring</h4>
+                    <p>Each correct answer builds your streak and belt progress: ⚪ 🟡 🟠 🟢 🔵 🟤 ⚫. Every 5 correct answers earn you the next belt. Progress is tracked separately for each kata and saved locally.</p>
+                </div>
+                <div>
+                    <h4 class="font-bold text-slate-900 dark:text-white mb-1">Hotkeys</h4>
+                    <ul class="space-y-1">
+                        <li><kbd class="modal-key">1</kbd>&ndash;<kbd class="modal-key">8</kbd> Jump to a kata</li>
+                        <li><kbd class="modal-key">Enter</kbd> Check answer</li>
+                        <li><kbd class="modal-key">/</kbd> Skip current word</li>
+                        <li><kbd class="modal-key">?</kbd> Open kata tips</li>
+                        <li><kbd class="modal-key">Esc</kbd> Back to the landing page</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                Press <kbd class="modal-key">Esc</kbd> to close
+            </div>
+        </div>
+    </div>
 
     <script type="module" src="./assets/js/app.js"></script>
 </body>
