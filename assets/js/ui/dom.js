@@ -38,6 +38,12 @@ export const dom = {
     kataName: byId('focusKataName'),
   },
 
+  actions: {
+    checkBtn: byId('checkAnswerBtn'),
+    skipBtn: byId('skipBtn'),
+    helpBtn: byId('helpBtn'),
+  },
+
   toast: {
     root: byId('milestoneToast'),
     icon: byId('milestoneToastIcon'),

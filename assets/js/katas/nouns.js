@@ -6,10 +6,6 @@ const byId = (id) => document.getElementById(id);
 const el = {
     tab: byId('tabNouns'),
     section: byId('nounSection'),
-    actions: byId('nounActions'),
-    checkBtn: byId('checkNounBtn'),
-    skipBtn: byId('skipNounBtn'),
-    teachBtn: byId('teachMeNounBtn'),
     cardBelt: byId('beltNouns'),
     word: byId('nounWord'),
     meaning: byId('nounMeaning'),
@@ -57,6 +53,7 @@ function mountRulesModal() {
 export default {
     id: 'nouns',
     datasetUrl: './assets/datasets/nouns.json',
+    helpModalId: 'nounModal',
     el,
 
     /** One-time wiring of controls owned by this kata only. */

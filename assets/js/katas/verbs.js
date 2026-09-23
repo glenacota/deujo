@@ -15,10 +15,6 @@ const PERSONS = [
 const el = {
     tab: byId('tabVerbs'),
     section: byId('verbSection'),
-    actions: byId('verbActions'),
-    checkBtn: byId('checkVerbBtn'),
-    skipBtn: byId('skipVerbBtn'),
-    teachBtn: byId('teachMeVerbBtn'),
     cardBelt: byId('beltVerbs'),
     modalTitle: null,
     modalTableBody: null,
@@ -77,6 +73,7 @@ function renderConjugationTable(verb) {
 export default {
     id: 'verbs',
     datasetUrl: './assets/datasets/verbs.json',
+    helpModalId: 'verbModal',
     el,
 
     mount() {

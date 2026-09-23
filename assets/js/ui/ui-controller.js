@@ -95,7 +95,6 @@ export class UiController {
         katas.forEach(({ id, el }) => {
             const isActive = id === activeId;
             el.section.classList.toggle('hidden', !isActive);
-            el.actions.classList.toggle('hidden', !isActive);
         });
     }
 
