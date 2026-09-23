@@ -151,6 +151,7 @@ class App {
 
         dom.share.btn.addEventListener('click', () => this.#ui.shareProgress(this.#state, this.#state.activeTab));
         dom.focus.backBtn.addEventListener('click', () => this.#exitToMenu());
+        dom.logo.addEventListener('click', () => this.#exitToMenu());
         
         dom.buyMeCoffee.btn.addEventListener('click', () => window.open('https://ko-fi.com/A6C827EN29', '_blank'));
 

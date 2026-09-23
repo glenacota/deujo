@@ -4,6 +4,8 @@
 const byId = (id) => document.getElementById(id);
 
 export const dom = {
+  logo: byId('logo'),
+  
   theme: {
     toggleBtn: byId('themeToggleBtn'),
     icon: byId('themeIcon'),
