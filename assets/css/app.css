@@ -3,6 +3,21 @@
     background: linear-gradient(to bottom, #000 0%, #000 33.33%, #DD0000 33.33%, #DD0000 66.66%, #FFCC00 66.66%, #FFCC00 100%);
 }
 
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    overflow-y: auto;
+    background: rgb(2 6 23 / 0.8);
+    backdrop-filter: blur(12px);
+}
+.modal-backdrop.hidden { display: none; }
+#milestoneToast { z-index: 70; }
+
 canvas#fireworksCanvas { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 60; }
 
 dialog.modal-dialog {
