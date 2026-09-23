@@ -135,15 +135,6 @@ class App {
         this.#ui.showDashboard();
     }
 
-    #handleEnterKey(event) {
-        event.preventDefault();
-        if (this.#modals.isOpen()) {
-            this.#modals.close();
-        } else if (this.#focusModeActive) {
-            this.#check(this.#state.activeTab);
-        }
-    }
-
     #bindEvents() {
         dom.theme.toggleBtn.addEventListener('click', () => this.#ui.toggleTheme());
         dom.mute.toggleBtn.addEventListener('click', () => {
@@ -165,16 +156,15 @@ class App {
 
         window.addEventListener('keydown', (e) => {
             if (this.#modals.handleKeydown(e)) return;
-            if (this.#modals.isOpen()) {
-                if (e.key === 'Enter' || e.key === 'Return') this.#handleEnterKey(e);
-                return;
+            if (e.key === 'Enter' || e.key === 'Return') {
+                if(this.#focusModeActive && !this.#modals.isOpen()) {
+                    e.preventDefault();
+                    this.#check(this.#state.activeTab);
+                }
             }
 
             const slot = Number(e.key);
             if (slot >= 1 && slot <= this.#katas.length) this.#enterKata(this.#katas[slot - 1].id);
-            if (e.key === 'Enter' || e.key === 'Return') {
-                this.#handleEnterKey(e);
-            }
             if (e.key === '?' && this.#focusModeActive) this.#entries.get(this.#state.activeTab)?.kata.el.teachBtn?.click();
             if (e.key === '/') this.#loadNext(this.#state.activeTab);
             if (e.key === 'Escape') this.#exitToMenu();
