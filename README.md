@@ -3,7 +3,7 @@
 [![Coded with GitHub Copilot](https://vibecoded.fyi/badges/flat/agents/github-copilot.svg)](https://vibecoded.fyi/) 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Step onto the tatami and sharpen your German grammar with [**Deujo** (Deutsch-Dojo)](https://www.glenacota.me/deujo).
+Step onto the tatami and sharpen your German grammar with [**Deujo** (Deutsch-Dojo)](https://deujo.glenacota.me).
 Deujo is a fluff-free training hall designed to build muscle memory for German nouns and verb conjugations.
 
 Just pure, disciplined practice.
