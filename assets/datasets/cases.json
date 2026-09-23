@@ -1,0 +1,37 @@
+[
+  { "w": "Der Mann ist müde.", "sentence": "{0} Mann ist müde.", "translation": "The man is tired.", "blanks": [{ "gender": "der", "case": "nom", "number": "sg", "articleType": "def" }] },
+  { "w": "Die Frau lacht.", "sentence": "{0} Frau lacht.", "translation": "The woman laughs.", "blanks": [{ "gender": "die", "case": "nom", "number": "sg", "articleType": "def" }] },
+  { "w": "Das Kind spielt im Garten.", "sentence": "{0} Kind spielt im Garten.", "translation": "The child plays in the garden.", "blanks": [{ "gender": "das", "case": "nom", "number": "sg", "articleType": "def" }] },
+  { "w": "Ein Hund bellt laut.", "sentence": "{0} Hund bellt laut.", "translation": "A dog barks loudly.", "blanks": [{ "gender": "der", "case": "nom", "number": "sg", "articleType": "indef" }] },
+  { "w": "Eine Katze schläft auf dem Sofa.", "sentence": "{0} Katze schläft auf dem Sofa.", "translation": "A cat sleeps on the sofa.", "blanks": [{ "gender": "die", "case": "nom", "number": "sg", "articleType": "indef" }] },
+  { "w": "Ein Auto steht vor dem Haus.", "sentence": "{0} Auto steht vor dem Haus.", "translation": "A car stands in front of the house.", "blanks": [{ "gender": "das", "case": "nom", "number": "sg", "articleType": "indef" }] },
+  { "w": "Die Kinder spielen im Park.", "sentence": "{0} Kinder spielen im Park.", "translation": "The children play in the park.", "blanks": [{ "gender": "das", "case": "nom", "number": "pl", "articleType": "def" }] },
+  { "w": "Ich sehe den Mann.", "sentence": "Ich sehe {0} Mann.", "translation": "I see the man.", "blanks": [{ "gender": "der", "case": "akk", "number": "sg", "articleType": "def" }] },
+  { "w": "Ich möchte den Termin reservieren.", "sentence": "Ich möchte {0} Termin reservieren.", "translation": "I would like to book an appointment.", "blanks": [{ "gender": "der", "case": "akk", "number": "sg", "articleType": "def" }] },
+  { "w": "Ich lese das Buch.", "sentence": "Ich lese {0} Buch.", "translation": "I read the book.", "blanks": [{ "gender": "das", "case": "akk", "number": "sg", "articleType": "def" }] },
+  { "w": "Ich brauche einen Stift.", "sentence": "Ich brauche {0} Stift.", "translation": "I need a pen.", "blanks": [{ "gender": "der", "case": "akk", "number": "sg", "articleType": "indef" }] },
+  { "w": "Sie kauft eine Tasche.", "sentence": "Sie kauft {0} Tasche.", "translation": "She buys a bag.", "blanks": [{ "gender": "die", "case": "akk", "number": "sg", "articleType": "indef" }] },
+  { "w": "Er sucht ein Zimmer.", "sentence": "Er sucht {0} Zimmer.", "translation": "He is looking for a room.", "blanks": [{ "gender": "das", "case": "akk", "number": "sg", "articleType": "indef" }] },
+  { "w": "Ich sehe die Bücher.", "sentence": "Ich sehe {0} Bücher.", "translation": "I see the books.", "blanks": [{ "gender": "das", "case": "akk", "number": "pl", "articleType": "def" }] },
+  { "w": "Ich helfe dem Mann.", "sentence": "Ich helfe {0} Mann.", "translation": "I help the man.", "blanks": [{ "gender": "der", "case": "dat", "number": "sg", "articleType": "def" }] },
+  { "w": "Ich gebe der Frau das Buch.", "sentence": "Ich gebe {0} Frau das Buch.", "translation": "I give the woman the book.", "blanks": [{ "gender": "die", "case": "dat", "number": "sg", "articleType": "def" }] },
+  { "w": "Ich danke dem Kind.", "sentence": "Ich danke {0} Kind.", "translation": "I thank the child.", "blanks": [{ "gender": "das", "case": "dat", "number": "sg", "articleType": "def" }] },
+  { "w": "Ich schreibe einem Freund einen Brief.", "sentence": "Ich schreibe {0} Freund einen Brief.", "translation": "I write a letter to a friend.", "blanks": [{ "gender": "der", "case": "dat", "number": "sg", "articleType": "indef" }] },
+  { "w": "Er hilft einer Frau.", "sentence": "Er hilft {0} Frau.", "translation": "He helps a woman.", "blanks": [{ "gender": "die", "case": "dat", "number": "sg", "articleType": "indef" }] },
+  { "w": "Sie gibt einem Kind einen Ball.", "sentence": "Sie gibt {0} Kind einen Ball.", "translation": "She gives a ball to a child.", "blanks": [{ "gender": "das", "case": "dat", "number": "sg", "articleType": "indef" }] },
+  { "w": "Ich helfe den Kindern.", "sentence": "Ich helfe {0} Kindern.", "translation": "I help the children.", "blanks": [{ "gender": "das", "case": "dat", "number": "pl", "articleType": "def" }] },
+  { "w": "Das ist das Auto des Mannes.", "sentence": "Das ist das Auto {0} Mannes.", "translation": "That is the man's car.", "blanks": [{ "gender": "der", "case": "gen", "number": "sg", "articleType": "def" }] },
+  { "w": "Die Farbe der Blume ist rot.", "sentence": "Die Farbe {0} Blume ist rot.", "translation": "The color of the flower is red.", "blanks": [{ "gender": "die", "case": "gen", "number": "sg", "articleType": "def" }] },
+  { "w": "Das ist das Spielzeug des Kindes.", "sentence": "Das ist das Spielzeug {0} Kindes.", "translation": "That is the child's toy.", "blanks": [{ "gender": "das", "case": "gen", "number": "sg", "articleType": "def" }] },
+  { "w": "Das sind die Spielsachen der Kinder.", "sentence": "Das sind die Spielsachen {0} Kinder.", "translation": "Those are the children's toys.", "blanks": [{ "gender": "das", "case": "gen", "number": "pl", "articleType": "def" }] },
+  { "w": "Der Mann gibt der Frau das Buch.", "sentence": "{0} Mann gibt {1} Frau {2} Buch.", "translation": "The man gives the woman the book.", "blanks": [
+      { "gender": "der", "case": "nom", "number": "sg", "articleType": "def" },
+      { "gender": "die", "case": "dat", "number": "sg", "articleType": "def" },
+      { "gender": "das", "case": "akk", "number": "sg", "articleType": "def" }
+  ] },
+  { "w": "Der Lehrer zeigt den Schülern das Bild.", "sentence": "{0} Lehrer zeigt {1} Schülern {2} Bild.", "translation": "The teacher shows the students the picture.", "blanks": [
+      { "gender": "der", "case": "nom", "number": "sg", "articleType": "def" },
+      { "gender": "das", "case": "dat", "number": "pl", "articleType": "def" },
+      { "gender": "das", "case": "akk", "number": "sg", "articleType": "def" }
+  ] }
+]

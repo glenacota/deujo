@@ -4,7 +4,7 @@
 
 import { createVerbKata } from './verbs.js';
 
-const MODULES = ['./nouns.js'];
+const MODULES = ['./nouns.js', './cases.js'];
 
 export async function loadKatas() {
     const loaded = await Promise.all(MODULES.map((path) => import(path)));
