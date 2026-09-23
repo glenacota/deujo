@@ -45,12 +45,6 @@ export const dom = {
     effect: byId('milestoneToastEffect'),
   },
 
-  howTo: {
-    btn: byId('howToBtn'),
-    modal: byId('howToModal'),
-    closeBtn: byId('closeHowToModalBtn'),
-  },
-
   modals: {
     feedback: {
       root: byId('feedbackModal'),

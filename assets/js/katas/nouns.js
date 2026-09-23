@@ -11,8 +11,6 @@ const el = {
     skipBtn: byId('skipNounBtn'),
     teachBtn: byId('teachMeNounBtn'),
     cardBelt: byId('beltNouns'),
-    modal: byId('nounModal'),
-    modalCloseBtn: byId('closeNounModalBtn'),
     word: byId('nounWord'),
     meaning: byId('nounMeaning'),
     plural: byId('pluralInput'),

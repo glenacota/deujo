@@ -8,6 +8,11 @@ import { dom } from './dom.js';
 export class UiController {
     #toastTimer = null;
     #shareStatusTimer = null;
+    #modals;
+
+    constructor(modals) {
+        this.#modals = modals;
+    }
 
     initTheme() {
         const stored = Storage.getTheme();
@@ -94,20 +99,6 @@ export class UiController {
         });
     }
 
-    openModal(modalElement) {
-        modalElement.classList.remove('hidden');
-    }
-
-    closeModal(modalElement) {
-        modalElement.classList.add('hidden');
-    }
-
-    /** @returns {HTMLElement|null} the currently open modal root, if any */
-    getOpenModal() {
-        return Array.from(document.querySelectorAll('.modal-backdrop'))
-            .find((root) => !root.classList.contains('hidden')) ?? null;
-    }
-
     showFeedback(result, message) {
         window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
 
@@ -122,8 +113,7 @@ export class UiController {
         dom.modals.feedback.title.textContent = result === CONFIG.feedbackType.Success ? '✅ Correct!' : '❌ Try again!';
         dom.modals.feedback.content.innerHTML = message;
 
-        this.openModal(dom.modals.feedback.root);
-        dom.modals.feedback.continueBtn.focus();
+        this.#modals.open(dom.modals.feedback.root);
     }
 
     showToast(isPromotion, belt, streak) {

@@ -7,6 +7,7 @@ import { FxEngine } from './services/fx-engine.js';
 import { GameState } from './state.js';
 import { loadKatas } from './katas/registry.js';
 import { dom } from './ui/dom.js';
+import { ModalController } from './ui/modal-controller.js';
 import { UiController } from './ui/ui-controller.js';
 
 class App {
@@ -14,6 +15,7 @@ class App {
     #fx;
     #state;
     #ui;
+    #modals;
     #katas = [];
     #entries = new Map(); // kata id -> { kata, dataset }
     #focusModeActive = false;
@@ -21,7 +23,8 @@ class App {
     constructor() {
         this.#audio = new AudioEngine();
         this.#fx = new FxEngine('fireworksCanvas');
-        this.#ui = new UiController();
+        this.#modals = new ModalController();
+        this.#ui = new UiController(this.#modals);
     }
 
     async bootstrap() {
@@ -134,12 +137,10 @@ class App {
 
     #handleEnterKey(event) {
         event.preventDefault();
-        const openModal = this.#ui.getOpenModal();
-
-        if (this.#focusModeActive) {
-            openModal ? this.#ui.closeModal(openModal) : this.#check(this.#state.activeTab);
-        } else {
-            if (openModal) this.#ui.closeModal(openModal);
+        if (this.#modals.isOpen()) {
+            this.#modals.close();
+        } else if (this.#focusModeActive) {
+            this.#check(this.#state.activeTab);
         }
     }
 
@@ -149,36 +150,26 @@ class App {
             const isMuted = this.#audio.toggleMute();
             this.#ui.toggleMute(isMuted);
         });
+        this.#modals.bind();
 
         this.#katas.forEach(({ id, el }) => {
             el.tab.addEventListener('click', () => this.#enterKata(id));
             el.checkBtn.addEventListener('click', () => this.#check(id));
             el.skipBtn.addEventListener('click', () => this.#loadNext(id));
-
-            if (!el.modal) return;
-            el.teachBtn?.addEventListener('click', () => this.#ui.openModal(el.modal));
-            el.modalCloseBtn?.addEventListener('click', () => this.#ui.closeModal(el.modal));
-            el.modal.addEventListener('click', (e) => {
-                if (e.target === el.modal) this.#ui.closeModal(el.modal);
-            });
         });
 
-        dom.modals.feedback.root.addEventListener('click', (e) => {
-            if (e.target === dom.modals.feedback.root) this.#ui.closeModal(dom.modals.feedback.root);
-        });
-        dom.modals.feedback.continueBtn.addEventListener('click', () => this.#ui.closeModal(dom.modals.feedback.root));
         dom.share.btn.addEventListener('click', () => this.#ui.shareProgress(this.#state, this.#state.activeTab));
         dom.focus.backBtn.addEventListener('click', () => this.#exitToMenu());
         
         dom.buyMeCoffee.btn.addEventListener('click', () => window.open('https://ko-fi.com/A6C827EN29', '_blank'));
 
-        dom.howTo.btn.addEventListener('click', () => this.#ui.openModal(dom.howTo.modal));
-        dom.howTo.closeBtn.addEventListener('click', () => this.#ui.closeModal(dom.howTo.modal));
-        dom.howTo.modal.addEventListener('click', (e) => {
-            if (e.target === dom.howTo.modal) this.#ui.closeModal(dom.howTo.modal);
-        });
-
         window.addEventListener('keydown', (e) => {
+            if (this.#modals.handleKeydown(e)) return;
+            if (this.#modals.isOpen()) {
+                if (e.key === 'Enter' || e.key === 'Return') this.#handleEnterKey(e);
+                return;
+            }
+
             const slot = Number(e.key);
             if (slot >= 1 && slot <= this.#katas.length) this.#enterKata(this.#katas[slot - 1].id);
             if (e.key === 'Enter' || e.key === 'Return') {
