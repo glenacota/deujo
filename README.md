@@ -8,6 +8,8 @@ Deujo is a fluff-free training hall designed to build muscle memory for German n
 
 Just pure, disciplined practice.
 
+> 🚨 ***DISCLAIMER**: I created this project with two goals: practice German grammar with this simple app, and practice vibe coding by building it.*
+
 
 ## ⛩️ Features
 - **Noun & Plural** sparring ring: Practice genders and plural forms side-by-side.
