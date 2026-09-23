@@ -177,8 +177,14 @@ class App {
                 }
             }
 
-            const slot = Number(e.key);
-            if (slot >= 1 && slot <= this.#katas.length) this.#enterKata(this.#katas[slot - 1].id);
+            if (e.shiftKey && e.code.startsWith('Digit')) {
+                const slot = Number(e.code.slice(5));
+
+                if (slot >= 1 && slot <= this.#katas.length) {
+                    e.preventDefault();
+                    this.#enterKata(this.#katas[slot - 1].id);
+                }
+            }
             if (e.key === '?' && this.#focusModeActive) dom.actions.helpBtn.click();
             if (e.key === '/') this.#loadNext(this.#state.activeTab);
             if (e.key === 'Escape') this.#exitToMenu();
