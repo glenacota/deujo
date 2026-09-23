@@ -260,6 +260,18 @@
         </div>
     </div>
 
+    <!-- Active Kata Help Modal -->
+    <div id="helpModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle">
+        <div class="modal-panel">
+            <div class="modal-header">
+                <h3 id="helpModalTitle" class="text-2xl font-black text-slate-900 dark:text-white"></h3>
+                <button type="button" data-modal-close data-modal-initial-focus class="modal-close" aria-label="Close help">✕</button>
+            </div>
+            <div id="helpModalContent" class="p-6 overflow-y-auto space-y-4 text-sm text-slate-700 dark:text-slate-300"></div>
+            <div class="modal-footer">Press <kbd class="modal-key">Esc</kbd> to close</div>
+        </div>
+    </div>
+
     <!-- How To Play Modal -->
     <div id="howToModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="howToModalTitle">
         <div class="modal-panel">

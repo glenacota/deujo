@@ -54,6 +54,11 @@ export const dom = {
   },
 
   modals: {
+    help: {
+      root: byId('helpModal'),
+      title: byId('helpModalTitle'),
+      content: byId('helpModalContent'),
+    },
     feedback: {
       root: byId('feedbackModal'),
       panel: byId('feedbackModalPanel'),

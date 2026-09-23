@@ -120,7 +120,11 @@ class App {
 
     #showHelpModal(id) {
         const kata = this.#entries.get(id)?.kata;
-        if (kata?.helpModalId) this.#modals.open(kata.helpModalId, dom.actions.helpBtn);
+        if (!kata?.getHelpContent) return;
+
+        dom.modals.help.title.textContent = kata.helpTitle ?? 'Help';
+        dom.modals.help.content.innerHTML = kata.getHelpContent(this.#state.current[id]);
+        this.#modals.open(dom.modals.help.root, dom.actions.helpBtn);
     }
 
     #setTab(tab) {
