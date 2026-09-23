@@ -135,7 +135,9 @@ class App {
     #enterKata(id) {
         this.#setTab(id);
         this.#focusModeActive = true;
-        this.#ui.renderFocusHeader(this.#entries.get(id).kata, this.#state);
+        const { kata } = this.#entries.get(id);
+        kata.render(this.#state.current[id]);
+        this.#ui.renderFocusHeader(kata, this.#state);
         this.#ui.showFocusMode();
     }
 

@@ -12,23 +12,36 @@ const PERSONS = [
     { key: 'sie', label: 'sie/Sie' },
 ];
 
-const el = {
-    tab: byId('tabVerbs'),
-    section: byId('verbSection'),
-    cardBelt: byId('beltVerbs'),
-    word: byId('verbInfinitive'),
-    meaning: byId('verbMeaning'),
-    tenseButtons: Array.from(document.querySelectorAll('.tense-btn')),
-    inputs: PERSONS.map((p) => byId(`conj_${p.key}`)),
+const TENSES = {
+    pres: { id: 'verbs-pres', label: 'Präsens' },
+    praet: { id: 'verbs-praet', label: 'Präteritum' },
+    perf: { id: 'verbs-perf', label: 'Perfekt' },
 };
 
-let tense = 'pres';
+function createElements(tenseKey) {
+    const suffix = tenseKey.charAt(0).toUpperCase() + tenseKey.slice(1);
 
-export default {
-    id: 'verbs',
-    datasetUrl: './assets/datasets/verbs.json',
-    helpTitle: 'Verb Conjugation',
-    el,
+    return {
+        tab: byId(`tabVerbs${suffix}`),
+        section: byId('verbSection'),
+        cardBelt: byId(`beltVerbs${suffix}`),
+        word: byId('verbInfinitive'),
+        meaning: byId('verbMeaning'),
+        tense: byId('verbTense'),
+        inputs: PERSONS.map((p) => byId(`conj_${p.key}`)),
+    };
+}
+
+export function createVerbKata(tenseKey) {
+    const tense = TENSES[tenseKey];
+    const el = createElements(tenseKey);
+
+    return {
+        id: tense.id,
+        name: `${tense.label}`,
+        datasetUrl: './assets/datasets/verbs.json',
+        helpTitle: `${tense.label} Conjugation`,
+        el,
 
     getHelpContent(verb) {
         if (!verb) return '';
@@ -39,18 +52,14 @@ export default {
                     <thead>
                         <tr class="border-b border-slate-200 dark:border-slate-800 text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
                             <th class="py-3 px-3">Person</th>
-                            <th class="py-3 px-3">Präsens</th>
-                            <th class="py-3 px-3">Präteritum</th>
-                            <th class="py-3 px-3">Perfekt</th>
+                            <th class="py-3 px-3">${tense.label}</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 font-mono">
                         ${PERSONS.map((person, index) => `
                             <tr>
                                 <td class="py-2 px-3 font-bold">${person.label}</td>
-                                <td class="py-2 px-3">${verb.pres[index] ?? '—'}</td>
-                                <td class="py-2 px-3">${verb.praet[index] ?? '—'}</td>
-                                <td class="py-2 px-3">${verb.perf[index] ?? '—'}</td>
+                                <td class="py-2 px-3">${verb[tenseKey][index] ?? '—'}</td>
                             </tr>
                         `).join('')}
                     </tbody>
@@ -59,24 +68,12 @@ export default {
         `;
     },
 
-    mount() {
-        el.tenseButtons.forEach((btn) =>
-            btn.addEventListener('click', () => {
-            tense = btn.dataset.tense;
-            el.tenseButtons.forEach((b) => {
-                const active = b.dataset.tense === tense;
-                b.classList.toggle('bg-purple-600', active);
-                b.classList.toggle('text-white', active);
-                b.classList.toggle('text-slate-600', !active);
-                b.classList.toggle('dark:text-slate-400', !active);
-            });
-            })
-        );
-    },
+        mount() {},
 
     render(verb) {
         el.word.textContent = verb.w;
         el.meaning.textContent = `🇬🇧 ${verb.m}`;
+            el.tense.textContent = tense.label;
         el.inputs.forEach((input) => {
             input.value = '';
             input.classList.remove('border-rose-500', 'border-emerald-500');
@@ -84,19 +81,20 @@ export default {
     },
 
     check(verb) {
-        const targetForms = verb[tense];
-        if (!targetForms) return null;
+            const targetForms = verb[tenseKey];
+            if (!targetForms) return null;
 
         const correct = el.inputs.every(
             (input, i) => input.value.trim().toLowerCase() === targetForms[i].toLowerCase()
         );
 
-        const message = correct
-            ? `Excellent! Perfect conjugation for "${verb.w}"!`
-            : 'Correct answer: '
-                + PERSONS.map((p, i) => `${p.label} <strong>${targetForms[i]}</strong>`).join(', ')
-                + '.';
+            const message = correct
+                ? `Excellent! Perfect ${tense.label} conjugation for "${verb.w}"!`
+                : 'Correct answer: '
+                    + PERSONS.map((p, i) => `${p.label} <strong>${targetForms[i]}</strong>`).join(', ')
+                    + '.';
 
-        return { correct, message };
-    },
-};
+            return { correct, message };
+        },
+    };
+}

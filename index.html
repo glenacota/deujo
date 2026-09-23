@@ -62,13 +62,29 @@
                     <div class="text-xs text-slate-500 dark:text-slate-400 lg:mt-0.5 mb-2">Gender &amp; Plural</div>
                     <span id="beltNouns" class="belt-label block w-full text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider">White Belt</span>
                 </button>
-                <button id="tabVerbs" type="button" class="text-left p-4 rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-950/80 hover:border-purple-500 hover:shadow-lg transition-all active:scale-[0.99]">
+                <button id="tabVerbsPres" type="button" class="text-left p-4 rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-950/80 hover:border-purple-500 hover:shadow-lg transition-all active:scale-[0.99]">
                     <div class="flex items-center lg:mb-2">
                         <kbd class="hidden sm:inline-block px-1.5 py-0.5 mr-4 text-xs bg-indigo-200 dark:bg-indigo-900/80 text-indigo-800 dark:text-indigo-200 rounded border border-indigo-300 dark:border-indigo-700/60 font-mono">2</kbd>
-                        <div class="font-black text-lg text-slate-900 dark:text-white">Verbs</div>
+                        <div class="font-black text-lg text-slate-900 dark:text-white">Präsens</div>
                     </div>
-                    <div class="text-xs text-slate-500 dark:text-slate-400 lg:mt-0.5 mb-2">Conjugation</div>
-                    <span id="beltVerbs" class="belt-label block w-full text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider">White Belt</span>
+                    <div class="text-xs text-slate-500 dark:text-slate-400 lg:mt-0.5 mb-2">Präsens Verbs Conjugation</div>
+                    <span id="beltVerbsPres" class="belt-label block w-full text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider">White Belt</span>
+                </button>
+                <button id="tabVerbsPraet" type="button" class="text-left p-4 rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-950/80 hover:border-purple-500 hover:shadow-lg transition-all active:scale-[0.99]">
+                    <div class="flex items-center lg:mb-2">
+                        <kbd class="hidden sm:inline-block px-1.5 py-0.5 mr-4 text-xs bg-indigo-200 dark:bg-indigo-900/80 text-indigo-800 dark:text-indigo-200 rounded border border-indigo-300 dark:border-indigo-700/60 font-mono">3</kbd>
+                        <div class="font-black text-lg text-slate-900 dark:text-white">Präteritum</div>
+                    </div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400 lg:mt-0.5 mb-2">Präteritum Tense Conjugation</div>
+                    <span id="beltVerbsPraet" class="belt-label block w-full text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider">White Belt</span>
+                </button>
+                <button id="tabVerbsPerf" type="button" class="text-left p-4 rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-950/80 hover:border-purple-500 hover:shadow-lg transition-all active:scale-[0.99]">
+                    <div class="flex items-center lg:mb-2">
+                        <kbd class="hidden sm:inline-block px-1.5 py-0.5 mr-4 text-xs bg-indigo-200 dark:bg-indigo-900/80 text-indigo-800 dark:text-indigo-200 rounded border border-indigo-300 dark:border-indigo-700/60 font-mono">4</kbd>
+                        <div class="font-black text-lg text-slate-900 dark:text-white">Perfekt</div>
+                    </div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400 lg:mt-0.5 mb-2">Perfekt Tense Conjugation</div>
+                    <span id="beltVerbsPerf" class="belt-label block w-full text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider">White Belt</span>
                 </button>
             </div>
         </div>
@@ -139,20 +155,9 @@
         <section id="verbSection" class="hidden px-6 py-8">
             <!-- Target Verb Display -->
             <div class="text-center mt-4 mb-8 lg:mb-10">
+                <p id="verbTense" class="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 mb-2">Präsens</p>
                 <h2 id="verbInfinitive" class="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight">gehen</h2>
                 <p id="verbMeaning" class="text-slate-500 dark:text-slate-400 text-base lg:text-lg mt-0 lg:mt-2 font-medium italic">to go</p>
-            </div>
-
-            <!-- Tense Selection Selector -->
-             <div class="max-w-xl mx-auto mb-2">
-                <span class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Choose the tense to train</span>
-            </div>
-            <div class="flex justify-center mb-5">
-                <div class="bg-slate-200 dark:bg-slate-950/80 border border-slate-300 dark:border-slate-800 p-1 rounded-xl flex space-x-1 max-w-xl w-full mx-auto">
-                    <button data-tense="pres" class="tense-btn flex-1 py-1.5 lg:py-3 rounded-lg text-sm lg:text-base font-bold transition-all bg-purple-600 text-white">Präsens</button>
-                    <button data-tense="praet" class="tense-btn flex-1 py-1.5 lg:py-3 rounded-lg text-sm lg:text-base font-bold transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200">Präteritum</button>
-                    <button data-tense="perf" class="tense-btn flex-1 py-1.5 lg:py-3 rounded-lg text-sm lg:text-base font-bold transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200">Perfekt</button>
-                </div>
             </div>
 
             <!-- Conjugation Grid Input -->
