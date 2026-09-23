@@ -27,7 +27,6 @@ function createElements(tenseKey) {
         cardBelt: byId(`beltVerbs${suffix}`),
         word: byId('verbInfinitive'),
         meaning: byId('verbMeaning'),
-        tense: byId('verbTense'),
         inputs: PERSONS.map((p) => byId(`conj_${p.key}`)),
     };
 }
@@ -73,7 +72,6 @@ export function createVerbKata(tenseKey) {
     render(verb) {
         el.word.textContent = verb.w;
         el.meaning.textContent = `🇬🇧 ${verb.m}`;
-            el.tense.textContent = tense.label;
         el.inputs.forEach((input) => {
             input.value = '';
             input.classList.remove('border-rose-500', 'border-emerald-500');
