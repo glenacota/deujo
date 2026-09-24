@@ -99,7 +99,7 @@ export default {
             input.spellcheck = false;
             input.dataset.index = part;
             input.size = 6;
-            input.className = 'case-blank-input inline-block w-20 mx-1 text-center bg-transparent border-b-2 border-indigo-400 dark:border-indigo-500 focus:outline-none focus:border-indigo-600 font-mono text-indigo-700 dark:text-indigo-300';
+            input.className = 'w-20 case-blank-input inline-block text-center bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-1 lg:py-1.5 text-xl text-indigo-700 dark:text-indigo-300 focus:outline-none focus:border-purple-500 leading-[2rem]';
             el.sentence.appendChild(input);
         });
 
