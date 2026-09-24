@@ -17,7 +17,7 @@ export class GameState {
   constructor(kataIds = []) {
     kataIds.forEach((id) => {
       this.current[id] = null;
-      this.history[id] = [];
+      this.history[id] = new Set();
       this.beltProgress[id] = Storage.getNumber(this.#beltKey(id));
       this.streakByKata[id] = Storage.getNumber(this.#streakKey(id));
       this.maxStreakByKata[id] = Storage.getNumber(this.#maxStreakKey(id));
@@ -84,14 +84,30 @@ export class GameState {
   /** Picks a random item the player hasn't seen recently */
   pickNext(dataset, type) {
     if (!dataset?.length) return null;
-    let pool = dataset.filter((item) => !this.history[type].includes(item.w));
+
+    const history = this.history[type];
+    let pool = dataset.filter((item) => !history.has(item.w));
+
     if (!pool.length) {
-      this.history[type] = this.history[type].slice(-CONFIG.rules.historyRecycle);
-      pool = dataset.filter((item) => !this.history[type].includes(item.w));
+      const kept = Array.from(history).slice(-CONFIG.rules.historyRecycle);
+      history.clear();
+      kept.forEach((w) => history.add(w));
+      pool = dataset.filter((item) => !history.has(item.w));
     }
+
+    if (!pool.length) {
+      history.clear();
+      pool = dataset;
+    }
+
     const chosen = pool[Math.floor(Math.random() * pool.length)];
-    this.history[type].push(chosen.w);
-    if (this.history[type].length > CONFIG.rules.historyMax) this.history[type].shift();
+    history.add(chosen.w);
+
+    if (history.size > CONFIG.rules.historyMax) {
+      const oldest = history.values().next().value;
+      history.delete(oldest);
+    }
+
     return chosen;
   }
 }
