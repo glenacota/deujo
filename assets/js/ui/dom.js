@@ -70,6 +70,5 @@ export const dom = {
 
   share: {
     btn: byId('progressShareBtn'),
-    status: byId('shareStatus'),
   },
 };

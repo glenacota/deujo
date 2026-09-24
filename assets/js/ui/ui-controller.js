@@ -148,19 +148,12 @@ export class UiController {
             await navigator.share({text});
         } else if (navigator.clipboard) {
             await navigator.clipboard.writeText(text);
-            this.#announceShare('Copied to clipboard!');
         }
         } catch {
         // User cancelled the native share sheet - not an error worth surfacing.
         }
     }
 
-    #announceShare(message) {
-        dom.share.status.textContent = message;
-        clearTimeout(this.#shareStatusTimer);
-        this.#shareStatusTimer = setTimeout(() => {
-            dom.share.status.textContent = '';
-        }, CONFIG.timing.toastMs);
-    }
+   
   
 }
