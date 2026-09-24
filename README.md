@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Step onto the tatami and sharpen your German grammar with [**Deujo** (Deutsch-Dojo)](https://deujo.glenacota.me).
-Deujo is a fluff-free training hall designed to build muscle memory for German nouns and verb conjugations.
+Deujo is a fluff-free training hall designed to build muscle memory for German grammar.
 
 Just pure, disciplined practice.
 
@@ -15,6 +15,7 @@ Just pure, disciplined practice.
 - **Noun & Plural** sparring ring: Practice genders and plural forms side-by-side.
 - **Verb Conjugation** katas: Train Präsens, Präteritum, and Perfekt tenses.
 - **Verb Charts**: Strike the `?` key to instantly view the complete conjugation chart.
+- **Cases**: Train Dativ, Genitiv, Akkusativ, and Nominativ cases.
 - **Just a spoon of gamification**: Unlock higher belt levels, hold your streak stance, and celebrate milestones.
 - **Kiai! Sound FX**.
 
@@ -41,7 +42,7 @@ python -m http.server 8000
 Point your browser to http://localhost:8000 and begin your first kata! 🚀
 
 ## 📜 Expand your Kataset
-Add new fuel to your arsenal by extending `./assets/nouns.json` or `./assets/verbs.json`.
+Add new fuel to your arsenal by extending `./assets/nouns.json` , `./assets/verbs.json`, or  `./assets/cases.json`.
 
 ## 🤗 OSS!
 Forged under the MIT License.
