@@ -170,8 +170,15 @@ class App {
 
         window.addEventListener('keydown', (e) => {
             if (this.#modals.handleKeydown(e)) return;
+
+            const target = e.target;
+            const isTyping =
+                target instanceof HTMLInputElement ||
+                target instanceof HTMLTextAreaElement ||
+                target.isContentEditable;
+
             if (e.key === 'Enter' || e.key === 'Return') {
-                if(this.#focusModeActive && !this.#modals.isOpen()) {
+                if (this.#focusModeActive && !this.#modals.isOpen() && !isTyping) {
                     e.preventDefault();
                     this.#check(this.#state.activeTab);
                 }
@@ -180,19 +187,20 @@ class App {
             if (e.shiftKey && e.code.startsWith('Digit')) {
                 const slot = Number(e.code.slice(5));
 
-                if (slot >= 1 && slot <= this.#katas.length) {
+                if (!isTyping && slot >= 1 && slot <= this.#katas.length) {
                     e.preventDefault();
                     this.#enterKata(this.#katas[slot - 1].id);
                 }
             }
-            if (e.key === '?' && this.#focusModeActive) dom.actions.helpBtn.click();
-            if (e.key === '/') this.#loadNext(this.#state.activeTab);
 
-            const target = e.target;
-            const isTyping =
-                target instanceof HTMLInputElement ||
-                target instanceof HTMLTextAreaElement ||
-                target.isContentEditable;
+            if (e.key === '?' && this.#focusModeActive && !isTyping) {
+                dom.actions.helpBtn.click();
+            }
+
+            if (e.key === '/' && !isTyping) {
+                this.#loadNext(this.#state.activeTab);
+            }
+
             if (e.key === 'Backspace' && this.#focusModeActive && !isTyping) {
                 e.preventDefault();
                 this.#exitToMenu();
