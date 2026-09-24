@@ -166,7 +166,7 @@ class App {
         dom.focus.backBtn.addEventListener('click', () => this.#exitToMenu());
         dom.logo.addEventListener('click', () => this.#exitToMenu());
         
-        dom.buyMeCoffee.btn.addEventListener('click', () => window.open('https://ko-fi.com/A6C827EN29', '_blank'));
+        dom.buyMeCoffee.btn.addEventListener('click', () => window.open('https://ko-fi.com/A6C827EN29', '_blank', 'noopener,noreferrer'));
 
         window.addEventListener('keydown', (e) => {
             if (this.#modals.handleKeydown(e)) return;
