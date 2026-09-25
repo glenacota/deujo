@@ -3,6 +3,7 @@
 
 import { CONFIG } from '../config.js';
 import { Storage } from '../services/storage.js';
+import { renderBeltBadge } from './belt-badge.js';
 import { dom } from './dom.js';
 
 // Full literal classnames kept here (not template-built) so Tailwind's build can find them.
@@ -77,10 +78,10 @@ export class UiController {
     renderHeaderStats(kataId, state) {
         dom.header.streak.textContent = state.streakByKata[kataId] ?? 0;
         dom.header.max.textContent = state.maxStreakByKata[kataId] ?? 0;
-        this.#applyBeltBadge(
+        renderBeltBadge(
             dom.header.beltBar,
-            state.getCurrentBelt(kataId),
-            state.getBeltProgressPct(kataId),
+            state,
+            kataId,
             'text-[10px] px-2 py-0.5 my-1 text-center'
         );
     }
@@ -88,14 +89,6 @@ export class UiController {
     /** Sole sink for dynamic HTML: callers must pre-escape any interpolated values via escapeHtml(). */
     #setTrustedHtml(el, html) {
         el.innerHTML = html;
-    }
-
-    #applyBeltBadge(el, belt, pct, sizeClasses) {
-        if (!el) return;
-        el.textContent = `${CONFIG.belts.labels[belt]}\xa0\xa0\xa0belt`;
-        el.dataset.label = `${CONFIG.belts.icons[belt]}\xa0\xa0\xa0belt`;
-        el.className = `belt-label rounded-full belt-label-${belt} font-semibold uppercase tracking-wider ${sizeClasses}`;
-        el.style.setProperty('--belt-progress', `${pct}%`);
     }
 
     /** Updates the belt badge shown on every kata card in the dashboard. */
@@ -106,10 +99,10 @@ export class UiController {
     }
 
     renderKataBelt(kata, state) {
-        this.#applyBeltBadge(
+        renderBeltBadge(
             kata.el.cardBelt,
-            state.getCurrentBelt(kata.id),
-            state.getBeltProgressPct(kata.id),
+            state,
+            kata.id,
             'block text-[10px] px-2 py-0.5'
         );
     }
