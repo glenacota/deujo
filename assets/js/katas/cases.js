@@ -75,19 +75,19 @@ function resolveArticle(blank) {
 function renderHelpTable(table, title) {
     const genders = ['der', 'die', 'das'];
     return `
-        <h4 class="font-bold text-slate-900 dark:text-white mb-1">${title}</h4>
+        <h4 class="font-bold text-slate-900 dark:text-white mb-1">${escapeHtml(title)}</h4>
         <table class="w-full text-left text-xs lg:text-sm border-collapse mb-4">
             <thead>
                 <tr class="border-b border-slate-200 dark:border-slate-800 text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
                     <th class="py-2 px-3">Fall</th>
-                    ${genders.map((g) => `<th class="py-2 px-3">${g}</th>`).join('')}
+                    ${genders.map((g) => `<th class="py-2 px-3">${escapeHtml(g)}</th>`).join('')}
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 font-mono">
                 ${Object.keys(CASE_LABELS).map((c) => `
                     <tr>
-                        <td class="py-2 px-3 font-bold">${CASE_LABELS[c]}</td>
-                        ${genders.map((g) => `<td class="py-2 px-3">${table[g][c]}</td>`).join('')}
+                        <td class="py-2 px-3 font-bold">${escapeHtml(CASE_LABELS[c])}</td>
+                        ${genders.map((g) => `<td class="py-2 px-3">${escapeHtml(table[g][c])}</td>`).join('')}
                     </tr>
                 `).join('')}
             </tbody>
@@ -112,8 +112,8 @@ export default {
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 font-mono">
                     ${Object.keys(CASE_LABELS).map((c) => `
                         <tr>
-                            <td class="py-2 px-3 font-bold">${CASE_LABELS[c]}</td>
-                            <td class="py-2 px-3">${PLURAL_DEFINITE[c]}</td>
+                            <td class="py-2 px-3 font-bold">${escapeHtml(CASE_LABELS[c])}</td>
+                            <td class="py-2 px-3">${escapeHtml(PLURAL_DEFINITE[c])}</td>
                         </tr>
                     `).join('')}
                 </tbody>

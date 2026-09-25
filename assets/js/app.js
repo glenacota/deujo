@@ -152,8 +152,7 @@ class App {
         const kata = this.#entries.get(id)?.kata;
         if (!kata?.getHelpContent) return;
 
-        dom.modals.help.title.textContent = kata.helpTitle;
-        dom.modals.help.content.innerHTML = kata.getHelpContent(this.#state.current[id]);
+        this.#ui.showHelpContent(kata.helpTitle, kata.getHelpContent(this.#state.current[id]));
         this.#modals.open(dom.modals.help.root, dom.actions.helpBtn);
     }
 

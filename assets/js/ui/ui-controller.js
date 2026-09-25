@@ -60,6 +60,11 @@ export class UiController {
         );
     }
 
+    /** Sole sink for dynamic HTML: callers must pre-escape any interpolated values via escapeHtml(). */
+    #setTrustedHtml(el, html) {
+        el.innerHTML = html;
+    }
+
     #applyBeltBadge(el, belt, pct, sizeClasses) {
         if (!el) return;
         el.textContent = `${CONFIG.belts.labels[belt]}\xa0\xa0\xa0belt`;
@@ -130,9 +135,14 @@ export class UiController {
             [CONFIG.feedbackType.Warning]: '⚠️ Check your answer',
         };
         dom.modals.feedback.title.textContent = titles[result] ?? titles[CONFIG.feedbackType.Warning];
-        dom.modals.feedback.content.innerHTML = message;
+        this.#setTrustedHtml(dom.modals.feedback.content, message);
 
         this.#modals.open(dom.modals.feedback.root);
+    }
+
+    showHelpContent(title, html) {
+        dom.modals.help.title.textContent = title;
+        this.#setTrustedHtml(dom.modals.help.content, html);
     }
 
     showToast(isPromotion, belt, streak) {
