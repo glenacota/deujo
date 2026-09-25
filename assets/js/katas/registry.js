@@ -2,15 +2,17 @@
 // The only place that knows which katas exist.
 // To add one: drop `<name>.js` in this folder and append its path here.
 
-import { createNounKata } from './nouns.js';
-import { createCaseKata } from './cases.js';
-import { createVerbKata } from './verbs.js';
+import { createNounKata } from './nouns/kata.js';
+import { createCaseKata } from './cases/kata.js';
+import { createVerbKata } from './verbs/verb.js';
 
 /**
  * @typedef {Object} Kata
  * @property {string} id
  * @property {string} name
+ * @property {string} subtitle
  * @property {string} datasetUrl
+ * @property {string} accent Tailwind color name driving the dashboard card's hover border.
  * @property {{kata: HTMLElement|null, section: HTMLElement|null, cardBelt: HTMLElement|null}} el
  * @property {function(): void} mount
  * @property {function(Object): void} render
@@ -21,7 +23,7 @@ import { createVerbKata } from './verbs.js';
 
 /** @param {Kata} kata */
 export function validateKata(kata) {
-    const requiredStrings = ['id', 'name', 'datasetUrl'];
+    const requiredStrings = ['id', 'name', 'subtitle', 'datasetUrl', 'accent'];
     const requiredFunctions = ['mount', 'render', 'check', 'getHelpContent', 'validateDataset'];
 
     if (!kata || typeof kata !== 'object') {

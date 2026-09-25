@@ -1,8 +1,9 @@
 // kata/verbs.js
 // Self-contained verb-conjugation kata.
 
-import { escapeHtml } from '../services/utility.js';
-import { PERSONS, TENSES } from '../services/grammar.js';
+import { escapeHtml } from '../../services/utility.js';
+import { PERSONS, TENSES } from '../../services/grammar.js';
+import { getVerbManifest } from './manifest.js';
 
 const byId = (id) => document.getElementById(id);
 
@@ -30,9 +31,7 @@ export function validateVerbDataset(dataset) {
     });
 }
 
-function mountElements(el, tenseKey) {
-    const suffix = tenseKey.charAt(0).toUpperCase() + tenseKey.slice(1);
-
+function mountElements(el, tenseKey, manifest) {
     // Each tense gets its own cloned DOM subtree (no shared ids), so multiple
     // tenses can coexist/be visible simultaneously in the future.
     const template = byId('verbSectionTemplate');
@@ -42,9 +41,9 @@ function mountElements(el, tenseKey) {
     section.dataset.tense = tenseKey;
     container.appendChild(fragment);
 
-    el.kata = byId(`kataVerbs${suffix}`);
+    el.kata = byId(`kata-${manifest.id}`);
     el.section = section;
-    el.cardBelt = byId(`beltVerbs${suffix}`);
+    el.cardBelt = byId(`belt-${manifest.id}`);
     el.word = section.querySelector('[data-role="word"]');
     el.meaning = section.querySelector('[data-role="meaning"]');
     el.inputs = PERSONS.map((p) => section.querySelector(`[data-role="conj_${p.key}"]`));
@@ -52,14 +51,12 @@ function mountElements(el, tenseKey) {
 
 export function createVerbKata(tenseKey) {
     const tense = TENSES[tenseKey];
+    const manifest = getVerbManifest(tenseKey);
     const el = { kata: null, section: null, cardBelt: null, word: null, meaning: null, inputs: [] };
 
     return {
-        id: tense.id,
-        name: `${tense.label}`,
-        datasetUrl: './assets/datasets/verbs.json',
+        ...manifest,
         validateDataset: validateVerbDataset,
-        helpTitle: `${tense.label} Conjugation`,
         el,
 
     getHelpContent(verb) {
@@ -89,7 +86,7 @@ export function createVerbKata(tenseKey) {
 
         mount() {
             if (el.kata) return;
-            mountElements(el, tenseKey);
+            mountElements(el, tenseKey, manifest);
         },
 
     render(verb) {

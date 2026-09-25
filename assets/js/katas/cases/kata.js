@@ -1,8 +1,9 @@
 // kata/cases.js
 // Self-contained case-declension kata: fill-in-the-blank sentences with inline inputs.
 
-import { escapeHtml } from '../services/utility.js';
-import { CASE_LABELS, DEFINITE, INDEFINITE, PLURAL_DEFINITE } from '../services/grammar.js';
+import { escapeHtml } from '../../services/utility.js';
+import { CASE_LABELS, DEFINITE, INDEFINITE, PLURAL_DEFINITE } from '../../services/grammar.js';
+import { casesManifest } from './manifest.js';
 
 const byId = (id) => document.getElementById(id);
 
@@ -82,11 +83,8 @@ export function createCaseKata() {
     let inputs = [];
 
     return {
-        id: 'cases',
-        name: 'Kasus',
-        datasetUrl: './assets/datasets/cases.json',
+        ...casesManifest,
         validateDataset: validateCaseDataset,
-        helpTitle: 'Declension Chart',
         el,
 
         getHelpContent() {
@@ -116,9 +114,9 @@ export function createCaseKata() {
             const section = fragment.querySelector('[data-role="section"]');
             container.appendChild(fragment);
 
-            el.kata = byId('kataCases');
+            el.kata = byId('kata-cases');
             el.section = section;
-            el.cardBelt = byId('beltCases');
+            el.cardBelt = byId('belt-cases');
             el.sentence = section.querySelector('[data-role="sentence"]');
             el.translation = section.querySelector('[data-role="translation"]');
         },

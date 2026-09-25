@@ -1,7 +1,8 @@
 // kata/nouns.js
 // Self-contained noun kata: elements, local selection state, rendering, validation.
 
-import { escapeHtml } from '../services/utility.js';
+import { escapeHtml } from '../../services/utility.js';
+import { nounsManifest } from './manifest.js';
 
 const byId = (id) => document.getElementById(id);
 
@@ -49,11 +50,8 @@ export function createNounKata() {
     let gender = null;
 
     return {
-        id: 'nouns',
-        name: 'Nouns',
-        datasetUrl: './assets/datasets/nouns.json',
+        ...nounsManifest,
         validateDataset: validateNounDataset,
-        helpTitle: 'Plural Rules',
         el,
 
         getHelpContent() {
@@ -82,9 +80,9 @@ export function createNounKata() {
             const section = fragment.querySelector('[data-role="section"]');
             container.appendChild(fragment);
 
-            el.kata = byId('kataNouns');
+            el.kata = byId('kata-nouns');
             el.section = section;
-            el.cardBelt = byId('beltNouns');
+            el.cardBelt = byId('belt-nouns');
             el.word = section.querySelector('[data-role="word"]');
             el.meaning = section.querySelector('[data-role="meaning"]');
             el.plural = section.querySelector('[data-role="plural"]');

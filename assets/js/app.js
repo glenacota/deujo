@@ -42,6 +42,7 @@ class App {
     #init() {
         this.#ui.initTheme();
         this.#ui.toggleMute(this.#audio.isMuted());
+        this.#ui.renderDashboard(this.#katas);
         this.#katas.forEach((kata) => {
             kata.mount();
             this.#loadNext(kata.id);

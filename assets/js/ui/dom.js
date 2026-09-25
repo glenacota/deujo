@@ -24,6 +24,8 @@ export const dom = {
 
   dashboardHome: {
     view: byId('dashboardView'),
+    grid: byId('dashboardGrid'),
+    cardTemplate: byId('kataCardTemplate'),
   },
 
   header: {
