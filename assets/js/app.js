@@ -225,7 +225,7 @@ class App {
                 dom.actions.helpBtn.click();
             }
 
-            if (e.shiftKey && e.code.startsWith('Digit')) {
+            if (e.shiftKey && e.code.startsWith('Digit') &&  !this.#modals.isOpen()) {
                 const slot = Number(e.code.slice(5));
 
                 if (!isTyping && slot >= 1 && slot <= this.#katas.length) {
@@ -234,7 +234,7 @@ class App {
                 }
             }
 
-            if (e.key === '/' && !isTyping) {
+            if (e.key === '/' && !isTyping && !this.#modals.isOpen()) {
                 e.preventDefault();
                 this.#loadNext(this.#state.activeKata);
             }
