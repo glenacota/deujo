@@ -5,43 +5,12 @@ import { CONFIG } from '../config.js';
 import { renderBeltBadge } from './belt-badge.js';
 import { dom } from './dom.js';
 
-// Full literal classnames kept here (not template-built) so Tailwind's build can find them.
-const ACCENT_HOVER_CLASSES = {
-    indigo: 'hover:border-indigo-500',
-    teal: 'hover:border-teal-500',
-    purple: 'hover:border-purple-500',
-};
-
 export class UiController {
     #toastTimer = null;
-    #shareStatusTimer = null;
     #modals;
 
     constructor(modals) {
         this.#modals = modals;
-    }
-
-    showDashboard() {
-        dom.dashboardHome.view.classList.remove('hidden');
-        dom.focus.view.classList.add('hidden');
-    }
-
-    /** Builds the dashboard cards from each kata's manifest (id/name/subtitle/accent). */
-    renderDashboard(katas) {
-        const { grid, cardTemplate } = dom.dashboardHome;
-        grid.innerHTML = '';
-
-        katas.forEach((kata, index) => {
-            const fragment = cardTemplate.content.cloneNode(true);
-            const card = fragment.querySelector('[data-role="card"]');
-            card.id = `kata-${kata.id}`;
-            card.classList.add(ACCENT_HOVER_CLASSES[kata.accent] ?? ACCENT_HOVER_CLASSES.indigo);
-            card.querySelector('[data-role="hotkey"]').textContent = `⇧ + ${index + 1}`;
-            card.querySelector('[data-role="name"]').textContent = kata.name;
-            card.querySelector('[data-role="subtitle"]').textContent = kata.subtitle;
-            card.querySelector('[data-role="belt"]').id = `belt-${kata.id}`;
-            grid.appendChild(fragment);
-        });
     }
 
     renderHeaderStats(kataId, state) {
@@ -87,11 +56,6 @@ export class UiController {
         dom.focus.kataName.textContent = kata.name;
         this.renderHeaderStats(kata.id, state);
      }
-
-    showFocusMode() {
-        dom.dashboardHome.view.classList.add('hidden');
-        dom.focus.view.classList.remove('hidden');
-    }
 
     showKataStatus(message, type = 'loading') {
         if (!dom.focus.status) return;
@@ -185,7 +149,4 @@ export class UiController {
             // User cancelled the native share sheet - not an error worth surfacing.
         }
     }
-
-   
-  
 }

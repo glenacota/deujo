@@ -6,6 +6,7 @@ import { AudioEngine } from './services/audio-engine.js';
 import { FxEngine } from './services/fx-engine.js';
 import { GameState } from './state.js';
 import { loadKatas } from './katas/registry.js';
+import { DashboardView } from './ui/dashboard-view.js';
 import { dom } from './ui/dom.js';
 import { ModalController } from './ui/modal-controller.js';
 import { ThemeController } from './ui/theme-controller.js';
@@ -16,6 +17,7 @@ class App {
     #fx;
     #state;
     #ui;
+    #dashboard;
     #theme;
     #modals;
     #katas = [];
@@ -27,6 +29,7 @@ class App {
         this.#fx = new FxEngine('fireworksCanvas');
         this.#modals = new ModalController();
         this.#ui = new UiController(this.#modals);
+        this.#dashboard = new DashboardView();
         this.#theme = new ThemeController();
     }
 
@@ -45,14 +48,14 @@ class App {
     #init() {
         this.#theme.initTheme();
         this.#theme.toggleMute(this.#audio.isMuted());
-        this.#ui.renderDashboard(this.#katas);
+        this.#dashboard.render(this.#katas);
         this.#katas.forEach((kata) => {
             kata.mount(dom.focus.sections);
             this.#loadNext(kata.id);
         });
         this.#ui.renderKataBelts(this.#katas, this.#state);
         this.#bindEvents();
-        this.#ui.showDashboard();
+        this.#dashboard.showDashboard();
     }
 
     #handleFeedback(id, isCorrect, message) {
@@ -170,7 +173,7 @@ class App {
         this.#focusModeActive = true;
         const { kata } = this.#entries.get(id);
         this.#ui.renderFocusHeader(kata, this.#state);
-        this.#ui.showFocusMode();
+        this.#dashboard.showFocusMode();
 
         const dataset = await this.#loadDataset(id);
         if (!dataset || this.#state.activeKata !== id) return;
@@ -183,7 +186,7 @@ class App {
 
     #exitToMenu() {
         this.#focusModeActive = false;
-        this.#ui.showDashboard();
+        this.#dashboard.showDashboard();
     }
 
     #bindEvents() {
