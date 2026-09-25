@@ -108,7 +108,12 @@ export class UiController {
         };
 
         dom.modals.feedback.panel.className = basePanelClasses + (themeStyles[result] ?? themeStyles[CONFIG.feedbackType.Warning]);
-        dom.modals.feedback.title.textContent = result === CONFIG.feedbackType.Success ? '✅ Correct!' : '❌ Try again!';
+        const titles = {
+            [CONFIG.feedbackType.Success]: '✅ Correct!',
+            [CONFIG.feedbackType.Error]: '❌ Try again!',
+            [CONFIG.feedbackType.Warning]: '⚠️ Check your answer',
+        };
+        dom.modals.feedback.title.textContent = titles[result] ?? titles[CONFIG.feedbackType.Warning];
         dom.modals.feedback.content.innerHTML = message;
 
         this.#modals.open(dom.modals.feedback.root);
