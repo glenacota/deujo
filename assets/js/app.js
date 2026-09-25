@@ -8,6 +8,7 @@ import { GameState } from './state.js';
 import { loadKatas } from './katas/registry.js';
 import { dom } from './ui/dom.js';
 import { ModalController } from './ui/modal-controller.js';
+import { ThemeController } from './ui/theme-controller.js';
 import { UiController } from './ui/ui-controller.js';
 
 class App {
@@ -15,6 +16,7 @@ class App {
     #fx;
     #state;
     #ui;
+    #theme;
     #modals;
     #katas = [];
     #entries = new Map(); // kata id -> { kata, dataset }
@@ -25,6 +27,7 @@ class App {
         this.#fx = new FxEngine('fireworksCanvas');
         this.#modals = new ModalController();
         this.#ui = new UiController(this.#modals);
+        this.#theme = new ThemeController();
     }
 
     async bootstrap() {
@@ -40,8 +43,8 @@ class App {
     }
 
     #init() {
-        this.#ui.initTheme();
-        this.#ui.toggleMute(this.#audio.isMuted());
+        this.#theme.initTheme();
+        this.#theme.toggleMute(this.#audio.isMuted());
         this.#ui.renderDashboard(this.#katas);
         this.#katas.forEach((kata) => {
             kata.mount(dom.focus.sections);
@@ -184,10 +187,10 @@ class App {
     }
 
     #bindEvents() {
-        dom.theme.toggleBtn.addEventListener('click', () => this.#ui.toggleTheme());
+        dom.theme.toggleBtn.addEventListener('click', () => this.#theme.toggleTheme());
         dom.mute.toggleBtn.addEventListener('click', () => {
             const isMuted = this.#audio.toggleMute();
-            this.#ui.toggleMute(isMuted);
+            this.#theme.toggleMute(isMuted);
         });
         this.#modals.bind();
 
