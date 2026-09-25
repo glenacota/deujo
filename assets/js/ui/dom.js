@@ -67,6 +67,10 @@ export const dom = {
       content: byId('feedbackModalContent'),
       continueBtn: byId('feedbackContinueBtn'),
     },
+    error: {
+      root: byId('errorModal'),
+      content: byId('errorModalContent'),
+    },
   },
 
   share: {

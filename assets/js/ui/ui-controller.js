@@ -85,6 +85,12 @@ export class UiController {
         });
     }
 
+    /** Shows the on-brand error modal, replacing the bootstrap failure alert(). */
+    showFatalError(message) {
+        dom.modals.error.content.textContent = message;
+        this.#modals.open(dom.modals.error.root);
+    }
+
     /** Updates the kata name in focus mode and the belt/streak stats in the header. */
     renderFocusHeader(kata, state) {
         dom.focus.kataName.textContent = kata.name;

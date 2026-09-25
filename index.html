@@ -21,7 +21,6 @@
     </script>
 
     <!-- Fonts self-hosting policy: retained on Google Fonts CDN (low-risk, cacheable, no runtime JS). Preconnect to cut handshake latency. -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self'; script-src 'self'; connect-src 'self'; base-uri 'self'; frame-ancestors 'none';">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -272,6 +271,16 @@
                 <div id="milestoneToastText" class="opacity-90">New Karate Belt Unlocked!</div>
             </div>
             <span id="milestoneToastEffect" class="text-xl">🎉</span>
+        </div>
+    </div>
+
+    <!-- Fatal Error Modal -->
+    <div id="errorModal" class="modal-backdrop hidden" role="alertdialog" aria-modal="true" aria-labelledby="errorModalTitle">
+        <div class="modal-panel">
+            <div class="modal-header">
+                <h3 id="errorModalTitle" class="text-2xl font-black text-slate-900 dark:text-white">⚠️ Something went wrong</h3>
+            </div>
+            <div id="errorModalContent" class="p-6 text-sm text-slate-700 dark:text-slate-300" aria-live="assertive"></div>
         </div>
     </div>
 

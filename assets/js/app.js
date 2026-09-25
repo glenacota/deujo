@@ -35,7 +35,7 @@ class App {
             this.#init();
         } catch (error) {
             console.error('Error loading language datasets:', error);
-            alert('Could not load vocabulary data. Please check your network or local server.');
+            this.#ui.showFatalError('Could not load vocabulary data. Please check your network or local server.');
         }
     }
 
