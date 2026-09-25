@@ -10,7 +10,9 @@ import { DashboardView } from './ui/dashboard-view.js';
 import { dom } from './ui/dom.js';
 import { FocusView } from './ui/focus-view.js';
 import { ModalController } from './ui/modal-controller.js';
+import { ShareController } from './ui/share-controller.js';
 import { ThemeController } from './ui/theme-controller.js';
+import { ToastController } from './ui/toast-controller.js';
 import { UiController } from './ui/ui-controller.js';
 
 class App {
@@ -21,6 +23,8 @@ class App {
     #dashboard;
     #focus;
     #theme;
+    #toast;
+    #share;
     #modals;
     #katas = [];
     #entries = new Map(); // kata id -> { kata, dataset }
@@ -34,6 +38,8 @@ class App {
         this.#dashboard = new DashboardView();
         this.#focus = new FocusView();
         this.#theme = new ThemeController();
+        this.#toast = new ToastController();
+        this.#share = new ShareController(this.#modals);
     }
 
     async bootstrap() {
@@ -72,7 +78,7 @@ class App {
             if (isPromoted) {
                 this.#audio.playMilestone();
                 this.#fx.triggerShow();
-                this.#ui.showToast(true, this.#state.getCurrentBelt(id), this.#state.streak);
+                this.#toast.show(true, this.#state.getCurrentBelt(id), this.#state.streak);
             } else {
                 this.#audio.playCorrect();
             }
@@ -82,7 +88,7 @@ class App {
 
             if (isDemoted) {
                 this.#audio.playDemotion();
-                this.#ui.showToast(false, this.#state.getCurrentBelt(id));
+                this.#toast.show(false, this.#state.getCurrentBelt(id));
             } else {
                 this.#audio.playWrong();
             }
@@ -208,7 +214,7 @@ class App {
         dom.actions.skipBtn.addEventListener('click', () => this.#loadNext(this.#state.activeKata));
         dom.actions.helpBtn.addEventListener('click', () => this.#showHelpModal(this.#state.activeKata));
 
-        dom.share.btn.addEventListener('click', () => this.#ui.shareProgress(this.#state, this.#state.activeKata));
+        dom.share.btn.addEventListener('click', () => this.#share.shareProgress(this.#state, this.#state.activeKata));
         dom.focus.backBtn.addEventListener('click', () => this.#exitToMenu());
         dom.logo.addEventListener('click', () => this.#exitToMenu());
         

@@ -6,7 +6,6 @@ import { renderBeltBadge } from './belt-badge.js';
 import { dom } from './dom.js';
 
 export class UiController {
-    #toastTimer = null;
     #modals;
 
     constructor(modals) {
@@ -67,47 +66,4 @@ export class UiController {
         this.#setTrustedHtml(dom.modals.help.content, html);
     }
 
-    showToast(isPromotion, belt, streak) {
-        const beltIndex = Math.min(belt, CONFIG.belts.labels.length - 1);
-        const beltName = `${CONFIG.belts.icons[beltIndex]} ${CONFIG.belts.labels[beltIndex]}`;
-
-        if (isPromotion) {
-            dom.toast.card.className = 'bg-amber-400 text-slate-950 px-6 py-4 border-4 border-slate-950 shadow-2xl flex items-center space-x-3 animate-bounce';
-            dom.toast.title.textContent = 'Belt Promoted!';
-            dom.toast.text.textContent = `🔥 Streak ${streak}! Promoted to ${beltName}!`;
-            dom.toast.effect.textContent = '🎉';
-        } else {
-            dom.toast.card.className = 'bg-rose-400 text-rose-950 px-6 py-4 border-4 border-rose-950 shadow-2xl flex items-center space-x-3';
-            dom.toast.title.textContent = 'Belt Demoted';
-            dom.toast.text.textContent = `Progress dropped to ${beltName}.`;
-            dom.toast.effect.textContent = '🚧';
-        }
-        
-        dom.toast.root.classList.remove('hidden');
-        clearTimeout(this.#toastTimer);
-        this.#toastTimer = setTimeout(() => dom.toast.root.classList.add('hidden'), CONFIG.timing.toastMs);
-    }
-
-    async shareProgress(state, kataId) {
-        const belt = state.getCurrentBelt(kataId);
-        const kataName = kataId.charAt(0).toUpperCase() + kataId.slice(1);
-        const text = [
-            `🥋🇩🇪 I'm a ${CONFIG.belts.labels[belt]} in the ${kataName} kata on Deujo.`,
-            `Can you beat my ${state.maxStreakByKata[kataId]}-answer streak of flawless German mastery?`,
-            'Join in: https://deujo.glenacota.me'
-        ].join('\n');
-        try {
-            if (navigator.share) {
-                await navigator.share({text});
-            } else if (navigator.clipboard) {
-                await navigator.clipboard.writeText(text);
-            } else {
-                dom.modals.share.text.value = text;
-                this.#modals.open(dom.modals.share.root, dom.share.btn);
-                dom.modals.share.text.select();
-            }
-        } catch {
-            // User cancelled the native share sheet - not an error worth surfacing.
-        }
-    }
 }
