@@ -34,7 +34,13 @@ class App {
                 this.#katas.map(async (kata) => {
                     const response = await fetch(kata.datasetUrl);
                     if (!response.ok) throw new Error(`Failed to load dataset for "${kata.id}".`);
-                    return response.json();
+                    const dataset = await response.json();
+                    try {
+                        kata.validateDataset(dataset);
+                    } catch (error) {
+                        throw new Error(`Invalid dataset for "${kata.id}": ${error.message}`);
+                    }
+                    return dataset;
                 })
             );
             this.#katas.forEach((kata, i) =>

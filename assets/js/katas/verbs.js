@@ -18,6 +18,30 @@ const TENSES = {
     perf: { id: 'verbs-perf', label: 'Perfekt' },
 };
 
+export function validateVerbDataset(dataset) {
+    if (!Array.isArray(dataset) || dataset.length === 0) {
+        throw new Error('dataset must be a non-empty array');
+    }
+
+    dataset.forEach((verb, index) => {
+        const validTenses = Object.keys(TENSES).every((tense) =>
+            Array.isArray(verb?.[tense]) &&
+            verb[tense].length === PERSONS.length &&
+            verb[tense].every((form) => typeof form === 'string' && form.trim())
+        );
+        if (
+            !verb ||
+            typeof verb.w !== 'string' ||
+            !verb.w.trim() ||
+            typeof verb.m !== 'string' ||
+            !verb.m.trim() ||
+            !validTenses
+        ) {
+            throw new Error(`entry ${index} must contain non-empty w, m, and six forms for each tense`);
+        }
+    });
+}
+
 function createElements(tenseKey) {
     const suffix = tenseKey.charAt(0).toUpperCase() + tenseKey.slice(1);
 
@@ -48,6 +72,7 @@ export function createVerbKata(tenseKey) {
         id: tense.id,
         name: `${tense.label}`,
         datasetUrl: './assets/datasets/verbs.json',
+        validateDataset: validateVerbDataset,
         helpTitle: `${tense.label} Conjugation`,
         el,
 

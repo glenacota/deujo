@@ -3,6 +3,28 @@
 
 const byId = (id) => document.getElementById(id);
 
+export function validateNounDataset(dataset) {
+    if (!Array.isArray(dataset) || dataset.length === 0) {
+        throw new Error('dataset must be a non-empty array');
+    }
+
+    dataset.forEach((noun, index) => {
+        const validGender = ['der', 'die', 'das'].includes(noun?.g);
+        const validPlural = typeof noun?.p === 'string';
+        if (
+            !noun ||
+            typeof noun.w !== 'string' ||
+            !noun.w.trim() ||
+            typeof noun.m !== 'string' ||
+            !noun.m.trim() ||
+            !validGender ||
+            !validPlural
+        ) {
+            throw new Error(`entry ${index} must contain non-empty w and m strings, string p, and valid g`);
+        }
+    });
+}
+
 const el = {
     tab: byId('tabNouns'),
     section: byId('nounSection'),
@@ -26,6 +48,7 @@ function setGenderActive(btn, active) {
 export default {
     id: 'nouns',
     datasetUrl: './assets/datasets/nouns.json',
+    validateDataset: validateNounDataset,
     helpTitle: 'Plural Rules',
     el,
 

@@ -3,6 +3,42 @@
 
 const byId = (id) => document.getElementById(id);
 
+const VALID_CASES = ['nom', 'akk', 'dat', 'gen'];
+const VALID_GENDERS = ['der', 'die', 'das'];
+const VALID_ARTICLE_TYPES = ['def', 'indef'];
+
+export function validateCaseDataset(dataset) {
+    if (!Array.isArray(dataset) || dataset.length === 0) {
+        throw new Error('dataset must be a non-empty array');
+    }
+
+    dataset.forEach((item, index) => {
+        const validBlanks = Array.isArray(item?.blanks) && item.blanks.length > 0 && item.blanks.every((blank) =>
+            VALID_CASES.includes(blank?.case) &&
+            VALID_GENDERS.includes(blank?.gender) &&
+            ['sg', 'pl'].includes(blank?.number) &&
+            VALID_ARTICLE_TYPES.includes(blank?.articleType)
+        );
+        const placeholderCount = typeof item?.sentence === 'string'
+            ? (item.sentence.match(/\{\d+\}/g) ?? []).length
+            : 0;
+
+        if (
+            !item ||
+            typeof item.w !== 'string' ||
+            !item.w.trim() ||
+            typeof item.sentence !== 'string' ||
+            !item.sentence.trim() ||
+            typeof item.translation !== 'string' ||
+            !item.translation.trim() ||
+            !validBlanks ||
+            placeholderCount !== item.blanks.length
+        ) {
+            throw new Error(`entry ${index} has invalid sentence, translation, or blank definitions`);
+        }
+    });
+}
+
 const el = {
     tab: byId('tabCases'),
     section: byId('caseSection'),
@@ -60,6 +96,7 @@ function renderHelpTable(table, title) {
 export default {
     id: 'cases',
     datasetUrl: './assets/datasets/cases.json',
+    validateDataset: validateCaseDataset,
     helpTitle: 'Declension Chart',
     el,
 
