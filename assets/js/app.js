@@ -223,6 +223,7 @@ class App {
 
         bindKeyboardShortcuts({
             modals: this.#modals,
+            inputRoot: dom.focus.sections,
             isFocusModeActive: () => this.#focusModeActive,
             kataCount: () => this.#katas.length,
             enterKataAtSlot: (slot) => this.#enterKata(this.#katas[slot - 1].id),

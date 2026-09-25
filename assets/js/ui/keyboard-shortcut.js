@@ -8,6 +8,7 @@ function isTypingTarget(target) {
 
 export function bindKeyboardShortcuts({
     modals,
+    inputRoot,
     isFocusModeActive,
     kataCount,
     enterKataAtSlot,
@@ -16,6 +17,32 @@ export function bindKeyboardShortcuts({
     loadNext,
     exitToMenu,
 }) {
+    inputRoot.addEventListener('beforeinput', (event) => {
+        if (event.inputType !== 'insertText' || event.data !== ':' || event.isComposing) return;
+
+        const input = event.target;
+        if (!(input instanceof HTMLInputElement) || input.type !== 'text' || input.readOnly || input.disabled) return;
+
+        const start = input.selectionStart;
+        const end = input.selectionEnd;
+        if (start === null || start !== end) return;
+
+        const match = input.value.slice(0, start).match(/(ss|[aou])$/i);
+        if (!match) return;
+
+        const shortcut = match[0].toLowerCase();
+        const replacements = { a: 'ä', o: 'ö', u: 'ü', ss: 'ß' };
+        const replacement = match[0] === 'SS'
+            ? 'ẞ'
+            : match[0] === match[0].toUpperCase()
+                ? replacements[shortcut].toUpperCase()
+                : replacements[shortcut];
+
+        event.preventDefault();
+        input.setRangeText(replacement, start - match[0].length, start, 'end');
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+
     const shortcuts = [
         {
             matches: (event) => event.key === 'Enter' && isFocusModeActive() && !modals.isOpen(),
