@@ -44,5 +44,14 @@ Point your browser to http://localhost:8000 and begin your first kata! 🚀
 ## 📜 Expand your Kataset
 Add new fuel to your arsenal by extending `./assets/nouns.json` , `./assets/verbs.json`, or  `./assets/cases.json`.
 
+## 🎨 Rebuilding the stylesheet
+The production Tailwind CSS is a committed, static file (`assets/css/tailwind.css`) generated at build time — no CDN compiler runs in the browser. Node is only needed if you change Tailwind classes or `tailwind.config.js`.
+
+```console
+npm install
+npm run build:css     # one-shot production build (minified)
+npm run watch:css      # rebuild on file changes while developing
+```
+
 ## 🤗 OSS!
 Forged under the MIT License.

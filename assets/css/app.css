@@ -66,7 +66,7 @@ html.dark .modal-key { border-color: rgb(51 65 85); background: rgb(30 41 59); c
 .belt-label-6 { background: linear-gradient(90deg, var(--belt-6-from), var(--belt-6-to)); color: #f8fafc; }
 
 .belt-label {
-    position: relative; display: inline-block; overflow: hidden; color: transparent;
+    position: relative; overflow: hidden; color: transparent;
     background: linear-gradient(90deg, var(--belt-fill-from) 0%, var(--belt-fill-to) var(--belt-progress), var(--belt-rest) var(--belt-progress), var(--belt-rest) 100%);
 }
 .belt-label::before, .belt-label::after {
