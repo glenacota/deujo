@@ -178,7 +178,7 @@ class App {
                 }
             }
 
-            if (e.key === '?' && this.#focusModeActive && !isTyping) {
+            if (e.key === '?' && this.#focusModeActive) {
                 dom.actions.helpBtn.click();
             }
 
