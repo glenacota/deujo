@@ -171,22 +171,22 @@ class App {
         window.addEventListener('keydown', (e) => {
             if (this.#modals.handleKeydown(e)) return;
 
-            if (e.key === 'Enter' || e.key === 'Return') {
+            const target = e.target;
+            const isTyping =
+                target instanceof HTMLInputElement ||
+                target instanceof HTMLTextAreaElement ||
+                target.isContentEditable;
+
+            if (e.key === 'Enter') {
                 if (this.#focusModeActive && !this.#modals.isOpen()) {
                     e.preventDefault();
                     this.#check(this.#state.activeTab);
                 }
             }
 
-            if (e.key === '?' && this.#focusModeActive) {
+            if (e.key === '?' && this.#focusModeActive && !isTyping) {
                 dom.actions.helpBtn.click();
             }
-
-            const target = e.target;
-            const isTyping =
-                target instanceof HTMLInputElement ||
-                target instanceof HTMLTextAreaElement ||
-                target.isContentEditable;
 
             if (e.shiftKey && e.code.startsWith('Digit')) {
                 const slot = Number(e.code.slice(5));
@@ -198,6 +198,7 @@ class App {
             }
 
             if (e.key === '/' && !isTyping) {
+                e.preventDefault();
                 this.#loadNext(this.#state.activeTab);
             }
 
