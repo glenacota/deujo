@@ -13,17 +13,6 @@ export class UiController {
         this.#modals = modals;
     }
 
-    renderHeaderStats(kataId, state) {
-        dom.header.streak.textContent = state.streakByKata[kataId] ?? 0;
-        dom.header.max.textContent = state.maxStreakByKata[kataId] ?? 0;
-        renderBeltBadge(
-            dom.header.beltBar,
-            state,
-            kataId,
-            'text-[10px] px-2 py-0.5 my-1 text-center'
-        );
-    }
-
     /** Sole sink for dynamic HTML: callers must pre-escape any interpolated values via escapeHtml(). */
     #setTrustedHtml(el, html) {
         el.innerHTML = html;
@@ -49,34 +38,6 @@ export class UiController {
     showFatalError(message) {
         dom.modals.error.content.textContent = message;
         this.#modals.open(dom.modals.error.root);
-    }
-
-    /** Updates the kata name in focus mode and the belt/streak stats in the header. */
-    renderFocusHeader(kata, state) {
-        dom.focus.kataName.textContent = kata.name;
-        this.renderHeaderStats(kata.id, state);
-     }
-
-    showKataStatus(message, type = 'loading') {
-        if (!dom.focus.status) return;
-
-        dom.focus.status.textContent = message;
-        dom.focus.status.className = type === 'error'
-            ? 'mt-3 text-center text-sm font-semibold text-rose-600 dark:text-rose-400'
-            : 'mt-3 text-center text-sm font-semibold text-slate-500 dark:text-slate-400';
-        dom.focus.status.classList.remove('hidden');
-    }
-
-    clearKataStatus() {
-        if (!dom.focus.status) return;
-        dom.focus.status.textContent = '';
-        dom.focus.status.classList.add('hidden');
-    }
-
-    switchKata(katas, activeId) {
-        const activeSection = katas.find(({ id }) => id === activeId)?.el.section;
-        const sections = new Set(katas.map(({ el }) => el.section));
-        sections.forEach((section) => section.classList.toggle('hidden', section !== activeSection));
     }
 
     showFeedback(result, message) {

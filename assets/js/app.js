@@ -8,6 +8,7 @@ import { GameState } from './state.js';
 import { loadKatas } from './katas/registry.js';
 import { DashboardView } from './ui/dashboard-view.js';
 import { dom } from './ui/dom.js';
+import { FocusView } from './ui/focus-view.js';
 import { ModalController } from './ui/modal-controller.js';
 import { ThemeController } from './ui/theme-controller.js';
 import { UiController } from './ui/ui-controller.js';
@@ -18,6 +19,7 @@ class App {
     #state;
     #ui;
     #dashboard;
+    #focus;
     #theme;
     #modals;
     #katas = [];
@@ -30,6 +32,7 @@ class App {
         this.#modals = new ModalController();
         this.#ui = new UiController(this.#modals);
         this.#dashboard = new DashboardView();
+        this.#focus = new FocusView();
         this.#theme = new ThemeController();
     }
 
@@ -92,7 +95,7 @@ class App {
         if (entry.dataset) return entry.dataset;
         if (entry.loading) return entry.loading;
 
-        this.#ui.showKataStatus('Loading exercises...');
+        this.#focus.showStatus('Loading exercises...');
         const request = fetch(entry.kata.datasetUrl)
             .then((response) => {
                 if (!response.ok) throw new Error(`Failed to load dataset for "${id}".`);
@@ -105,13 +108,13 @@ class App {
                     throw new Error(`Invalid dataset for "${id}": ${error.message}`);
                 }
                 entry.dataset = dataset;
-                if (this.#state.activeKata === id) this.#ui.clearKataStatus();
+                if (this.#state.activeKata === id) this.#focus.clearStatus();
                 return dataset;
             })
             .catch((error) => {
                 console.error(`Error loading dataset for "${id}":`, error);
                 if (this.#state.activeKata === id) {
-                    this.#ui.showKataStatus(`Could not load ${entry.kata.name} exercises.`, 'error');
+                    this.#focus.showStatus(`Could not load ${entry.kata.name} exercises.`, 'error');
                 }
                 return null;
             })
@@ -126,7 +129,7 @@ class App {
     #renderProgress(id) {
         this.#ui.renderKataBelt(this.#entries.get(id).kata, this.#state);
         if (this.#state.activeKata === id) {
-            this.#ui.renderFocusHeader(this.#entries.get(id).kata, this.#state);
+            this.#focus.renderHeader(this.#entries.get(id).kata, this.#state);
         }
     }
 
@@ -165,14 +168,14 @@ class App {
 
     #setKata(kata) {
         this.#state.setActiveKata(kata);
-        this.#ui.switchKata(this.#katas, kata);
+        this.#focus.switchKata(this.#katas, kata);
     }
 
     async #enterKata(id) {
         this.#setKata(id);
         this.#focusModeActive = true;
         const { kata } = this.#entries.get(id);
-        this.#ui.renderFocusHeader(kata, this.#state);
+        this.#focus.renderHeader(kata, this.#state);
         this.#dashboard.showFocusMode();
 
         const dataset = await this.#loadDataset(id);
