@@ -40,13 +40,13 @@ export function validateCaseDataset(dataset) {
 }
 
 const el = {
-    kata: byId('kataCases'),
-    section: byId('caseSection'),
-    cardBelt: byId('beltCases'),
-    sentence: byId('caseSentence'),
-    translation: byId('caseTranslation'),
-    inputs: [],
+    kata: null,
+    section: null,
+    cardBelt: null,
+    sentence: null,
+    translation: null,
 };
+let inputs = [];
 
 const CASE_LABELS = { nom: 'Nominativ', akk: 'Akkusativ', dat: 'Dativ', gen: 'Genitiv' };
 
@@ -119,16 +119,26 @@ export default {
         `;
     },
 
-    mount() {},
+    mount() {
+        if (el.kata) return;
+
+        el.kata = byId('kataCases');
+        el.section = byId('caseSection');
+        el.cardBelt = byId('beltCases');
+        el.sentence = byId('caseSentence');
+        el.translation = byId('caseTranslation');
+    },
 
     render(item) {
-        el.sentence.innerHTML = '';
+        el.sentence.textContent = '';
         el.translation.textContent = item.translation ? `🇬🇧 ${item.translation}` : '';
 
+        const fragment = document.createDocumentFragment();
+        inputs = [];
         const parts = item.sentence.split(/\{(\d+)\}/g);
         parts.forEach((part, i) => {
             if (i % 2 === 0) {
-                if (part) el.sentence.appendChild(document.createTextNode(part));
+                if (part) fragment.appendChild(document.createTextNode(part));
                 return;
             }
             const input = document.createElement('input');
@@ -138,15 +148,15 @@ export default {
             input.dataset.index = part;
             input.size = 6;
             input.className = 'lg:w-20 w-15 case-blank-input inline-block text-center bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg lg:px-3 px-2 py-1 lg:py-1.5 lg:text-xl text-base text-indigo-700 dark:text-indigo-300 focus:outline-none focus:border-purple-500 lg:leading-[2rem] leading-[1.5rem]';
-            el.sentence.appendChild(input);
+            inputs.push(input);
+            fragment.appendChild(input);
         });
 
-        el.inputs = Array.from(el.sentence.querySelectorAll('.case-blank-input'));
+        el.sentence.appendChild(fragment);
     },
 
     check(item) {
         const targets = item.blanks.map(resolveArticle);
-        const inputs = el.inputs;
         if (!inputs.length) return null;
 
         const correct =

@@ -57,11 +57,11 @@ class App {
     #init() {
         this.#ui.initTheme();
         this.#ui.toggleMute(this.#audio.isMuted());
-        this.#ui.renderKataBelts(this.#katas, this.#state);
         this.#katas.forEach((kata) => {
-            kata.mount?.();
+            kata.mount();
             this.#loadNext(kata.id);
         });
+        this.#ui.renderKataBelts(this.#katas, this.#state);
         this.#bindEvents();
         this.#ui.showDashboard();
     }

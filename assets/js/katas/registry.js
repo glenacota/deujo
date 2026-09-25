@@ -11,7 +11,7 @@ import { createVerbKata } from './verbs.js';
  * @property {string} id
  * @property {string} name
  * @property {string} datasetUrl
- * @property {{kata: HTMLElement, section: HTMLElement, cardBelt: HTMLElement}} el
+ * @property {{kata: HTMLElement|null, section: HTMLElement|null, cardBelt: HTMLElement|null}} el
  * @property {function(): void} mount
  * @property {function(Object): void} render
  * @property {function(Object): Object|null} check
@@ -41,7 +41,7 @@ export function validateKata(kata) {
     });
 
     ['kata', 'section', 'cardBelt'].forEach((field) => {
-        if (!(kata.el?.[field] instanceof HTMLElement)) {
+        if (!Object.hasOwn(kata.el ?? {}, field)) {
             throw new Error(`Kata "${kata.id}" requires el.${field}.`);
         }
     });

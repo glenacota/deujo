@@ -26,13 +26,13 @@ export function validateNounDataset(dataset) {
 }
 
 const el = {
-    kata: byId('kataNouns'),
-    section: byId('nounSection'),
-    cardBelt: byId('beltNouns'),
-    word: byId('nounWord'),
-    meaning: byId('nounMeaning'),
-    plural: byId('pluralInput'),
-    genderButtons: Array.from(document.querySelectorAll('.gender-btn')),
+    kata: null,
+    section: null,
+    cardBelt: null,
+    word: null,
+    meaning: null,
+    plural: null,
+    genderButtons: [],
 };
 
 let gender = null;
@@ -73,6 +73,16 @@ export default {
 
     /** One-time wiring of controls owned by this kata only. */
     mount() {
+        if (el.kata) return;
+
+        el.kata = byId('kataNouns');
+        el.section = byId('nounSection');
+        el.cardBelt = byId('beltNouns');
+        el.word = byId('nounWord');
+        el.meaning = byId('nounMeaning');
+        el.plural = byId('pluralInput');
+        el.genderButtons = Array.from(document.querySelectorAll('.gender-btn'));
+
         el.genderButtons.forEach((btn) =>
             btn.addEventListener('click', () => {
             gender = btn.dataset.gender;
