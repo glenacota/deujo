@@ -1,11 +1,23 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="author" content="glenacota">
     <title>Deujo: Deutsch-Dojo</title>
     <link rel="icon" type="image/png" href="./assets/logo.png">
+
+    <!-- Sync theme before first paint, avoid dark/light flash -->
+    <script>
+        (function () {
+            try {
+                var stored = localStorage.getItem('dm_theme');
+                var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                var isDark = stored ? stored === 'dark' : prefersDark;
+                document.documentElement.classList.toggle('dark', isDark);
+            } catch (e) {}
+        })();
+    </script>
 
     <!-- Fonts self-hosting policy: retained on Google Fonts CDN (low-risk, cacheable, no runtime JS). Preconnect to cut handshake latency. -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
