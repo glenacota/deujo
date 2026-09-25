@@ -1,6 +1,8 @@
 // kata/nouns.js
 // Self-contained noun kata: elements, local selection state, rendering, validation.
 
+import { escapeHtml } from '../services/utility.js';
+
 const byId = (id) => document.getElementById(id);
 
 export function validateNounDataset(dataset) {
@@ -115,7 +117,7 @@ export default {
             gender === noun.g && (hasNoPlural || userPlural.toLowerCase() === noun.p.toLowerCase());
 
         const pluralText = hasNoPlural ? 'no plural' : `die ${noun.p}`;
-        const answer = `<span class="font-extrabold underline">${noun.g}</span> ${noun.w}, Plural: <span class="font-extrabold underline">${pluralText}</span>`;
+        const answer = `<span class="font-extrabold underline">${escapeHtml(noun.g)}</span> ${escapeHtml(noun.w)}, Plural: <span class="font-extrabold underline">${escapeHtml(pluralText)}</span>`;
 
         return { correct, message: `${correct ? 'Excellent' : 'Correct answer'}: ${answer}` };
     },

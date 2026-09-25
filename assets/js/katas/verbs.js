@@ -1,6 +1,8 @@
 // kata/verbs.js
 // Self-contained verb-conjugation kata.
 
+import { escapeHtml } from '../services/utility.js';
+
 const byId = (id) => document.getElementById(id);
 
 const PERSONS = [
@@ -85,14 +87,14 @@ export function createVerbKata(tenseKey) {
                     <thead>
                         <tr class="border-b border-slate-200 dark:border-slate-800 text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
                             <th class="py-3 px-3">Person</th>
-                            <th class="py-3 px-3">${tense.label}</th>
+                            <th class="py-3 px-3">${escapeHtml(tense.label)}</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 font-mono">
                         ${PERSONS.map((person, index) => `
                             <tr>
-                                <td class="py-2 px-3 font-bold">${person.label}</td>
-                                <td class="py-2 px-3">${verb[tenseKey][index] ?? '—'}</td>
+                                <td class="py-2 px-3 font-bold">${escapeHtml(person.label)}</td>
+                                <td class="py-2 px-3">${escapeHtml(verb[tenseKey][index] ?? '—')}</td>
                             </tr>
                         `).join('')}
                     </tbody>
@@ -121,9 +123,9 @@ export function createVerbKata(tenseKey) {
         );
 
             const message = correct
-                ? `Excellent! Perfect ${tense.label} conjugation for "${verb.w}"!`
+                ? `Excellent! Perfect ${escapeHtml(tense.label)} conjugation for "${escapeHtml(verb.w)}"!`
                 : 'Correct answer: '
-                    + PERSONS.map((p, i) => `${p.label} <strong>${targetForms[i]}</strong>`).join(', ')
+                    + PERSONS.map((p, i) => `${escapeHtml(p.label)} <strong>${escapeHtml(targetForms[i])}</strong>`).join(', ')
                     + '.';
 
             return { correct, message };

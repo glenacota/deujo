@@ -1,6 +1,8 @@
 // kata/cases.js
 // Self-contained case-declension kata: fill-in-the-blank sentences with inline inputs.
 
+import { escapeHtml } from '../services/utility.js';
+
 const byId = (id) => document.getElementById(id);
 
 const VALID_CASES = ['nom', 'akk', 'dat', 'gen'];
@@ -166,7 +168,7 @@ export default {
         const message = correct
             ? 'Excellent! Correct declension!'
             : 'Correct answer: '
-                + targets.map((t, i) => `<strong>${t}</strong> (${CASE_LABELS[item.blanks[i].case]})`).join(', ')
+                + targets.map((t, i) => `<strong>${escapeHtml(t)}</strong> (${escapeHtml(CASE_LABELS[item.blanks[i].case])})`).join(', ')
                 + '.';
 
         return { correct, message };
