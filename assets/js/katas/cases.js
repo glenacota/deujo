@@ -16,26 +16,26 @@ export function validateCaseDataset(dataset) {
     }
 
     dataset.forEach((item, index) => {
-        const validBlanks = Array.isArray(item?.blanks) && item.blanks.length > 0 && item.blanks.every((blank) =>
-            VALID_CASES.includes(blank?.case) &&
-            VALID_GENDERS.includes(blank?.gender) &&
-            ['sg', 'pl'].includes(blank?.number) &&
-            VALID_ARTICLE_TYPES.includes(blank?.articleType)
+        const validBlanks = Array.isArray(item?.b) && item.b.length > 0 && item.b.every((blank) =>
+            VALID_CASES.includes(blank?.c) &&
+            VALID_GENDERS.includes(blank?.g) &&
+            ['sg', 'pl'].includes(blank?.n) &&
+            VALID_ARTICLE_TYPES.includes(blank?.a)
         );
-        const placeholderCount = typeof item?.sentence === 'string'
-            ? (item.sentence.match(/\{\d+\}/g) ?? []).length
+        const placeholderCount = typeof item?.s === 'string'
+            ? (item.s.match(/\{\d+\}/g) ?? []).length
             : 0;
 
         if (
             !item ||
             typeof item.w !== 'string' ||
             !item.w.trim() ||
-            typeof item.sentence !== 'string' ||
-            !item.sentence.trim() ||
-            typeof item.translation !== 'string' ||
-            !item.translation.trim() ||
+            typeof item.s !== 'string' ||
+            !item.s.trim() ||
+            typeof item.m !== 'string' ||
+            !item.m.trim() ||
             !validBlanks ||
-            placeholderCount !== item.blanks.length
+            placeholderCount !== item.b.length
         ) {
             throw new Error(`entry ${index} has invalid sentence, translation, or blank definitions`);
         }
@@ -43,9 +43,9 @@ export function validateCaseDataset(dataset) {
 }
 
 function resolveArticle(blank) {
-    if (blank.number === 'pl') return PLURAL_DEFINITE[blank.case];
-    const table = blank.articleType === 'indef' ? INDEFINITE : DEFINITE;
-    return table[blank.gender][blank.case];
+    if (blank.n === 'pl') return PLURAL_DEFINITE[blank.c];
+    const table = blank.a === 'indef' ? INDEFINITE : DEFINITE;
+    return table[blank.g][blank.c];
 }
 
 function renderHelpTable(table, title) {
@@ -119,11 +119,11 @@ export function createCaseKata() {
 
         render(item) {
             el.sentence.textContent = '';
-            el.translation.textContent = item.translation ? `🇬🇧 ${item.translation}` : '';
+            el.translation.textContent = item.m ? `🇬🇧 ${item.m}` : '';
 
             const fragment = document.createDocumentFragment();
             inputs = [];
-            const parts = item.sentence.split(/\{(\d+)\}/g);
+            const parts = item.s.split(/\{(\d+)\}/g);
             parts.forEach((part, i) => {
                 if (i % 2 === 0) {
                     if (part) fragment.appendChild(document.createTextNode(part));
@@ -144,7 +144,7 @@ export function createCaseKata() {
         },
 
         check(item) {
-            const targets = item.blanks.map(resolveArticle);
+            const targets = item.b.map(resolveArticle);
             if (!inputs.length) return null;
 
             const correct =
@@ -154,7 +154,7 @@ export function createCaseKata() {
             const message = correct
                 ? 'Excellent! Correct declension!'
                 : 'Correct answer: '
-                    + targets.map((t, i) => `<strong>${escapeHtml(t)}</strong> (${escapeHtml(CASE_LABELS[item.blanks[i].case])})`).join(', ')
+                    + targets.map((t, i) => `<strong>${escapeHtml(t)}</strong> (${escapeHtml(CASE_LABELS[item.b[i].case])})`).join(', ')
                     + '.';
 
             return { correct, message };
