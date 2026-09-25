@@ -29,23 +29,8 @@ class App {
 
     async bootstrap() {
         try {
-            this.#katas = await loadKatas();
-            const datasets = await Promise.all(
-                this.#katas.map(async (kata) => {
-                    const response = await fetch(kata.datasetUrl);
-                    if (!response.ok) throw new Error(`Failed to load dataset for "${kata.id}".`);
-                    const dataset = await response.json();
-                    try {
-                        kata.validateDataset(dataset);
-                    } catch (error) {
-                        throw new Error(`Invalid dataset for "${kata.id}": ${error.message}`);
-                    }
-                    return dataset;
-                })
-            );
-            this.#katas.forEach((kata, i) =>
-                this.#entries.set(kata.id, { kata: kata, dataset: datasets[i] })
-            );
+            this.#katas = loadKatas();
+            this.#katas.forEach((kata) => this.#entries.set(kata.id, { kata, dataset: null, loading: null }));
             this.#state = new GameState(this.#katas.map((p) => p.id));
             this.#init();
         } catch (error) {
@@ -94,6 +79,43 @@ class App {
         }
     }
 
+    async #loadDataset(id) {
+        const entry = this.#entries.get(id);
+        if (!entry) return null;
+        if (entry.dataset) return entry.dataset;
+        if (entry.loading) return entry.loading;
+
+        this.#ui.showKataStatus('Loading exercises...');
+        const request = fetch(entry.kata.datasetUrl)
+            .then((response) => {
+                if (!response.ok) throw new Error(`Failed to load dataset for "${id}".`);
+                return response.json();
+            })
+            .then((dataset) => {
+                try {
+                    entry.kata.validateDataset(dataset);
+                } catch (error) {
+                    throw new Error(`Invalid dataset for "${id}": ${error.message}`);
+                }
+                entry.dataset = dataset;
+                if (this.#state.activeKata === id) this.#ui.clearKataStatus();
+                return dataset;
+            })
+            .catch((error) => {
+                console.error(`Error loading dataset for "${id}":`, error);
+                if (this.#state.activeKata === id) {
+                    this.#ui.showKataStatus(`Could not load ${entry.kata.name} exercises.`, 'error');
+                }
+                return null;
+            })
+            .finally(() => {
+                if (entry.loading === request) entry.loading = null;
+            });
+
+        entry.loading = request;
+        return request;
+    }
+
     #renderProgress(id) {
         this.#ui.renderKataBelts(this.#katas, this.#state);
         if (this.#state.activeKata === id) {
@@ -103,13 +125,15 @@ class App {
 
     #loadNext(id) {
         const { kata, dataset } = this.#entries.get(id);
+        if (!dataset) return;
         const item = this.#state.pickNext(dataset, id);
         this.#state.current[id] = item;
         if (item) kata.render(item);
     }
 
     #check(id) {
-        const { kata } = this.#entries.get(id);
+        const { kata, dataset } = this.#entries.get(id);
+        if (!dataset) return;
         const item = this.#state.current[id];
         if (!item) return;
 
@@ -138,13 +162,20 @@ class App {
         this.#ui.switchKata(this.#katas, kata);
     }
 
-    #enterKata(id) {
+    async #enterKata(id) {
         this.#setKata(id);
         this.#focusModeActive = true;
         const { kata } = this.#entries.get(id);
-        kata.render(this.#state.current[id]);
         this.#ui.renderFocusHeader(kata, this.#state);
         this.#ui.showFocusMode();
+
+        const dataset = await this.#loadDataset(id);
+        if (!dataset || this.#state.activeKata !== id) return;
+        if (this.#state.current[id]) {
+            kata.render(this.#state.current[id]);
+        } else {
+            this.#loadNext(id);
+        }
     }
 
     #exitToMenu() {

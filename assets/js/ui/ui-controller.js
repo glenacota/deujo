@@ -91,6 +91,22 @@ export class UiController {
         dom.focus.view.classList.remove('hidden');
     }
 
+    showKataStatus(message, type = 'loading') {
+        if (!dom.focus.status) return;
+
+        dom.focus.status.textContent = message;
+        dom.focus.status.className = type === 'error'
+            ? 'mt-3 text-center text-sm font-semibold text-rose-600 dark:text-rose-400'
+            : 'mt-3 text-center text-sm font-semibold text-slate-500 dark:text-slate-400';
+        dom.focus.status.classList.remove('hidden');
+    }
+
+    clearKataStatus() {
+        if (!dom.focus.status) return;
+        dom.focus.status.textContent = '';
+        dom.focus.status.classList.add('hidden');
+    }
+
     switchKata(katas, activeId) {
         const activeSection = katas.find(({ id }) => id === activeId)?.el.section;
         const sections = new Set(katas.map(({ el }) => el.section));

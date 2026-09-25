@@ -36,6 +36,7 @@ export const dom = {
     view: byId('focusView'),
     backBtn: byId('backToMenuBtn'),
     kataName: byId('focusKataName'),
+    status: byId('kataStatus'),
   },
 
   actions: {
