@@ -41,8 +41,18 @@ python -m http.server 8000
 
 Point your browser to http://localhost:8000 and begin your first kata! 🚀
 
-## 📜 Expand your Kataset
-Add new fuel to your arsenal by extending `./assets/datasets/nouns.json` , `./assets/datasets/verbs.json`, or  `./assets/datasets/cases.json`.
+## 📜 Add a Kata or Dataset
+To add exercises to an existing kata, append entries to its JSON file in `assets/datasets/`. Keep each entry in that kata's existing schema; its `validateDataset()` function defines required fields and constraints.
+
+To add a kata:
+1. Add `assets/js/katas/<id>/manifest.js`, `template.js`, and `kata.js`, plus `assets/datasets/<id>.json`.
+2. Give the manifest a unique `id`, `name`, `subtitle`, `datasetUrl`, and `accent`. Dashboard accents must be `indigo`, `teal`, or `purple`.
+3. Export a `create...Kata()` factory from `kata.js`. Return the manifest fields, `el` with `kata`, `section`, and `cardBelt`, and these methods: `mount(container)`, `render(item)`, `check(item)`, `getHelpContent(item)`, and `validateDataset(dataset)`.
+4. In `mount`, create and append one `[data-role="section"]` from your template. Set `el.section` and connect `el.kata` to `kata-<id>` and `el.cardBelt` to `belt-<id>`.
+5. Make `validateDataset()` reject anything except a non-empty array of entries matching your kata's schema. `check()` returns `{ correct, message }`, `{ warning }`, or `null`; `getHelpContent()` returns an HTML string.
+6. Import the factory in `assets/js/katas/registry.js` and add its call to `loadKatas()`.
+
+Use unique IDs and keep dataset paths relative to the site root. Escape dataset text inserted into HTML; prefer `textContent` for plain text. Tailwind scans `index.html` and `assets/js/**/*.js`, so use literal class names and a supported accent.
 
 ## 🎨 Rebuilding the stylesheet
 The production Tailwind CSS is a committed, static file (`assets/css/tailwind.css`) generated at build time — no CDN compiler runs in the browser. Node is only needed if you change Tailwind classes or `tailwind.config.js`.
