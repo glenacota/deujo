@@ -1,9 +1,10 @@
-// kata/cases.js
+// katas/cases/kata.js
 // Self-contained case-declension kata: fill-in-the-blank sentences with inline inputs.
 
-import { escapeHtml } from '../../services/utility.js';
+import { escapeHtml, createSectionFromTemplate } from '../../services/utility.js';
 import { CASE_LABELS, DEFINITE, INDEFINITE, PLURAL_DEFINITE } from '../../services/grammar.js';
 import { casesManifest } from './manifest.js';
+import { casesTemplate } from './template.js';
 
 const byId = (id) => document.getElementById(id);
 
@@ -105,14 +106,11 @@ export function createCaseKata() {
             `;
         },
 
-        mount() {
+        mount(container) {
             if (el.kata) return;
 
-            const template = byId('caseSectionTemplate');
-            const container = byId('caseSections');
-            const fragment = template.content.cloneNode(true);
-            const section = fragment.querySelector('[data-role="section"]');
-            container.appendChild(fragment);
+            const section = createSectionFromTemplate(casesTemplate);
+            container.appendChild(section);
 
             el.kata = byId('kata-cases');
             el.section = section;

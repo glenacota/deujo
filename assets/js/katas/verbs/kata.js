@@ -1,9 +1,10 @@
-// kata/verbs.js
+// katas/verbs/kata.js
 // Self-contained verb-conjugation kata.
 
-import { escapeHtml } from '../../services/utility.js';
+import { escapeHtml, createSectionFromTemplate } from '../../services/utility.js';
 import { PERSONS, TENSES } from '../../services/grammar.js';
 import { getVerbManifest } from './manifest.js';
+import { verbsTemplate } from './template.js';
 
 const byId = (id) => document.getElementById(id);
 
@@ -31,15 +32,12 @@ export function validateVerbDataset(dataset) {
     });
 }
 
-function mountElements(el, tenseKey, manifest) {
-    // Each tense gets its own cloned DOM subtree (no shared ids), so multiple
+function mountElements(el, tenseKey, manifest, container) {
+    // Each tense gets its own parsed section (no shared ids), so multiple
     // tenses can coexist/be visible simultaneously in the future.
-    const template = byId('verbSectionTemplate');
-    const container = byId('verbSections');
-    const fragment = template.content.cloneNode(true);
-    const section = fragment.querySelector('[data-role="section"]');
+    const section = createSectionFromTemplate(verbsTemplate);
     section.dataset.tense = tenseKey;
-    container.appendChild(fragment);
+    container.appendChild(section);
 
     el.kata = byId(`kata-${manifest.id}`);
     el.section = section;
@@ -84,9 +82,9 @@ export function createVerbKata(tenseKey) {
         `;
     },
 
-        mount() {
+        mount(container) {
             if (el.kata) return;
-            mountElements(el, tenseKey, manifest);
+            mountElements(el, tenseKey, manifest, container);
         },
 
     render(verb) {

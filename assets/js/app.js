@@ -44,7 +44,7 @@ class App {
         this.#ui.toggleMute(this.#audio.isMuted());
         this.#ui.renderDashboard(this.#katas);
         this.#katas.forEach((kata) => {
-            kata.mount();
+            kata.mount(dom.focus.sections);
             this.#loadNext(kata.id);
         });
         this.#ui.renderKataBelts(this.#katas, this.#state);

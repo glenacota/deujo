@@ -39,6 +39,7 @@ export const dom = {
     backBtn: byId('backToMenuBtn'),
     kataName: byId('focusKataName'),
     status: byId('kataStatus'),
+    sections: byId('kataSections'),
   },
 
   actions: {

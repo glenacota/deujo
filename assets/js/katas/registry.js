@@ -4,7 +4,7 @@
 
 import { createNounKata } from './nouns/kata.js';
 import { createCaseKata } from './cases/kata.js';
-import { createVerbKata } from './verbs/verb.js';
+import { createVerbKata } from './verbs/kata.js';
 
 /**
  * @typedef {Object} Kata
@@ -14,7 +14,7 @@ import { createVerbKata } from './verbs/verb.js';
  * @property {string} datasetUrl
  * @property {string} accent Tailwind color name driving the dashboard card's hover border.
  * @property {{kata: HTMLElement|null, section: HTMLElement|null, cardBelt: HTMLElement|null}} el
- * @property {function(): void} mount
+ * @property {function(HTMLElement): void} mount
  * @property {function(Object): void} render
  * @property {function(Object): Object|null} check
  * @property {function(Object|null): string} getHelpContent

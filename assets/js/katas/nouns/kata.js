@@ -1,8 +1,9 @@
-// kata/nouns.js
+// katas/nouns/kata.js
 // Self-contained noun kata: elements, local selection state, rendering, validation.
 
-import { escapeHtml } from '../../services/utility.js';
+import { escapeHtml, createSectionFromTemplate } from '../../services/utility.js';
 import { nounsManifest } from './manifest.js';
+import { nounsTemplate } from './template.js';
 
 const byId = (id) => document.getElementById(id);
 
@@ -71,14 +72,11 @@ export function createNounKata() {
         },
 
         /** One-time wiring of controls owned by this kata only. */
-        mount() {
+        mount(container) {
             if (el.kata) return;
 
-            const template = byId('nounSectionTemplate');
-            const container = byId('nounSections');
-            const fragment = template.content.cloneNode(true);
-            const section = fragment.querySelector('[data-role="section"]');
-            container.appendChild(fragment);
+            const section = createSectionFromTemplate(nounsTemplate);
+            container.appendChild(section);
 
             el.kata = byId('kata-nouns');
             el.section = section;
