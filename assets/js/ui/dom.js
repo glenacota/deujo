@@ -71,6 +71,10 @@ export const dom = {
       root: byId('errorModal'),
       content: byId('errorModalContent'),
     },
+    share: {
+      root: byId('shareModal'),
+      text: byId('shareModalText'),
+    },
   },
 
   share: {

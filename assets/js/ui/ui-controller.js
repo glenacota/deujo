@@ -185,13 +185,17 @@ export class UiController {
             'Join in: https://deujo.glenacota.me'
         ].join('\n');
         try {
-        if (navigator.share) {
-            await navigator.share({text});
-        } else if (navigator.clipboard) {
-            await navigator.clipboard.writeText(text);
-        }
+            if (navigator.share) {
+                await navigator.share({text});
+            } else if (navigator.clipboard) {
+                await navigator.clipboard.writeText(text);
+            } else {
+                dom.modals.share.text.value = text;
+                this.#modals.open(dom.modals.share.root, dom.share.btn);
+                dom.modals.share.text.select();
+            }
         } catch {
-        // User cancelled the native share sheet - not an error worth surfacing.
+            // User cancelled the native share sheet - not an error worth surfacing.
         }
     }
 
