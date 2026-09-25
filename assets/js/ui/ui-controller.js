@@ -82,7 +82,7 @@ export class UiController {
 
     /** Updates the kata name in focus mode and the belt/streak stats in the header. */
     renderFocusHeader(kata, state) {
-        dom.focus.kataName.textContent = kata.name ?? kata.id.charAt(0).toUpperCase() + kata.id.slice(1);
+        dom.focus.kataName.textContent = kata.name;
         this.renderHeaderStats(kata.id, state);
      }
 
@@ -91,7 +91,7 @@ export class UiController {
         dom.focus.view.classList.remove('hidden');
     }
 
-    switchTab(katas, activeId) {
+    switchKata(katas, activeId) {
         const activeSection = katas.find(({ id }) => id === activeId)?.el.section;
         const sections = new Set(katas.map(({ el }) => el.section));
         sections.forEach((section) => section.classList.toggle('hidden', section !== activeSection));

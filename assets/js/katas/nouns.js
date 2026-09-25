@@ -26,7 +26,7 @@ export function validateNounDataset(dataset) {
 }
 
 const el = {
-    tab: byId('tabNouns'),
+    kata: byId('kataNouns'),
     section: byId('nounSection'),
     cardBelt: byId('beltNouns'),
     word: byId('nounWord'),
@@ -47,6 +47,7 @@ function setGenderActive(btn, active) {
 
 export default {
     id: 'nouns',
+    name: 'Nouns',
     datasetUrl: './assets/datasets/nouns.json',
     validateDataset: validateNounDataset,
     helpTitle: 'Plural Rules',

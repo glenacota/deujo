@@ -55,7 +55,7 @@ function createElements(tenseKey) {
     container.appendChild(fragment);
 
     return {
-        tab: byId(`tabVerbs${suffix}`),
+        kata: byId(`kataVerbs${suffix}`),
         section,
         cardBelt: byId(`beltVerbs${suffix}`),
         word: section.querySelector('[data-role="word"]'),

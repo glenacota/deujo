@@ -40,7 +40,7 @@ export function validateCaseDataset(dataset) {
 }
 
 const el = {
-    tab: byId('tabCases'),
+    kata: byId('kataCases'),
     section: byId('caseSection'),
     cardBelt: byId('beltCases'),
     sentence: byId('caseSentence'),
@@ -95,6 +95,7 @@ function renderHelpTable(table, title) {
 
 export default {
     id: 'cases',
+    name: 'Kasus',
     datasetUrl: './assets/datasets/cases.json',
     validateDataset: validateCaseDataset,
     helpTitle: 'Declension Chart',

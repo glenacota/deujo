@@ -96,7 +96,7 @@ class App {
 
     #renderProgress(id) {
         this.#ui.renderKataBelts(this.#katas, this.#state);
-        if (this.#state.activeTab === id) {
+        if (this.#state.activeKata === id) {
             this.#ui.renderFocusHeader(this.#entries.get(id).kata, this.#state);
         }
     }
@@ -128,18 +128,18 @@ class App {
         const kata = this.#entries.get(id)?.kata;
         if (!kata?.getHelpContent) return;
 
-        dom.modals.help.title.textContent = kata.helpTitle ?? 'Help';
+        dom.modals.help.title.textContent = kata.helpTitle;
         dom.modals.help.content.innerHTML = kata.getHelpContent(this.#state.current[id]);
         this.#modals.open(dom.modals.help.root, dom.actions.helpBtn);
     }
 
-    #setTab(tab) {
-        this.#state.setActiveTab(tab);
-        this.#ui.switchTab(this.#katas, tab);
+    #setKata(kata) {
+        this.#state.setActiveKata(kata);
+        this.#ui.switchKata(this.#katas, kata);
     }
 
     #enterKata(id) {
-        this.#setTab(id);
+        this.#setKata(id);
         this.#focusModeActive = true;
         const { kata } = this.#entries.get(id);
         kata.render(this.#state.current[id]);
@@ -161,14 +161,14 @@ class App {
         this.#modals.bind();
 
         this.#katas.forEach(({ id, el }) => {
-            el.tab.addEventListener('click', () => this.#enterKata(id));
+            el.kata.addEventListener('click', () => this.#enterKata(id));
         });
 
-        dom.actions.checkBtn.addEventListener('click', () => this.#check(this.#state.activeTab));
-        dom.actions.skipBtn.addEventListener('click', () => this.#loadNext(this.#state.activeTab));
-        dom.actions.helpBtn.addEventListener('click', () => this.#showHelpModal(this.#state.activeTab));
+        dom.actions.checkBtn.addEventListener('click', () => this.#check(this.#state.activeKata));
+        dom.actions.skipBtn.addEventListener('click', () => this.#loadNext(this.#state.activeKata));
+        dom.actions.helpBtn.addEventListener('click', () => this.#showHelpModal(this.#state.activeKata));
 
-        dom.share.btn.addEventListener('click', () => this.#ui.shareProgress(this.#state, this.#state.activeTab));
+        dom.share.btn.addEventListener('click', () => this.#ui.shareProgress(this.#state, this.#state.activeKata));
         dom.focus.backBtn.addEventListener('click', () => this.#exitToMenu());
         dom.logo.addEventListener('click', () => this.#exitToMenu());
         
@@ -186,7 +186,7 @@ class App {
             if (e.key === 'Enter') {
                 if (this.#focusModeActive && !this.#modals.isOpen()) {
                     e.preventDefault();
-                    this.#check(this.#state.activeTab);
+                    this.#check(this.#state.activeKata);
                 }
             }
 
@@ -205,7 +205,7 @@ class App {
 
             if (e.key === '/' && !isTyping) {
                 e.preventDefault();
-                this.#loadNext(this.#state.activeTab);
+                this.#loadNext(this.#state.activeKata);
             }
 
             if (e.key === 'Backspace' && this.#focusModeActive && !isTyping) {

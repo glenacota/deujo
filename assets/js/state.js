@@ -10,7 +10,7 @@ export class GameState {
   streakByKata = {};
   maxStreakByKata = {};
   beltProgress = {};
-  activeTab = '';
+  activeKata = '';
   current = {};   // kata id -> current item
   history = {};   // kata id -> recently seen words
 
@@ -23,9 +23,9 @@ export class GameState {
       this.maxStreakByKata[id] = Storage.getNumber(this.#maxStreakKey(id));
     });
 
-    this.activeTab = kataIds[0] ?? '';
-    const storedTab = Storage.getString(CONFIG.storage.tab, this.activeTab);
-    if (kataIds.includes(storedTab)) this.activeTab = storedTab;
+    this.activeKata = kataIds[0] ?? '';
+    const storedKata = Storage.getString(CONFIG.storage.kata, this.activeKata);
+    if (kataIds.includes(storedKata)) this.activeKata = storedKata;
   }
 
   #beltKey(kataId) {
@@ -40,10 +40,10 @@ export class GameState {
     return `${CONFIG.storage.maxStreak}_${kataId}`;
   }
 
-  setActiveTab(tab) {
-    if (!(tab in this.history)) return;
-    this.activeTab = tab;
-    Storage.setString(CONFIG.storage.tab, tab);
+  setActiveKata(kata) {
+    if (!(kata in this.history)) return;
+    this.activeKata = kata;
+    Storage.setString(CONFIG.storage.kata, kata);
   }
 
   #persist(kataId) {
