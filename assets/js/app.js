@@ -117,7 +117,7 @@ class App {
     }
 
     #renderProgress(id) {
-        this.#ui.renderKataBelts(this.#katas, this.#state);
+        this.#ui.renderKataBelt(this.#entries.get(id).kata, this.#state);
         if (this.#state.activeKata === id) {
             this.#ui.renderFocusHeader(this.#entries.get(id).kata, this.#state);
         }

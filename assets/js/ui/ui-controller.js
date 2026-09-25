@@ -76,13 +76,17 @@ export class UiController {
     /** Updates the belt badge shown on every kata card in the dashboard. */
     renderKataBelts(katas, state) {
         katas.forEach((kata) => {
-            this.#applyBeltBadge(
-                kata.el.cardBelt,
-                state.getCurrentBelt(kata.id),
-                state.getBeltProgressPct(kata.id),
-                'block text-[10px] px-2 py-0.5'
-            );
+            this.renderKataBelt(kata, state);
         });
+    }
+
+    renderKataBelt(kata, state) {
+        this.#applyBeltBadge(
+            kata.el.cardBelt,
+            state.getCurrentBelt(kata.id),
+            state.getBeltProgressPct(kata.id),
+            'block text-[10px] px-2 py-0.5'
+        );
     }
 
     /** Shows the on-brand error modal, replacing the bootstrap failure alert(). */
