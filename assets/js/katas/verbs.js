@@ -21,13 +21,22 @@ const TENSES = {
 function createElements(tenseKey) {
     const suffix = tenseKey.charAt(0).toUpperCase() + tenseKey.slice(1);
 
+    // Each tense gets its own cloned DOM subtree (no shared ids), so multiple
+    // tenses can coexist/be visible simultaneously in the future.
+    const template = byId('verbSectionTemplate');
+    const container = byId('verbSections');
+    const fragment = template.content.cloneNode(true);
+    const section = fragment.querySelector('[data-role="section"]');
+    section.dataset.tense = tenseKey;
+    container.appendChild(fragment);
+
     return {
         tab: byId(`tabVerbs${suffix}`),
-        section: byId('verbSection'),
+        section,
         cardBelt: byId(`beltVerbs${suffix}`),
-        word: byId('verbInfinitive'),
-        meaning: byId('verbMeaning'),
-        inputs: PERSONS.map((p) => byId(`conj_${p.key}`)),
+        word: section.querySelector('[data-role="word"]'),
+        meaning: section.querySelector('[data-role="meaning"]'),
+        inputs: PERSONS.map((p) => section.querySelector(`[data-role="conj_${p.key}"]`)),
     };
 }
 
