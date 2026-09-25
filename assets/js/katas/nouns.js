@@ -76,13 +76,19 @@ export function createNounKata() {
         mount() {
             if (el.kata) return;
 
+            const template = byId('nounSectionTemplate');
+            const container = byId('nounSections');
+            const fragment = template.content.cloneNode(true);
+            const section = fragment.querySelector('[data-role="section"]');
+            container.appendChild(fragment);
+
             el.kata = byId('kataNouns');
-            el.section = byId('nounSection');
+            el.section = section;
             el.cardBelt = byId('beltNouns');
-            el.word = byId('nounWord');
-            el.meaning = byId('nounMeaning');
-            el.plural = byId('pluralInput');
-            el.genderButtons = Array.from(document.querySelectorAll('.gender-btn'));
+            el.word = section.querySelector('[data-role="word"]');
+            el.meaning = section.querySelector('[data-role="meaning"]');
+            el.plural = section.querySelector('[data-role="plural"]');
+            el.genderButtons = Array.from(section.querySelectorAll('[data-role="gender"]'));
 
             el.genderButtons.forEach((btn) =>
                 btn.addEventListener('click', () => {

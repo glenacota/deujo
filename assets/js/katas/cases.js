@@ -110,11 +110,17 @@ export function createCaseKata() {
         mount() {
             if (el.kata) return;
 
+            const template = byId('caseSectionTemplate');
+            const container = byId('caseSections');
+            const fragment = template.content.cloneNode(true);
+            const section = fragment.querySelector('[data-role="section"]');
+            container.appendChild(fragment);
+
             el.kata = byId('kataCases');
-            el.section = byId('caseSection');
+            el.section = section;
             el.cardBelt = byId('beltCases');
-            el.sentence = byId('caseSentence');
-            el.translation = byId('caseTranslation');
+            el.sentence = section.querySelector('[data-role="sentence"]');
+            el.translation = section.querySelector('[data-role="translation"]');
         },
 
         render(item) {
