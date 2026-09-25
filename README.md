@@ -42,7 +42,7 @@ python -m http.server 8000
 Point your browser to http://localhost:8000 and begin your first kata! 🚀
 
 ## 📜 Expand your Kataset
-Add new fuel to your arsenal by extending `./assets/nouns.json` , `./assets/verbs.json`, or  `./assets/cases.json`.
+Add new fuel to your arsenal by extending `./assets/datasets/nouns.json` , `./assets/datasets/verbs.json`, or  `./assets/datasets/cases.json`.
 
 ## 🎨 Rebuilding the stylesheet
 The production Tailwind CSS is a committed, static file (`assets/css/tailwind.css`) generated at build time — no CDN compiler runs in the browser. Node is only needed if you change Tailwind classes or `tailwind.config.js`.
