@@ -30,7 +30,7 @@ export function validateVerbDataset(dataset) {
     });
 }
 
-function createElements(tenseKey) {
+function mountElements(el, tenseKey) {
     const suffix = tenseKey.charAt(0).toUpperCase() + tenseKey.slice(1);
 
     // Each tense gets its own cloned DOM subtree (no shared ids), so multiple
@@ -42,19 +42,17 @@ function createElements(tenseKey) {
     section.dataset.tense = tenseKey;
     container.appendChild(fragment);
 
-    return {
-        kata: byId(`kataVerbs${suffix}`),
-        section,
-        cardBelt: byId(`beltVerbs${suffix}`),
-        word: section.querySelector('[data-role="word"]'),
-        meaning: section.querySelector('[data-role="meaning"]'),
-        inputs: PERSONS.map((p) => section.querySelector(`[data-role="conj_${p.key}"]`)),
-    };
+    el.kata = byId(`kataVerbs${suffix}`);
+    el.section = section;
+    el.cardBelt = byId(`beltVerbs${suffix}`);
+    el.word = section.querySelector('[data-role="word"]');
+    el.meaning = section.querySelector('[data-role="meaning"]');
+    el.inputs = PERSONS.map((p) => section.querySelector(`[data-role="conj_${p.key}"]`));
 }
 
 export function createVerbKata(tenseKey) {
     const tense = TENSES[tenseKey];
-    const el = createElements(tenseKey);
+    const el = { kata: null, section: null, cardBelt: null, word: null, meaning: null, inputs: [] };
 
     return {
         id: tense.id,
@@ -89,7 +87,10 @@ export function createVerbKata(tenseKey) {
         `;
     },
 
-        mount() {},
+        mount() {
+            if (el.kata) return;
+            mountElements(el, tenseKey);
+        },
 
     render(verb) {
         el.word.textContent = verb.w;
