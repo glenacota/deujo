@@ -9,6 +9,7 @@ import { loadKatas } from './katas/registry.js';
 import { DashboardView } from './ui/dashboard-view.js';
 import { dom } from './ui/dom.js';
 import { FocusView } from './ui/focus-view.js';
+import { bindKeyboardShortcuts } from './ui/keyboard-shortcut.js';
 import { ModalController } from './ui/modal-controller.js';
 import { ShareController } from './ui/share-controller.js';
 import { ThemeController } from './ui/theme-controller.js';
@@ -220,44 +221,15 @@ class App {
         
         dom.buyMeCoffee.btn.addEventListener('click', () => window.open('https://ko-fi.com/A6C827EN29', '_blank', 'noopener,noreferrer'));
 
-        window.addEventListener('keydown', (e) => {
-            if (this.#modals.handleKeydown(e)) return;
-
-            const target = e.target;
-            const isTyping =
-                target instanceof HTMLInputElement ||
-                target instanceof HTMLTextAreaElement ||
-                target.isContentEditable;
-
-            if (e.key === 'Enter') {
-                if (this.#focusModeActive && !this.#modals.isOpen()) {
-                    e.preventDefault();
-                    this.#check(this.#state.activeKata);
-                }
-            }
-
-            if (e.key === '?' && this.#focusModeActive && !isTyping) {
-                dom.actions.helpBtn.click();
-            }
-
-            if (e.shiftKey && e.code.startsWith('Digit') &&  !this.#modals.isOpen()) {
-                const slot = Number(e.code.slice(5));
-
-                if (!isTyping && slot >= 1 && slot <= this.#katas.length) {
-                    e.preventDefault();
-                    this.#enterKata(this.#katas[slot - 1].id);
-                }
-            }
-
-            if (e.key === '/' && !isTyping && !this.#modals.isOpen()) {
-                e.preventDefault();
-                this.#loadNext(this.#state.activeKata);
-            }
-
-            if (e.key === 'Backspace' && this.#focusModeActive && !isTyping) {
-                e.preventDefault();
-                this.#exitToMenu();
-            }
+        bindKeyboardShortcuts({
+            modals: this.#modals,
+            isFocusModeActive: () => this.#focusModeActive,
+            kataCount: () => this.#katas.length,
+            enterKataAtSlot: (slot) => this.#enterKata(this.#katas[slot - 1].id),
+            check: () => this.#check(this.#state.activeKata),
+            showHelp: () => dom.actions.helpBtn.click(),
+            loadNext: () => this.#loadNext(this.#state.activeKata),
+            exitToMenu: () => this.#exitToMenu(),
         });
     }
 }
