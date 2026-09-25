@@ -2,23 +2,9 @@
 // Self-contained verb-conjugation kata.
 
 import { escapeHtml } from '../services/utility.js';
+import { PERSONS, TENSES } from '../services/grammar.js';
 
 const byId = (id) => document.getElementById(id);
-
-const PERSONS = [
-    { key: 'ich', label: 'ich' },
-    { key: 'du', label: 'du' },
-    { key: 'er', label: 'er/sie/es' },
-    { key: 'wir', label: 'wir' },
-    { key: 'ihr', label: 'ihr' },
-    { key: 'sie', label: 'sie/Sie' },
-];
-
-const TENSES = {
-    pres: { id: 'verbs-pres', label: 'Präsens' },
-    praet: { id: 'verbs-praet', label: 'Präteritum' },
-    perf: { id: 'verbs-perf', label: 'Perfekt' },
-};
 
 export function validateVerbDataset(dataset) {
     if (!Array.isArray(dataset) || dataset.length === 0) {

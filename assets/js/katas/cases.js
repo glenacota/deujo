@@ -2,6 +2,7 @@
 // Self-contained case-declension kata: fill-in-the-blank sentences with inline inputs.
 
 import { escapeHtml } from '../services/utility.js';
+import { CASE_LABELS, DEFINITE, INDEFINITE, PLURAL_DEFINITE } from '../services/grammar.js';
 
 const byId = (id) => document.getElementById(id);
 
@@ -41,31 +42,6 @@ export function validateCaseDataset(dataset) {
     });
 }
 
-const el = {
-    kata: null,
-    section: null,
-    cardBelt: null,
-    sentence: null,
-    translation: null,
-};
-let inputs = [];
-
-const CASE_LABELS = { nom: 'Nominativ', akk: 'Akkusativ', dat: 'Dativ', gen: 'Genitiv' };
-
-const DEFINITE = {
-    der: { nom: 'der', akk: 'den', dat: 'dem', gen: 'des' },
-    die: { nom: 'die', akk: 'die', dat: 'der', gen: 'der' },
-    das: { nom: 'das', akk: 'das', dat: 'dem', gen: 'des' },
-};
-
-const INDEFINITE = {
-    der: { nom: 'ein', akk: 'einen', dat: 'einem', gen: 'eines' },
-    die: { nom: 'eine', akk: 'eine', dat: 'einer', gen: 'einer' },
-    das: { nom: 'ein', akk: 'ein', dat: 'einem', gen: 'eines' },
-};
-
-const PLURAL_DEFINITE = { nom: 'die', akk: 'die', dat: 'den', gen: 'der' };
-
 function resolveArticle(blank) {
     if (blank.number === 'pl') return PLURAL_DEFINITE[blank.case];
     const table = blank.articleType === 'indef' ? INDEFINITE : DEFINITE;
@@ -95,82 +71,93 @@ function renderHelpTable(table, title) {
     `;
 }
 
-export default {
-    id: 'cases',
-    name: 'Kasus',
-    datasetUrl: './assets/datasets/cases.json',
-    validateDataset: validateCaseDataset,
-    helpTitle: 'Declension Chart',
-    el,
+export function createCaseKata() {
+    const el = {
+        kata: null,
+        section: null,
+        cardBelt: null,
+        sentence: null,
+        translation: null,
+    };
+    let inputs = [];
 
-    getHelpContent() {
-        return `
-            ${renderHelpTable(DEFINITE, 'Definite Articles')}
-            ${renderHelpTable(INDEFINITE, 'Indefinite Articles')}
-            <h4 class="font-bold text-slate-900 dark:text-white mb-1">Plural (Definite)</h4>
-            <table class="w-full text-left text-xs lg:text-sm border-collapse">
-                <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 font-mono">
-                    ${Object.keys(CASE_LABELS).map((c) => `
-                        <tr>
-                            <td class="py-2 px-3 font-bold">${escapeHtml(CASE_LABELS[c])}</td>
-                            <td class="py-2 px-3">${escapeHtml(PLURAL_DEFINITE[c])}</td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
-        `;
-    },
+    return {
+        id: 'cases',
+        name: 'Kasus',
+        datasetUrl: './assets/datasets/cases.json',
+        validateDataset: validateCaseDataset,
+        helpTitle: 'Declension Chart',
+        el,
 
-    mount() {
-        if (el.kata) return;
+        getHelpContent() {
+            return `
+                ${renderHelpTable(DEFINITE, 'Definite Articles')}
+                ${renderHelpTable(INDEFINITE, 'Indefinite Articles')}
+                <h4 class="font-bold text-slate-900 dark:text-white mb-1">Plural (Definite)</h4>
+                <table class="w-full text-left text-xs lg:text-sm border-collapse">
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 font-mono">
+                        ${Object.keys(CASE_LABELS).map((c) => `
+                            <tr>
+                                <td class="py-2 px-3 font-bold">${escapeHtml(CASE_LABELS[c])}</td>
+                                <td class="py-2 px-3">${escapeHtml(PLURAL_DEFINITE[c])}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        },
 
-        el.kata = byId('kataCases');
-        el.section = byId('caseSection');
-        el.cardBelt = byId('beltCases');
-        el.sentence = byId('caseSentence');
-        el.translation = byId('caseTranslation');
-    },
+        mount() {
+            if (el.kata) return;
 
-    render(item) {
-        el.sentence.textContent = '';
-        el.translation.textContent = item.translation ? `🇬🇧 ${item.translation}` : '';
+            el.kata = byId('kataCases');
+            el.section = byId('caseSection');
+            el.cardBelt = byId('beltCases');
+            el.sentence = byId('caseSentence');
+            el.translation = byId('caseTranslation');
+        },
 
-        const fragment = document.createDocumentFragment();
-        inputs = [];
-        const parts = item.sentence.split(/\{(\d+)\}/g);
-        parts.forEach((part, i) => {
-            if (i % 2 === 0) {
-                if (part) fragment.appendChild(document.createTextNode(part));
-                return;
-            }
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.autocomplete = 'off';
-            input.spellcheck = false;
-            input.dataset.index = part;
-            input.size = 6;
-            input.className = 'lg:w-20 w-15 case-blank-input inline-block text-center bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg lg:px-3 px-2 py-1 lg:py-1.5 lg:text-xl text-base text-indigo-700 dark:text-indigo-300 focus:outline-none focus:border-purple-500 lg:leading-[2rem] leading-[1.5rem]';
-            inputs.push(input);
-            fragment.appendChild(input);
-        });
+        render(item) {
+            el.sentence.textContent = '';
+            el.translation.textContent = item.translation ? `🇬🇧 ${item.translation}` : '';
 
-        el.sentence.appendChild(fragment);
-    },
+            const fragment = document.createDocumentFragment();
+            inputs = [];
+            const parts = item.sentence.split(/\{(\d+)\}/g);
+            parts.forEach((part, i) => {
+                if (i % 2 === 0) {
+                    if (part) fragment.appendChild(document.createTextNode(part));
+                    return;
+                }
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.autocomplete = 'off';
+                input.spellcheck = false;
+                input.dataset.index = part;
+                input.size = 6;
+                input.className = 'lg:w-20 w-15 case-blank-input inline-block text-center bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg lg:px-3 px-2 py-1 lg:py-1.5 lg:text-xl text-base text-indigo-700 dark:text-indigo-300 focus:outline-none focus:border-purple-500 lg:leading-[2rem] leading-[1.5rem]';
+                inputs.push(input);
+                fragment.appendChild(input);
+            });
 
-    check(item) {
-        const targets = item.blanks.map(resolveArticle);
-        if (!inputs.length) return null;
+            el.sentence.appendChild(fragment);
+        },
 
-        const correct =
-            inputs.length === targets.length &&
-            inputs.every((input, i) => input.value.trim().toLowerCase() === targets[i].toLowerCase());
+        check(item) {
+            const targets = item.blanks.map(resolveArticle);
+            if (!inputs.length) return null;
 
-        const message = correct
-            ? 'Excellent! Correct declension!'
-            : 'Correct answer: '
-                + targets.map((t, i) => `<strong>${escapeHtml(t)}</strong> (${escapeHtml(CASE_LABELS[item.blanks[i].case])})`).join(', ')
-                + '.';
+            const correct =
+                inputs.length === targets.length &&
+                inputs.every((input, i) => input.value.trim().toLowerCase() === targets[i].toLowerCase());
 
-        return { correct, message };
-    },
-};
+            const message = correct
+                ? 'Excellent! Correct declension!'
+                : 'Correct answer: '
+                    + targets.map((t, i) => `<strong>${escapeHtml(t)}</strong> (${escapeHtml(CASE_LABELS[item.blanks[i].case])})`).join(', ')
+                    + '.';
+
+            return { correct, message };
+        },
+    };
+}

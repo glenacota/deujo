@@ -2,8 +2,8 @@
 // The only place that knows which katas exist.
 // To add one: drop `<name>.js` in this folder and append its path here.
 
-import nouns from './nouns.js';
-import cases from './cases.js';
+import { createNounKata } from './nouns.js';
+import { createCaseKata } from './cases.js';
 import { createVerbKata } from './verbs.js';
 
 /**
@@ -51,8 +51,8 @@ export function validateKata(kata) {
 
 export function loadKatas() {
     return [
-        nouns,
-        cases,
+        createNounKata(),
+        createCaseKata(),
         createVerbKata('pres'),
         createVerbKata('praet'),
         createVerbKata('perf'),
