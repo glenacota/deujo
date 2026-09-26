@@ -7,6 +7,9 @@ const ACCENT_HOVER_CLASSES = {
 };
 
 export class DashboardView {
+    #cards = new Map();
+    #belts = new Map();
+
     showDashboard() {
         dom.dashboardHome.view.classList.remove('hidden');
         dom.focus.view.classList.add('hidden');
@@ -15,6 +18,8 @@ export class DashboardView {
     render(katas) {
         const { grid, cardTemplate } = dom.dashboardHome;
         grid.innerHTML = '';
+        this.#cards.clear();
+        this.#belts.clear();
 
         katas.forEach((kata, index) => {
             const fragment = cardTemplate.content.cloneNode(true);
@@ -24,9 +29,22 @@ export class DashboardView {
             card.querySelector('[data-role="hotkey"]').textContent = `⇧ + ${index + 1}`;
             card.querySelector('[data-role="name"]').textContent = kata.name;
             card.querySelector('[data-role="subtitle"]').textContent = kata.subtitle;
-            card.querySelector('[data-role="belt"]').id = `belt-${kata.id}`;
+            const belt = card.querySelector('[data-role="belt"]');
+            belt.id = `belt-${kata.id}`;
             grid.appendChild(fragment);
+
+            // Cards/belts live in the dashboard, independent of a kata's own (lazy) focus-section mount.
+            this.#cards.set(kata.id, card);
+            this.#belts.set(kata.id, belt);
         });
+    }
+
+    getCard(id) {
+        return this.#cards.get(id);
+    }
+
+    getBelt(id) {
+        return this.#belts.get(id);
     }
 
     showFocusMode() {

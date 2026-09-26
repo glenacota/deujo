@@ -6,8 +6,6 @@ import { PERSONS, TENSES } from '../../services/grammar.js';
 import { getVerbManifest } from './manifest.js';
 import { verbsTemplate } from './template.js';
 
-const byId = (id) => document.getElementById(id);
-
 export function validateVerbDataset(dataset) {
     if (!Array.isArray(dataset) || dataset.length === 0) {
         throw new Error('dataset must be a non-empty array');
@@ -39,9 +37,7 @@ function mountElements(el, tenseKey, manifest, container) {
     section.dataset.tense = tenseKey;
     container.appendChild(section);
 
-    el.kata = byId(`kata-${manifest.id}`);
     el.section = section;
-    el.cardBelt = byId(`belt-${manifest.id}`);
     el.word = section.querySelector('[data-role="word"]');
     el.meaning = section.querySelector('[data-role="meaning"]');
     el.inputs = PERSONS.map((p) => section.querySelector(`[data-role="conj_${p.key}"]`));
@@ -83,7 +79,7 @@ export function createVerbKata(tenseKey) {
     },
 
         mount(container) {
-            if (el.kata) return;
+            if (el.section) return;
             mountElements(el, tenseKey, manifest, container);
         },
 

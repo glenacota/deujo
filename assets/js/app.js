@@ -60,11 +60,7 @@ class App {
         this.#theme.initTheme();
         this.#theme.toggleMute(this.#audio.isMuted());
         this.#dashboard.render(this.#katas);
-        this.#katas.forEach((kata) => {
-            kata.mount(dom.focus.sections);
-            this.#loadNext(kata.id);
-        });
-        this.#ui.renderKataBelts(this.#katas, this.#state);
+        this.#katas.forEach((kata) => this.#renderBelt(kata.id));
         this.#bindEvents();
         this.#dashboard.showDashboard();
     }
@@ -135,10 +131,15 @@ class App {
     }
 
     #renderProgress(id) {
-        this.#ui.renderKataBelt(this.#entries.get(id).kata, this.#state);
+        this.#renderBelt(id);
         if (this.#state.activeKata === id) {
             this.#focus.renderHeader(this.#entries.get(id).kata, this.#state);
         }
+    }
+
+    /** Belt badges live on the dashboard card, independent of the kata's own (lazy) focus-section mount. */
+    #renderBelt(id) {
+        this.#ui.renderKataBelt(this.#dashboard.getBelt(id), id, this.#state);
     }
 
     #loadNext(id) {
@@ -180,9 +181,10 @@ class App {
     }
 
     async #enterKata(id) {
+        const { kata } = this.#entries.get(id);
+        kata.mount(dom.focus.sections);
         this.#setKata(id);
         this.#focusModeActive = true;
-        const { kata } = this.#entries.get(id);
         this.#focus.renderHeader(kata, this.#state);
         this.#dashboard.showFocusMode();
 
@@ -206,8 +208,8 @@ class App {
             const isMuted = this.#audio.toggleMute();
             this.#theme.toggleMute(isMuted);
         });
-        this.#katas.forEach(({ id, el }) => {
-            el.kata.addEventListener('click', () => this.#enterKata(id));
+        this.#katas.forEach(({ id }) => {
+            this.#dashboard.getCard(id).addEventListener('click', () => this.#enterKata(id));
         });
 
         dom.actions.checkBtn.addEventListener('click', () => this.#check(this.#state.activeKata));

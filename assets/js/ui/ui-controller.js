@@ -18,18 +18,11 @@ export class UiController {
         el.innerHTML = html;
     }
 
-    /** Updates the belt badge shown on every kata card in the dashboard. */
-    renderKataBelts(katas, state) {
-        katas.forEach((kata) => {
-            this.renderKataBelt(kata, state);
-        });
-    }
-
-    renderKataBelt(kata, state) {
+    renderKataBelt(beltEl, kataId, state) {
         renderBeltBadge(
-            kata.el.cardBelt,
+            beltEl,
             state,
-            kata.id,
+            kataId,
             'block text-[10px] px-2 py-0.5'
         );
     }

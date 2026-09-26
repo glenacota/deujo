@@ -6,8 +6,6 @@ import { CASE_LABELS, DEFINITE, INDEFINITE, PLURAL_DEFINITE } from '../../servic
 import { casesManifest } from './manifest.js';
 import { casesTemplate } from './template.js';
 
-const byId = (id) => document.getElementById(id);
-
 const VALID_CASES = ['nom', 'akk', 'dat', 'gen'];
 const VALID_GENDERS = ['der', 'die', 'das'];
 const VALID_ARTICLE_TYPES = ['def', 'indef'];
@@ -107,14 +105,12 @@ export function createCaseKata() {
         },
 
         mount(container) {
-            if (el.kata) return;
+            if (el.section) return;
 
             const section = createSectionFromTemplate(casesTemplate);
             container.appendChild(section);
 
-            el.kata = byId('kata-cases');
             el.section = section;
-            el.cardBelt = byId('belt-cases');
             el.sentence = section.querySelector('[data-role="sentence"]');
             el.translation = section.querySelector('[data-role="translation"]');
         },

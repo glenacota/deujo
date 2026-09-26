@@ -34,7 +34,7 @@ export class FocusView {
 
     switchKata(katas, activeId) {
         const activeSection = katas.find(({ id }) => id === activeId)?.el.section;
-        const sections = new Set(katas.map(({ el }) => el.section));
+        const sections = new Set(katas.map(({ el }) => el.section).filter(Boolean));
         sections.forEach((section) => section.classList.toggle('hidden', section !== activeSection));
     }
 }

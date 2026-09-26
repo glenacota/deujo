@@ -5,8 +5,6 @@ import { escapeHtml, createSectionFromTemplate } from '../../services/utility.js
 import { nounsManifest } from './manifest.js';
 import { nounsTemplate } from './template.js';
 
-const byId = (id) => document.getElementById(id);
-
 export function validateNounDataset(dataset) {
     if (!Array.isArray(dataset) || dataset.length === 0) {
         throw new Error('dataset must be a non-empty array');
@@ -73,14 +71,12 @@ export function createNounKata() {
 
         /** One-time wiring of controls owned by this kata only. */
         mount(container) {
-            if (el.kata) return;
+            if (el.section) return;
 
             const section = createSectionFromTemplate(nounsTemplate);
             container.appendChild(section);
 
-            el.kata = byId('kata-nouns');
             el.section = section;
-            el.cardBelt = byId('belt-nouns');
             el.word = section.querySelector('[data-role="word"]');
             el.meaning = section.querySelector('[data-role="meaning"]');
             el.plural = section.querySelector('[data-role="plural"]');
