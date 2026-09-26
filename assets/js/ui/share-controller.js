@@ -10,12 +10,12 @@ export class ShareController {
         this.#modals = modals;
     }
 
-    async shareProgress(state, kataId) {
-        const belt = state.getCurrentBelt(kataId);
-        const kataName = kataId.charAt(0).toUpperCase() + kataId.slice(1);
+    async shareProgress(state, kata) {
+        const { id, name } = kata;
+        const belt = state.getCurrentBelt(id);
         const text = [
-            `🥋🇩🇪 I'm a ${CONFIG.belts.labels[belt]} in the ${kataName} kata on Deujo.`,
-            `Can you beat my ${state.maxStreakByKata[kataId]}-answer streak of flawless German mastery?`,
+            `🥋🇩🇪 I'm a ${CONFIG.belts.labels[belt]} in the ${name} kata on Deujo.`,
+            `Can you beat my ${state.maxStreakByKata[id]}-answer streak of flawless German mastery?`,
             'Join in: https://deujo.glenacota.me'
         ].join('\n');
         try {

@@ -215,7 +215,10 @@ class App {
         dom.actions.skipBtn.addEventListener('click', () => this.#loadNext(this.#state.activeKata));
         dom.actions.helpBtn.addEventListener('click', () => this.#showHelpModal(this.#state.activeKata));
 
-        dom.share.btn.addEventListener('click', () => this.#share.shareProgress(this.#state, this.#state.activeKata));
+        dom.share.btn.addEventListener('click', () => {
+            const kata = this.#entries.get(this.#state.activeKata)?.kata;
+            if (kata) this.#share.shareProgress(this.#state, kata);
+        });
         dom.focus.backBtn.addEventListener('click', () => this.#exitToMenu());
         dom.logo.addEventListener('click', () => this.#exitToMenu());
         
