@@ -142,9 +142,14 @@ export function createCaseKata() {
                 inputs.every((input, i) => input.value.trim().toLowerCase() === targets[i].toLowerCase());
 
             const message = correct
-                ? 'Excellent! Correct declension!'
+                ? 'Excellent! Correct declension: '
+                    + targets.map((answer, i) => `<strong>${escapeHtml(answer)}</strong> (${escapeHtml(item.b[i].c)})`).join(', ')
+                    + '.'
                 : 'Correct answer: '
                     + targets.map((answer, i) => `<strong>${escapeHtml(answer)}</strong> (${escapeHtml(item.b[i].c)})`).join(', ')
+                    + '.<br/><br/>'
+                    + 'Your answer: '
+                    + inputs.map((answer, i) => `<strong>${escapeHtml(answer.value.trim())}</strong>`).join(', ')
                     + '.';
 
             return { correct, message };
