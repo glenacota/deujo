@@ -5,8 +5,6 @@ import { CONFIG } from './config.js';
 import { Storage } from './services/storage.js';
 
 export class GameState {
-  streak;
-  maxStreak;
   streakByKata = {};
   maxStreakByKata = {};
   beltProgress = {};

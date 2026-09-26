@@ -79,7 +79,7 @@ class App {
             if (isPromoted) {
                 this.#audio.playMilestone();
                 this.#fx.triggerShow();
-                this.#toast.show(true, this.#state.getCurrentBelt(id), this.#state.streak);
+                this.#toast.show(true, this.#state.getCurrentBelt(id), this.#state.streakByKata[id]);
             } else {
                 this.#audio.playCorrect();
             }
