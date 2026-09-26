@@ -144,13 +144,15 @@ export function createCaseKata() {
             const message = correct
                 ? 'Excellent! Correct declension: '
                     + targets.map((answer, i) => `<strong>${escapeHtml(answer)}</strong> (${escapeHtml(item.b[i].c)})`).join(', ')
-                    + '.'
+                    + '.<br/><br/>'
+                    + `<span class="text-xs italic">Full sentence: "${item.w}"</span>.`
                 : 'Correct answer: '
                     + targets.map((answer, i) => `<strong>${escapeHtml(answer)}</strong> (${escapeHtml(item.b[i].c)})`).join(', ')
                     + '.<br/><br/>'
                     + 'Your answer: '
                     + inputs.map((answer, i) => `<strong>${escapeHtml(answer.value.trim())}</strong>`).join(', ')
-                    + '.';
+                    + '.<br/><br/>'
+                    + `<span class="text-xs italic">Full sentence: "${item.w}"</span>.`
 
             return { correct, message };
         },
