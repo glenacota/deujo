@@ -130,6 +130,7 @@ export function createCaseKata() {
                 const input = document.createElement('input');
                 input.type = 'text';
                 input.autocomplete = 'off';
+                input.maxLength = '10'
                 input.spellcheck = false;
                 input.dataset.index = part;
                 input.size = 6;

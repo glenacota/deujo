@@ -15,7 +15,7 @@ export const nounsTemplate = `
         </div>
         <div class="max-w-xl mx-auto mb-6">
             <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Type the Plural Form (<em>die ...</em>)</label>
-            <input type="text" data-role="plural" placeholder="e.g. Kinder" autocomplete="off" class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-1 lg:py-1.5 text-lg text-indigo-700 dark:text-indigo-300 leading-[2rem] placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-purple-500">
+            <input type="text" data-role="plural" placeholder="e.g. Kinder" autocomplete="off" maxlength="40" class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-1 lg:py-1.5 text-lg text-indigo-700 dark:text-indigo-300 leading-[2rem] placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-purple-500">
         </div>
     </section>
 `;
