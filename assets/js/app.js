@@ -29,6 +29,7 @@ class App {
     #modals;
     #katas = [];
     #entries = new Map(); // kata id -> { kata, dataset }
+    #datasets = new Map(); // dataset URL -> Promise<dataset>
     #focusModeActive = false;
 
     constructor() {
@@ -100,17 +101,33 @@ class App {
         if (entry.loading) return entry.loading;
 
         this.#focus.showStatus('Loading exercises...');
-        const request = fetch(entry.kata.datasetUrl)
-            .then((response) => {
-                if (!response.ok) throw new Error(`Failed to load dataset for "${id}".`);
-                return response.json();
-            })
+        const datasetUrl = entry.kata.datasetUrl;
+        let datasetPromise = this.#datasets.get(datasetUrl);
+        if (!datasetPromise) {
+            datasetPromise = fetch(datasetUrl)
+                .then((response) => {
+                    if (!response.ok) throw new Error(`Failed to load dataset for "${id}".`);
+                    return response.json();
+                })
+                .then((dataset) => {
+                    try {
+                        entry.kata.validateDataset(dataset);
+                    } catch (error) {
+                        throw new Error(`Invalid dataset for "${id}": ${error.message}`);
+                    }
+                    return dataset;
+                })
+                .catch((error) => {
+                    if (this.#datasets.get(datasetUrl) === datasetPromise) {
+                        this.#datasets.delete(datasetUrl);
+                    }
+                    throw error;
+                });
+            this.#datasets.set(datasetUrl, datasetPromise);
+        }
+
+        const request = datasetPromise
             .then((dataset) => {
-                try {
-                    entry.kata.validateDataset(dataset);
-                } catch (error) {
-                    throw new Error(`Invalid dataset for "${id}": ${error.message}`);
-                }
                 entry.dataset = dataset;
                 if (this.#state.activeKata === id) this.#focus.clearStatus();
                 return dataset;
