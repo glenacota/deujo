@@ -44,6 +44,14 @@ export class GameState {
     Storage.setString(CONFIG.storage.kata, kata);
   }
 
+  setFocusModeActive(isActive) {
+    Storage.setBoolean(CONFIG.storage.focusMode, isActive);
+  }
+
+  wasFocusModeActive() {
+    return Storage.getBoolean(CONFIG.storage.focusMode);
+  }
+
   #persist(kataId) {
     Storage.setNumber(this.#streakKey(kataId), this.streakByKata[kataId]);
     Storage.setNumber(this.#maxStreakKey(kataId), this.maxStreakByKata[kataId]);

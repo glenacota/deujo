@@ -6,6 +6,7 @@ export const CONFIG = Object.freeze({
     theme: 'dm_theme',
     mute: 'dm_mute',
     kata: 'dm_active_kata',
+    focusMode: 'dm_focus_mode',
     streak: 'dm_streak',
     maxStreak: 'dm_max_streak',
     belt: 'dm_belt_progress',

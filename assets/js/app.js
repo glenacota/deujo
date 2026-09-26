@@ -63,7 +63,12 @@ class App {
         this.#dashboard.render(this.#katas);
         this.#katas.forEach((kata) => this.#renderBelt(kata.id));
         this.#bindEvents();
-        this.#dashboard.showDashboard();
+
+        if (this.#state.wasFocusModeActive() && this.#state.activeKata) {
+            this.#enterKata(this.#state.activeKata);
+        } else {
+            this.#dashboard.showDashboard();
+        }
     }
 
     #handleFeedback(id, isCorrect, message) {
@@ -202,6 +207,7 @@ class App {
         kata.mount(dom.focus.sections);
         this.#setKata(id);
         this.#focusModeActive = true;
+        this.#state.setFocusModeActive(true);
         this.#focus.renderHeader(kata, this.#state);
         this.#dashboard.showFocusMode();
 
@@ -216,6 +222,7 @@ class App {
 
     #exitToMenu() {
         this.#focusModeActive = false;
+        this.#state.setFocusModeActive(false);
         this.#dashboard.showDashboard();
     }
 
