@@ -35,6 +35,7 @@ class App {
         this.#audio = new AudioEngine();
         this.#fx = new FxEngine('fireworksCanvas');
         this.#modals = new ModalController();
+        this.#modals.bind();
         this.#ui = new UiController(this.#modals);
         this.#dashboard = new DashboardView();
         this.#focus = new FocusView();
@@ -51,7 +52,7 @@ class App {
             this.#init();
         } catch (error) {
             console.error('Error loading language datasets:', error);
-            this.#ui.showFatalError('Could not load vocabulary data. Please check your network or local server.');
+            this.#ui.showFatalError('Please check your network, local server, or console logs.');
         }
     }
 
@@ -205,8 +206,6 @@ class App {
             const isMuted = this.#audio.toggleMute();
             this.#theme.toggleMute(isMuted);
         });
-        this.#modals.bind();
-
         this.#katas.forEach(({ id, el }) => {
             el.kata.addEventListener('click', () => this.#enterKata(id));
         });

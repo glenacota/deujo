@@ -19,7 +19,7 @@ export class ModalController {
 
         document.querySelectorAll('.modal-backdrop').forEach((modal) => {
             modal.addEventListener('click', (event) => {
-                if (event.target === modal || event.target.closest('[data-modal-close]')) {
+                if (modal.id !== 'errorModal' && (event.target === modal || event.target.closest('[data-modal-close]'))) {
                     this.close(modal);
                 }
             });
@@ -61,7 +61,7 @@ export class ModalController {
 
         if (event.key === 'Escape') {
             event.preventDefault();
-            this.close();
+            if (this.#activeModal.id !== 'errorModal') this.close();
             return true;
         }
 

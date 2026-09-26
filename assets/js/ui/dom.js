@@ -73,6 +73,7 @@ export const dom = {
     error: {
       root: byId('errorModal'),
       content: byId('errorModalContent'),
+      reloadBtn: byId('errorModalReloadBtn'),
     },
     share: {
       root: byId('shareModal'),

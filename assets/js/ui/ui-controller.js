@@ -10,6 +10,7 @@ export class UiController {
 
     constructor(modals) {
         this.#modals = modals;
+        dom.modals.error.reloadBtn.addEventListener('click', () => window.location.reload());
     }
 
     /** Sole sink for dynamic HTML: callers must pre-escape any interpolated values via escapeHtml(). */
