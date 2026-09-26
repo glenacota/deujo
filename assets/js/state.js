@@ -52,11 +52,13 @@ export class GameState {
 
   /** @returns {boolean} true if this answer completed a milestone (belt promotion) */
   incrementStreak(kataId) {
+    const previousBelt = this.getCurrentBelt(kataId);
     this.streakByKata[kataId]++;
     this.maxStreakByKata[kataId] = Math.max(this.maxStreakByKata[kataId], this.streakByKata[kataId]);
-    this.beltProgress[kataId]++;
+    const maxProgress = CONFIG.rules.maxBelt * (CONFIG.rules.milestoneInterval + 1);
+    this.beltProgress[kataId] = Math.min(this.beltProgress[kataId] + 1, maxProgress);
     this.#persist(kataId);
-    return this.beltProgress[kataId] % CONFIG.rules.milestoneInterval === 0;
+    return this.getCurrentBelt(kataId) > previousBelt;
   }
 
   /** @returns {boolean} true if this mistake dropped the player into a lower belt */
@@ -76,6 +78,7 @@ export class GameState {
   }
 
   getBeltProgressPct(kataId) {
+    if (this.getCurrentBelt(kataId) >= CONFIG.rules.maxBelt) return 100;
     return ((this.beltProgress[kataId] % CONFIG.rules.milestoneInterval) / CONFIG.rules.milestoneInterval) * 100;
   }
 
