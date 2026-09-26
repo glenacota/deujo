@@ -6,9 +6,7 @@ import { CASE_LABELS, DEFINITE, INDEFINITE, PLURAL_DEFINITE } from '../../servic
 import { casesManifest } from './manifest.js';
 import { casesTemplate } from './template.js';
 
-const VALID_CASES = ['nom', 'akk', 'dat', 'gen'];
-const VALID_GENDERS = ['der', 'die', 'das'];
-const VALID_ARTICLE_TYPES = ['def', 'indef'];
+const VALID_CASE_NAMES = Object.keys(CASE_LABELS);
 
 export function validateCaseDataset(dataset) {
     if (!Array.isArray(dataset) || dataset.length === 0) {
@@ -17,10 +15,9 @@ export function validateCaseDataset(dataset) {
 
     dataset.forEach((item, index) => {
         const validBlanks = Array.isArray(item?.b) && item.b.length > 0 && item.b.every((blank) =>
-            VALID_CASES.includes(blank?.c) &&
-            VALID_GENDERS.includes(blank?.g) &&
-            ['sg', 'pl'].includes(blank?.n) &&
-            VALID_ARTICLE_TYPES.includes(blank?.a)
+            typeof blank?.a === 'string' &&
+            blank.a.trim() &&
+            VALID_CASE_NAMES.includes(blank.c)
         );
         const placeholderCount = typeof item?.s === 'string'
             ? (item.s.match(/\{\d+\}/g) ?? []).length
@@ -37,37 +34,45 @@ export function validateCaseDataset(dataset) {
             !validBlanks ||
             placeholderCount !== item.b.length
         ) {
-            throw new Error(`entry ${index} has invalid sentence, translation, or blank definitions`);
+            throw new Error(`entry ${index} has invalid sentence, translation, or blank answers`);
         }
     });
 }
 
-function resolveArticle(blank) {
-    if (blank.n === 'pl') return PLURAL_DEFINITE[blank.c];
-    const table = blank.a === 'indef' ? INDEFINITE : DEFINITE;
-    return table[blank.g][blank.c];
-}
-
-function renderHelpTable(table, title) {
-    const genders = ['der', 'die', 'das'];
+function renderHelpMatrix() {
+    const rows = [
+        { label: 'Masculine', gender: 'der' },
+        { label: 'Feminine', gender: 'die' },
+        { label: 'Neuter', gender: 'das' },
+        { label: 'Plural', gender: null },
+    ];
+    const cases = Object.keys(CASE_LABELS);
     return `
-        <h4 class="font-bold text-slate-900 dark:text-white mb-1">${escapeHtml(title)}</h4>
-        <table class="w-full text-left text-xs lg:text-sm border-collapse mb-4">
-            <thead>
-                <tr class="border-b border-slate-200 dark:border-slate-800 text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
-                    <th class="py-2 px-3">Fall</th>
-                    ${genders.map((g) => `<th class="py-2 px-3">${escapeHtml(g)}</th>`).join('')}
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 font-mono">
-                ${Object.keys(CASE_LABELS).map((c) => `
-                    <tr>
-                        <td class="py-2 px-3 font-bold">${escapeHtml(CASE_LABELS[c])}</td>
-                        ${genders.map((g) => `<td class="py-2 px-3">${escapeHtml(table[g][c])}</td>`).join('')}
+        <div class="overflow-x-auto">
+            <table class="w-full min-w-[34rem] border-collapse text-left text-sm">
+                <thead>
+                    <tr class="border-b border-slate-200 text-xs font-bold uppercase text-purple-600 dark:border-slate-800 dark:text-purple-400">
+                        <th class="px-3 py-2"></th>
+                        ${cases.map((c) => `<th class="px-3 py-2">${escapeHtml(CASE_LABELS[c])}</th>`).join('')}
                     </tr>
-                `).join('')}
-            </tbody>
-        </table>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-mono dark:divide-slate-800/60">
+                    ${rows.map(({ label, gender }) => `
+                        <tr>
+                            <th scope="row" class="px-3 py-2 font-sans font-bold">${escapeHtml(label)}</th>
+                            ${cases.map((c) => `
+                                <td class="whitespace-nowrap px-3 py-2">
+                                    ${gender
+                                        ? `${escapeHtml(DEFINITE[gender][c])} / ${escapeHtml(INDEFINITE[gender][c])}`
+                                        : `${escapeHtml(PLURAL_DEFINITE[c])} / —`}
+                                </td>
+                            `).join('')}
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+        <p class="mt-3 text-xs text-slate-500 dark:text-slate-400">Definite / indefinite. — = no plural indefinite article.</p>
     `;
 }
 
@@ -87,21 +92,7 @@ export function createCaseKata() {
         el,
 
         getHelpContent() {
-            return `
-                ${renderHelpTable(DEFINITE, 'Definite Articles')}
-                ${renderHelpTable(INDEFINITE, 'Indefinite Articles')}
-                <h4 class="font-bold text-slate-900 dark:text-white mb-1">Plural (Definite)</h4>
-                <table class="w-full text-left text-xs lg:text-sm border-collapse">
-                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 font-mono">
-                        ${Object.keys(CASE_LABELS).map((c) => `
-                            <tr>
-                                <td class="py-2 px-3 font-bold">${escapeHtml(CASE_LABELS[c])}</td>
-                                <td class="py-2 px-3">${escapeHtml(PLURAL_DEFINITE[c])}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
+            return renderHelpMatrix();
         },
 
         mount(container) {
@@ -143,7 +134,7 @@ export function createCaseKata() {
         },
 
         check(item) {
-            const targets = item.b.map(resolveArticle);
+            const targets = item.b.map((blank) => blank.a);
             if (!inputs.length) return null;
 
             const correct =
@@ -153,7 +144,7 @@ export function createCaseKata() {
             const message = correct
                 ? 'Excellent! Correct declension!'
                 : 'Correct answer: '
-                    + targets.map((t, i) => `<strong>${escapeHtml(t)}</strong> (${escapeHtml(CASE_LABELS[item.b[i].c])})`).join(', ')
+                    + targets.map((answer, i) => `<strong>${escapeHtml(answer)}</strong> (${escapeHtml(item.b[i].c)})`).join(', ')
                     + '.';
 
             return { correct, message };
