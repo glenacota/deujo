@@ -156,7 +156,7 @@ export function createCaseKata() {
             const message = correct
                 ? 'Excellent! Correct declension!'
                 : 'Correct answer: '
-                    + targets.map((t, i) => `<strong>${escapeHtml(t)}</strong> (${escapeHtml(CASE_LABELS[item.b[i].case])})`).join(', ')
+                    + targets.map((t, i) => `<strong>${escapeHtml(t)}</strong> (${escapeHtml(CASE_LABELS[item.b[i].c])})`).join(', ')
                     + '.';
 
             return { correct, message };
