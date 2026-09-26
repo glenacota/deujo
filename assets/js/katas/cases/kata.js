@@ -137,7 +137,7 @@ export function createCaseKata() {
                 input.spellcheck = false;
                 input.dataset.index = part;
                 input.size = 6;
-                input.className = 'lg:w-20 w-15 case-blank-input inline-block text-center bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg lg:px-3 px-2 py-1 lg:py-1.5 lg:text-xl text-base text-indigo-700 dark:text-indigo-300 focus:outline-none focus:border-purple-500 lg:leading-[2rem] leading-[1.5rem]';
+                input.className = 'lg:w-20 w-16 case-blank-input inline-block text-center bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg lg:px-3 px-2 py-1 lg:py-1.5 lg:text-xl text-base text-indigo-700 dark:text-indigo-300 focus:outline-none focus:border-purple-500 lg:leading-[2rem] leading-[1.5rem]';
                 inputs.push(input);
                 fragment.appendChild(input);
             });
