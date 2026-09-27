@@ -15,6 +15,8 @@ export function validateNounDataset(dataset) {
         const validPlural = typeof noun?.p === 'string';
         if (
             !noun ||
+            typeof noun.id !== 'string' ||
+            !noun.id.trim() ||
             typeof noun.w !== 'string' ||
             !noun.w.trim() ||
             typeof noun.m !== 'string' ||

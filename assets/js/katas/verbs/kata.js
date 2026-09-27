@@ -19,6 +19,8 @@ export function validateVerbDataset(dataset) {
         );
         if (
             !verb ||
+            typeof verb.id !== 'string' ||
+            !verb.id.trim() ||
             typeof verb.w !== 'string' ||
             !verb.w.trim() ||
             typeof verb.m !== 'string' ||

@@ -25,6 +25,8 @@ export function validateCaseDataset(dataset) {
 
         if (
             !item ||
+            typeof item.id !== 'string' ||
+            !item.id.trim() ||
             typeof item.w !== 'string' ||
             !item.w.trim() ||
             typeof item.s !== 'string' ||
