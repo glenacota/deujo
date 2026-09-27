@@ -95,13 +95,13 @@ export class GameState {
     if (!dataset?.length) return null;
 
     const history = this.history[type];
-    let pool = dataset.filter((item) => !history.has(item.w));
+    let pool = dataset.filter((item) => !history.has(item.id));
 
     if (!pool.length) {
       const kept = Array.from(history).slice(-CONFIG.rules.historyRecycle);
       history.clear();
-      kept.forEach((w) => history.add(w));
-      pool = dataset.filter((item) => !history.has(item.w));
+      kept.forEach((id) => history.add(id));
+      pool = dataset.filter((item) => !history.has(item.id));
     }
 
     if (!pool.length) {
@@ -110,7 +110,7 @@ export class GameState {
     }
 
     const chosen = pool[Math.floor(Math.random() * pool.length)];
-    history.add(chosen.w);
+    history.add(chosen.id);
 
     if (history.size > CONFIG.rules.historyMax) {
       const oldest = history.values().next().value;
