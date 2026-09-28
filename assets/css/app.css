@@ -3,6 +3,9 @@
     background: linear-gradient(to bottom, #000 0%, #000 33.33%, #DD0000 33.33%, #DD0000 66.66%, #FFCC00 66.66%, #FFCC00 100%);
 }
 
+/* Shared invalid-field marker for kata inputs/buttons, on top of the Tailwind border-rose-500 class. */
+[aria-invalid="true"] { box-shadow: 0 0 0 1px rgb(244 63 94 / 0.5); }
+
 .modal-backdrop {
     position: fixed;
     inset: 0;

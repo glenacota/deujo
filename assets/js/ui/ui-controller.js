@@ -33,7 +33,36 @@ export class UiController {
         this.#modals.open(dom.modals.error.root);
     }
 
-    showFeedback(result, message) {
+    /** Builds the "you typed / expected" comparison list from structured per-field results (no HTML sink). */
+    #renderFieldComparison(fields) {
+        const list = document.createElement('ul');
+        list.className = 'mt-3 space-y-1.5 text-sm';
+
+        fields.forEach(({ label, expected, given, ok }) => {
+            const item = document.createElement('li');
+            item.className = 'flex flex-wrap items-baseline gap-x-1.5 ' + (ok ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300');
+
+            const labelEl = document.createElement('span');
+            labelEl.classList.add('font-bold', 'mr-2');
+            labelEl.textContent = `${ok? '✅' : '❌'} ${label}:`;
+            item.appendChild(labelEl);
+
+            const givenEl = document.createElement('span');
+            givenEl.textContent = `"${given || '—'}"`;
+            item.appendChild(givenEl);
+
+            const expectedEl = document.createElement('span');
+            expectedEl.classList.add("italic");
+            expectedEl.textContent = ok ? `- correct!` : `- expected "${expected}"`;
+            item.appendChild(expectedEl);
+            
+            list.appendChild(item);
+        });
+
+        return list;
+    }
+
+    showFeedback(result, message, fields) {
         window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
 
         const basePanelClasses = 'w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border ';
@@ -51,6 +80,10 @@ export class UiController {
         };
         dom.modals.feedback.title.textContent = titles[result] ?? titles[CONFIG.feedbackType.Warning];
         this.#setTrustedHtml(dom.modals.feedback.content, message);
+
+        if (Array.isArray(fields) && fields.length) {
+            dom.modals.feedback.content.appendChild(this.#renderFieldComparison(fields));
+        }
 
         this.#modals.open(dom.modals.feedback.root);
     }

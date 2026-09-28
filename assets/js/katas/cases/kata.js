@@ -151,24 +151,23 @@ export function createCaseKata() {
                 return { warning: 'Please fill in all blanks before checking.' };
             }
 
-            const correct =
-                inputs.length === targets.length &&
-                inputs.every((input, i) => input.value.trim().toLowerCase() === targets[i].toLowerCase());
+            const fields = inputs.map((input, i) => {
+                const given = input.value.trim();
+                const expected = targets[i];
+                const ok = given.toLowerCase() === expected.toLowerCase();
+                input.setAttribute('aria-invalid', String(!ok));
+                input.classList.toggle('border-rose-500', !ok);
+                input.classList.toggle('border-emerald-500', ok);
+                return { label: `#${i + 1}`, expected, given, ok };
+            });
 
-            const message = correct
-                ? 'Excellent! Correct declension: '
-                    + targets.map((answer, i) => `<strong>${escapeHtml(answer)}</strong> (${escapeHtml(item.b[i].c)})`).join(', ')
-                    + '.<br/><br/>'
-                    + `<span class="text-xs italic">Full sentence: "${item.w}"</span>.`
-                : 'Correct answer: '
-                    + targets.map((answer, i) => `<strong>${escapeHtml(answer)}</strong> (${escapeHtml(item.b[i].c)})`).join(', ')
-                    + '.<br/><br/>'
-                    + 'Your answer: '
-                    + inputs.map((answer, i) => `<strong>${escapeHtml(answer.value.trim())}</strong>`).join(', ')
-                    + '.<br/><br/>'
-                    + `<span class="text-xs italic">Full sentence: "${item.w}"</span>.`
+            const correct = fields.every((f) => f.ok);
+            const message = (correct
+                ? 'Excellent! Correct declension.'
+                : 'Not quite. Review the blanks below.')
+                + `<br/><br/><span class="text-xs italic">Full sentence: "${escapeHtml(item.w)}"</span>.`;
 
-            return { correct, message };
+            return { correct, message, fields };
         },
     };
 }

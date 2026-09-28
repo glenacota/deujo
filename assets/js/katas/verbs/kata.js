@@ -99,6 +99,7 @@ export function createVerbKata(tenseKey) {
             input.value = '';
             input.placeholder = TENSE_PLACEHOLDERS[tenseKey][i];
             input.classList.remove('border-rose-500', 'border-emerald-500');
+            input.removeAttribute('aria-invalid');
         });
     },
 
@@ -110,17 +111,22 @@ export function createVerbKata(tenseKey) {
             return { warning: 'Please fill in all six conjugations before checking.' };
         }
 
-        const correct = el.inputs.every(
-            (input, i) => input.value.trim().toLowerCase() === targetForms[i].toLowerCase()
-        );
+            const fields = el.inputs.map((input, i) => {
+                const given = input.value.trim();
+                const expected = targetForms[i];
+                const ok = given.toLowerCase() === expected.toLowerCase();
+                input.setAttribute('aria-invalid', String(!ok));
+                input.classList.toggle('border-rose-500', !ok);
+                input.classList.toggle('border-emerald-500', ok);
+                return { label: PERSONS[i].label, expected, given, ok };
+            });
 
+            const correct = fields.every((f) => f.ok);
             const message = correct
                 ? `Excellent! Perfect ${escapeHtml(tense.label)} conjugation for "${escapeHtml(verb.w)}"!`
-                : 'Correct answer: '
-                    + PERSONS.map((p, i) => `${escapeHtml(p.label)} <strong>${escapeHtml(targetForms[i])}</strong>`).join(', ')
-                    + '.';
+                : `Not quite. Review the ${escapeHtml(tense.label)} forms below.`;
 
-            return { correct, message };
+            return { correct, message, fields };
         },
     };
 }

@@ -72,9 +72,9 @@ class App {
         }
     }
 
-    #handleFeedback(id, isCorrect, message) {
+    #handleFeedback(id, isCorrect, message, fields) {
         const feedbackType = isCorrect ? CONFIG.feedbackType.Success : CONFIG.feedbackType.Error;
-        this.#ui.showFeedback(feedbackType, message);
+        this.#ui.showFeedback(feedbackType, message, fields);
 
         if (isCorrect) {
             const isPromoted = this.#state.incrementStreak(id);
@@ -187,7 +187,7 @@ class App {
         }
 
         this.#state.recordAnswer(id, item.id, result.correct);
-        this.#handleFeedback(id, result.correct, result.message);
+        this.#handleFeedback(id, result.correct, result.message, result.fields);
         this.#refreshDue(id);
         this.#loadNext(id);
     }

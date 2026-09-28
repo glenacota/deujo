@@ -103,22 +103,42 @@ export function createNounKata() {
             el.plural.placeholder = hasPlural ? 'e.g. Kinder' : 'no plural';
 
             el.plural.classList.remove('border-rose-500', 'border-emerald-500');
-            el.genderButtons.forEach((btn) => setGenderActive(btn, false));
+            el.plural.removeAttribute('aria-invalid');
+            el.genderButtons.forEach((btn) => {
+                setGenderActive(btn, false);
+                btn.classList.remove('border-rose-500', 'border-emerald-500');
+                btn.removeAttribute('aria-invalid');
+            });
         },
 
-        /** @returns {{correct:boolean,message:string}|{warning:string}} */
+        /** @returns {{correct:boolean,message:string,fields:object[]}|{warning:string}} */
         check(noun) {
             if (!gender) return { warning: '⚠️ Please select a gender (der, die, or das).' };
 
             const userPlural = el.plural.value.trim();
             const hasNoPlural = !noun.p;
-            const correct =
-                gender === noun.g && (hasNoPlural || userPlural.toLowerCase() === noun.p.toLowerCase());
+            const genderOk = gender === noun.g;
+            const pluralOk = hasNoPlural || userPlural.toLowerCase() === noun.p.toLowerCase();
+            const correct = genderOk && pluralOk;
+
+            const selectedBtn = el.genderButtons.find((btn) => btn.dataset.gender === gender);
+            selectedBtn?.setAttribute('aria-invalid', String(!genderOk));
+            selectedBtn?.classList.toggle('border-rose-500', !genderOk);
+            selectedBtn?.classList.toggle('border-emerald-500', genderOk);
+
+            el.plural.setAttribute('aria-invalid', String(!pluralOk));
+            el.plural.classList.toggle('border-rose-500', !pluralOk);
+            el.plural.classList.toggle('border-emerald-500', pluralOk);
 
             const pluralText = hasNoPlural ? 'no plural' : `die ${noun.p}`;
-            const answer = `<span class="font-extrabold underline">${escapeHtml(noun.g)}</span> ${escapeHtml(noun.w)}, Plural: <span class="font-extrabold underline">${escapeHtml(pluralText)}</span>`;
+            const fields = [
+                { label: 'Gender', expected: noun.g, given: gender, ok: genderOk },
+                { label: 'Plural', expected: pluralText, given: hasNoPlural ? 'no plural' : (userPlural || '—'), ok: pluralOk },
+            ];
 
-            return { correct, message: `${correct ? 'Excellent' : 'Correct answer'}: ${answer}` };
+            const message = `${correct ? 'Excellent' : 'Not quite'}: <span class="font-extrabold underline">${escapeHtml(noun.w)}</span>`;
+
+            return { correct, message, fields };
         },
     };
 }
