@@ -82,8 +82,8 @@ export class GameState {
   // ---- Spaced repetition -------------------------------------------------
 
   /**
-   * Priority: (1) most overdue item, (2) first unseen item in dataset order,
-   * (3) soonest-due item (practice ahead). Single O(n) pass.
+  * Priority: (1) most overdue item, (2) unseen item, (3) soonest-due item.
+  * Randomly breaks ties within each tier. Single O(n) pass.
    */
   pickNext(dataset, kataId) {
     if (!dataset?.length) return null;
@@ -93,18 +93,30 @@ export class GameState {
     const recent = this.recent[kataId];
     const skip = dataset.length > CONFIG.rules.recentExclude ? new Set(recent) : null;
 
-    let due = null, dueAt = Infinity;
-    let fresh = null;
-    let upcoming = null, upcomingAt = Infinity;
+    let due = null, dueAt = Infinity, dueCount = 0;
+    let fresh = null, freshCount = 0;
+    let upcoming = null, upcomingAt = Infinity, upcomingCount = 0;
 
     for (const item of dataset) {
       if (skip?.has(item.id)) continue;
       const rec = records[item.id];
-      if (!rec) { fresh ??= item; continue; }
+      if (!rec) {
+        freshCount++;
+        if (Math.random() < 1 / freshCount) fresh = item;
+        continue;
+      }
       if (rec.dueAt <= now) {
-        if (rec.dueAt < dueAt) { due = item; dueAt = rec.dueAt; }
-      } else if (rec.dueAt < upcomingAt) {
-        upcoming = item; upcomingAt = rec.dueAt;
+        if (rec.dueAt < dueAt) { due = item; dueAt = rec.dueAt; dueCount = 1; }
+        else if (rec.dueAt === dueAt) {
+          dueCount++;
+          if (Math.random() < 1 / dueCount) due = item;
+        }
+      } else {
+        if (rec.dueAt < upcomingAt) { upcoming = item; upcomingAt = rec.dueAt; upcomingCount = 1; }
+        else if (rec.dueAt === upcomingAt) {
+          upcomingCount++;
+          if (Math.random() < 1 / upcomingCount) upcoming = item;
+        }
       }
     }
 
