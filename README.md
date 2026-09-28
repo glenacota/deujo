@@ -52,10 +52,26 @@ To add a kata:
 5. Make `validateDataset()` reject anything except a non-empty array of entries matching your kata's schema. `check()` returns `{ correct, message }`, `{ warning }`, or `null`; `getHelpContent()` returns an HTML string.
 6. Import the factory in `assets/js/katas/registry.js` and add its call to `loadKatas()`.
 
-Use unique IDs and keep dataset paths relative to the site root. Escape dataset text inserted into HTML; prefer `textContent` for plain text. Tailwind scans `index.html` and `assets/js/**/*.js`, so use literal class names and a supported accent.
+Use unique IDs and keep dataset paths relative to the site root. Escape dataset text inserted into HTML; prefer `textContent` for plain text. Tailwind scans `index.html` and `assets/js/**/*.js`, so use literal class names and a supported accent. `npm test` checks every registered kata contract and validates all shipped datasets.
+
+## 🧪 Tests
+Unit tests run on the Node.js built-in test runner. No test dependencies.
+
+```console
+npm test               # run every test
+node --test tests/unit/state.test.js   # run one file
+```
+
+Rules of the harness:
+- Tests live in `tests/unit/*.test.js` and are picked up by `npm test`.
+- `tests/helpers/browser-stub.js` installs minimal `localStorage`, `window`, and `document` globals so DOM-adjacent modules import in Node. Call it before the dynamic `import()` of any module that touches those globals.
+- Give `GameState` a unique kata id per test. `SrsStore` keeps records in module state for the whole test file, and the runner gives each file its own process.
+- Prefer dependency injection over stubbing: `schedule()` already accepts `now` and `rng`, so no fake timers.
+
+The end-to-end layer (driving a real DOM through the UI) is not built yet. When it is, keep it under `tests/e2e/` and run it with a separate script so `npm test` stays dependency-free.
 
 ## 🎨 Rebuilding the stylesheet
-The production Tailwind CSS is a committed, static file (`assets/css/tailwind.css`) generated at build time — no CDN compiler runs in the browser. Node is only needed if you change Tailwind classes or `tailwind.config.js`.
+The production Tailwind CSS is a committed, static file (`assets/css/tailwind.css`) generated at build time — no CDN compiler runs in the browser. Node is only needed if you change Tailwind classes or `tailwind.config.cjs`.
 
 ```console
 npm install
