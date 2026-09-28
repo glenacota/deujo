@@ -65,10 +65,8 @@ node --test tests/unit/state.test.js   # run one file
 Rules of the harness:
 - Tests live in `tests/unit/*.test.js` and are picked up by `npm test`.
 - `tests/helpers/browser-stub.js` installs minimal `localStorage`, `window`, and `document` globals so DOM-adjacent modules import in Node. Call it before the dynamic `import()` of any module that touches those globals.
-- Give `GameState` a unique kata id per test. `SrsStore` keeps records in module state for the whole test file, and the runner gives each file its own process.
-- Prefer dependency injection over stubbing: `schedule()` already accepts `now` and `rng`, so no fake timers.
-
-The end-to-end layer (driving a real DOM through the UI) is not built yet. When it is, keep it under `tests/e2e/` and run it with a separate script so `npm test` stays dependency-free.
+- `SrsStore` caches records in module state, so call `SrsStore.reset()` in `beforeEach` alongside `browser.reset()`. A shared kata id is then safe; use a second id only when a test needs two SRS stores alive at once.
+- Prefer dependency injection over stubbing: `schedule()` accepts `now` and `rng`, `SrsStore.countDue()` accepts `now`, and `pickNext()` accepts `now`, so no fake timers.
 
 ## 🎨 Rebuilding the stylesheet
 The production Tailwind CSS is a committed, static file (`assets/css/tailwind.css`) generated at build time — no CDN compiler runs in the browser. Node is only needed if you change Tailwind classes or `tailwind.config.cjs`.

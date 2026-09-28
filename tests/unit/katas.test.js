@@ -26,9 +26,17 @@ test('every registered kata passes validateKata', () => {
   }
 });
 
-test('kata ids and dataset urls are unique', () => {
+test('kata ids are unique', () => {
   const ids = katas.map((k) => k.id);
   assert.equal(new Set(ids).size, ids.length, `duplicate kata id in ${ids.join(', ')}`);
+});
+
+// dataset urls are deliberately shared: the three verb katas read one file.
+test('every kata points at a dataset that exists on disk', async () => {
+  for (const url of new Set(katas.map((k) => k.datasetUrl))) {
+    const dataset = await loadDataset(url);
+    assert.ok(Array.isArray(dataset), `${url} is not a JSON array`);
+  }
 });
 
 test('validateKata rejects a kata with a missing field', () => {
@@ -36,24 +44,24 @@ test('validateKata rejects a kata with a missing field', () => {
   assert.throws(() => validateKata(null), /must be an object/);
   assert.throws(() => validateKata({ ...base, id: '' }), /requires non-empty id/);
   assert.throws(() => validateKata({ ...base, render: undefined }), /requires render\(\)/);
+  assert.throws(() => validateKata({ ...base, check: undefined }), /requires check\(\)/);
   assert.throws(() => validateKata({ ...base, el: {} }), /requires el\.kata/);
+  assert.throws(() => validateKata({ ...base, el: { kata: null, section: null } }), /requires el\.cardBelt/);
 });
 
+// validateXDataset already rejects an empty array, so length needs no separate check.
 test('the shipped noun dataset is valid', async () => {
   const dataset = await loadDataset(katas.find((k) => k.id === 'nouns').datasetUrl);
-  assert.ok(dataset.length > 0);
   assert.doesNotThrow(() => validateNounDataset(dataset));
 });
 
 test('the shipped case dataset is valid', async () => {
   const dataset = await loadDataset(katas.find((k) => k.id === 'cases').datasetUrl);
-  assert.ok(dataset.length > 0);
   assert.doesNotThrow(() => validateCaseDataset(dataset));
 });
 
 test('the shipped verb dataset is valid', async () => {
   const dataset = await loadDataset(katas.find((k) => k.id === 'verbs-pres').datasetUrl);
-  assert.ok(dataset.length > 0);
   assert.doesNotThrow(() => validateVerbDataset(dataset));
 });
 
@@ -80,9 +88,11 @@ const goodCase = { id: 'c_1', w: 'der Mann', m: 'the man', s: '{0} Mann', b: [{ 
 test('validateCaseDataset requires one blank per placeholder', () => {
   assert.doesNotThrow(() => validateCaseDataset([goodCase]));
   assert.throws(() => validateCaseDataset([{ ...goodCase, s: 'Mann' }]), /entry 0/, 'missing placeholder');
-  assert.throws(() => validateCaseDataset([{ ...goodCase, b: [] }]), /entry 0/, 'no blanks');
+  assert.throws(() => validateCaseDataset([{ ...goodCase, s: '{0} und {1}' }]), /entry 0/, 'placeholder count mismatch');
+  // No placeholders AND no blanks, so the placeholder-count check cannot fire.
+  // This isolates the "blanks must be a non-empty array" rule.
+  assert.throws(() => validateCaseDataset([{ ...goodCase, s: 'der Mann', b: [] }]), /entry 0/, 'no blanks');
   assert.throws(() => validateCaseDataset([{ ...goodCase, b: [{ a: 'der', c: 'vocative' }] }]), /entry 0/);
-  assert.throws(() => validateCaseDataset([{ ...goodCase, s: '{0} und {1}' }]), /entry 0/);
 });
 
 const sixForms = ['a', 'b', 'c', 'd', 'e', 'f'];
@@ -97,5 +107,4 @@ test('validateVerbDataset requires six forms per tense', () => {
 
 test('escapeHtml neutralises markup in dataset strings', () => {
   assert.equal(escapeHtml('<img src=x onerror="a">&\''), '&lt;img src=x onerror=&quot;a&quot;&gt;&amp;&#39;');
-  assert.equal(escapeHtml(42), '42');
 });

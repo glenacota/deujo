@@ -85,10 +85,9 @@ export class GameState {
   * Priority: (1) most overdue item, (2) unseen item, (3) soonest-due item.
   * Randomly breaks ties within each tier. Single O(n) pass.
    */
-  pickNext(dataset, kataId) {
+  pickNext(dataset, kataId, now = Date.now()) {
     if (!dataset?.length) return null;
 
-    const now = Date.now();
     const records = SrsStore.getKata(kataId);
     const recent = this.recent[kataId];
     const skip = dataset.length > CONFIG.rules.recentExclude ? new Set(recent) : null;

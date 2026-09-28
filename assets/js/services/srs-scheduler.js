@@ -14,7 +14,6 @@ const LEARNING_STEPS_MS = [60_000, 600_000]; // 1 min, 10 min
 const START_EASE = 2.5;
 const MIN_EASE = 1.3;
 const GRADUATING_DAYS = 1;
-const EASY_BONUS = 1.3;
 const LAPSE_MULT = 0.5;
 const FUZZ_MIN_DAYS = 3;
 
@@ -75,13 +74,8 @@ function review(grade, r, now, rng) {
     return r;
   }
 
-  let next;
-  if (grade === GRADES.GOOD) {
-    next = r.interval * r.ease;
-  } else {
-    r.ease += 0.15;
-    next = r.interval * r.ease * EASY_BONUS;
-  }
+  // Only AGAIN and GOOD exist; schedule() rejects anything else before we get here.
+  let next = r.interval * r.ease;
 
   if (next >= FUZZ_MIN_DAYS) next *= 0.95 + rng() * 0.1; // ±5% to avoid pile-ups
   r.interval = Math.max(r.interval + 1, Math.round(next)); // always make progress

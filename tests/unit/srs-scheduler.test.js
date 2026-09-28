@@ -74,6 +74,11 @@ test('a lapse halves the interval, cuts ease by 0.2, and never drops below one d
 
   const floored = schedule(GRADES.AGAIN, graduated(1, 1.3), NOW);
   assert.equal(floored.ease, 1.3, 'ease floors at 1.3');
+});
+
+test('a lapse on a zero-interval record still floors at one day', () => {
+  // isValidRecord() accepts interval 0, so a hand-edited record can reach the floor.
+  const floored = schedule(GRADES.AGAIN, graduated(0), NOW);
   assert.equal(floored.interval, 1, 'interval floors at one day');
 });
 

@@ -44,6 +44,14 @@ document.addEventListener('visibilitychange', () => {
 });
 
 export const SrsStore = {
+  reset() {
+    data = null;
+    if (saveTimer !== null) {
+      clearTimeout(saveTimer);
+      saveTimer = null;
+    }
+  },
+
   get(kataId, itemId) {
     return load()[kataId]?.[itemId] ?? null;
   },

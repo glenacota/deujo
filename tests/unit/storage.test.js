@@ -9,6 +9,7 @@ import { installBrowserStub, installThrowingStorage } from '../helpers/browser-s
 const browser = installBrowserStub();
 
 // Storage must be imported after the stub exists.
+const { CONFIG } = await import('../../assets/js/config.js');
 const { Storage } = await import('../../assets/js/services/storage.js');
 
 beforeEach(() => browser.reset());
@@ -47,12 +48,36 @@ test('JSON falls back on malformed content', () => {
   assert.equal(Storage.getJSON('dm_test_json'), null);
 });
 
-test('reads and writes never throw when localStorage is unavailable', () => {
+test('getJSON returns the fallback for a missing key', () => {
+  // Without an explicit null check this accidentally passes, because
+  // JSON.parse(null) is null -- the fallback itself was never applied.
+  assert.deepEqual(Storage.getJSON('dm_test_absent', { fallback: true }), { fallback: true });
+  assert.equal(Storage.getJSON('dm_test_absent', 'cases'), 'cases');
+  assert.equal(Storage.getJSON('dm_test_absent'), null);
+});
+
+test('theme helpers use the configured theme key', () => {
+  assert.equal(Storage.getTheme(), null, 'an unset theme reads as null');
+
+  Storage.setTheme('dark');
+  assert.equal(localStorage.getItem(CONFIG.storage.theme), 'dark');
+  assert.equal(Storage.getTheme(), 'dark');
+});
+
+test('no getter or setter throws when localStorage is unavailable', () => {
   const restore = installThrowingStorage();
   try {
     assert.equal(Storage.getNumber('dm_test_num', 5), 5);
+    assert.equal(Storage.getBoolean('dm_test_bool', true), true);
+    assert.equal(Storage.getString('dm_test_str', 'cases'), 'cases');
     assert.equal(Storage.getJSON('dm_test_json', null), null);
+    assert.equal(Storage.getTheme(), null);
+
     Storage.setNumber('dm_test_num', 1);
+    Storage.setBoolean('dm_test_bool', true);
+    Storage.setString('dm_test_str', 'nouns');
+    Storage.setJSON('dm_test_json', { a: 1 });
+    Storage.setTheme('dark');
   } finally {
     restore();
   }
