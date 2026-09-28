@@ -10,10 +10,10 @@ export const CONFIG = Object.freeze({
     streak: 'dm_streak',
     maxStreak: 'dm_max_streak',
     belt: 'dm_belt_progress',
+    srs: 'dm_srs_v1'      // spatial repetition strategy
   },
   rules: {
-    historyMax: 30,       // how many recently-seen words we remember, per topic
-    historyRecycle: 5,    // how much history survives once the pool is exhausted
+    recentExclude: 3,     // last N served items are skipped by pickNext 
     milestoneInterval: 5, // belt points needed to advance one belt
     maxBelt: 6,           // index of the last belt (Black Belt)
   },

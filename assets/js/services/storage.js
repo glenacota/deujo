@@ -48,6 +48,16 @@ export const Storage = {
     safeSet(key, value);
   },
 
+  getJSON(key, fallback = null) {
+    const raw = safeGet(key);
+    if (raw === null) return fallback;
+    try { return JSON.parse(raw); } catch { return fallback; }
+  },
+
+  setJSON(key, value) {
+    safeSet(key, JSON.stringify(value));
+  },
+
   getTheme() {
     return safeGet(CONFIG.storage.theme);
   },
