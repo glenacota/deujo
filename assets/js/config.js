@@ -13,7 +13,7 @@ export const CONFIG = Object.freeze({
     srs: 'dm_srs_v1'      // spatial repetition strategy
   },
   rules: {
-    recentExclude: 3,     // last N served items are skipped by pickNext 
+    recentExclude: 10,    // last N served items are skipped by pickNext 
     milestoneInterval: 5, // belt points needed to advance one belt
     maxBelt: 6,           // index of the last belt (Black Belt)
   },
