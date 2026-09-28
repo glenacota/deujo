@@ -6,6 +6,12 @@ function isTypingTarget(target) {
         target?.isContentEditable;
 }
 
+function getVisibleInputs(inputRoot) {
+    const section = inputRoot.querySelector('[data-role="section"]:not(.hidden)');
+    if (!section) return [];
+    return Array.from(section.querySelectorAll('input')).filter((input) => !input.disabled && !input.readOnly);
+}
+
 export function bindKeyboardShortcuts({
     modals,
     inputRoot,
@@ -48,6 +54,19 @@ export function bindKeyboardShortcuts({
             matches: (event) => event.key === 'Enter' && isFocusModeActive() && !modals.isOpen(),
             run: (event) => {
                 event.preventDefault();
+                const target = event.target;
+                if (target instanceof HTMLInputElement) {
+                    const inputs = getVisibleInputs(inputRoot);
+                    const index = inputs.indexOf(target);
+                    if (index !== -1 && index !== inputs.length - 1) {
+                        const next = inputs.slice(index + 1).find((input) => !input.value.trim())
+                            ?? inputs.find((input) => !input.value.trim());
+                        if (next) {
+                            next.focus();
+                            return;
+                        }
+                    }
+                }
                 check();
             },
         },

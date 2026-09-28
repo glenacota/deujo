@@ -125,11 +125,19 @@ export function createCaseKata() {
                 input.autocomplete = 'off';
                 input.maxLength = '10'
                 input.spellcheck = false;
+                input.autocapitalize = 'none';
+                input.autocorrect = 'off';
+                input.lang = 'de';
                 input.dataset.index = part;
                 input.size = 6;
                 input.className = 'lg:w-20 w-16 case-blank-input inline-block text-center bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg lg:px-3 px-2 py-1 lg:py-1.5 lg:text-xl text-base text-indigo-700 dark:text-indigo-300 focus:outline-none focus:border-purple-500 lg:leading-[2rem] leading-[1.5rem]';
                 inputs.push(input);
                 fragment.appendChild(input);
+            });
+
+            inputs.forEach((input, i) => {
+                input.setAttribute('enterkeyhint', i === inputs.length - 1 ? 'done' : 'next');
+                input.setAttribute('aria-label', `Blank ${i + 1} of ${inputs.length}`);
             });
 
             el.sentence.appendChild(fragment);
@@ -138,6 +146,10 @@ export function createCaseKata() {
         check(item) {
             const targets = item.b.map((blank) => blank.a);
             if (!inputs.length) return null;
+
+            if (inputs.some((input) => !input.value.trim())) {
+                return { warning: 'Please fill in all blanks before checking.' };
+            }
 
             const correct =
                 inputs.length === targets.length &&

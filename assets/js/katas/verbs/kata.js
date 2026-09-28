@@ -6,6 +6,13 @@ import { PERSONS, TENSES } from '../../services/grammar.js';
 import { getVerbManifest } from './manifest.js';
 import { verbsTemplate } from './template.js';
 
+// Tense-neutral placeholders (from "gehen"), one per person, so the hint never leaks the current verb's answer.
+const TENSE_PLACEHOLDERS = {
+    pres: ['e.g. gehe', 'e.g. gehst', 'e.g. geht', 'e.g. gehen', 'e.g. geht', 'e.g. gehen'],
+    praet: ['e.g. ging', 'e.g. gingst', 'e.g. ging', 'e.g. gingen', 'e.g. gingt', 'e.g. gingen'],
+    perf: ['e.g. bin gegangen', 'e.g. bist gegangen', 'e.g. ist gegangen', 'e.g. sind gegangen', 'e.g. seid gegangen', 'e.g. sind gegangen'],
+};
+
 export function validateVerbDataset(dataset) {
     if (!Array.isArray(dataset) || dataset.length === 0) {
         throw new Error('dataset must be a non-empty array');
@@ -88,8 +95,9 @@ export function createVerbKata(tenseKey) {
     render(verb) {
         el.word.textContent = verb.w;
         el.meaning.textContent = `🇬🇧 ${verb.m}`;
-        el.inputs.forEach((input) => {
+        el.inputs.forEach((input, i) => {
             input.value = '';
+            input.placeholder = TENSE_PLACEHOLDERS[tenseKey][i];
             input.classList.remove('border-rose-500', 'border-emerald-500');
         });
     },
@@ -97,6 +105,10 @@ export function createVerbKata(tenseKey) {
     check(verb) {
             const targetForms = verb[tenseKey];
             if (!targetForms) return null;
+
+        if (el.inputs.some((input) => !input.value.trim())) {
+            return { warning: 'Please fill in all six conjugations before checking.' };
+        }
 
         const correct = el.inputs.every(
             (input, i) => input.value.trim().toLowerCase() === targetForms[i].toLowerCase()
