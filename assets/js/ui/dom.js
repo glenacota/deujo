@@ -44,8 +44,16 @@ export const dom = {
 
   actions: {
     checkBtn: byId('checkAnswerBtn'),
+    checkLabel: document.querySelector('#checkAnswerBtn [data-role="label"]'),
     skipBtn: byId('skipBtn'),
     helpBtn: byId('helpBtn'),
+  },
+
+  verdict: {
+    root: byId('answerVerdict'),
+    icon: byId('answerVerdictIcon'),
+    title: byId('answerVerdictTitle'),
+    detail: byId('answerVerdictDetail'),
   },
 
   toast: {
@@ -62,13 +70,6 @@ export const dom = {
       root: byId('helpModal'),
       title: byId('helpModalTitle'),
       content: byId('helpModalContent'),
-    },
-    feedback: {
-      root: byId('feedbackModal'),
-      panel: byId('feedbackModalPanel'),
-      title: byId('feedbackModalTitle'),
-      content: byId('feedbackModalContent'),
-      continueBtn: byId('feedbackContinueBtn'),
     },
     error: {
       root: byId('errorModal'),

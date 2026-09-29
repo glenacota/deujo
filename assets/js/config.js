@@ -24,5 +24,4 @@ export const CONFIG = Object.freeze({
     icons: ['⚪️', '🟡', '🟠', '🟢', '🔵', '🟤', '⚫️'],
     labels: ["White", "Yellow", "Orange", "Green", "Blue", "Brown", "Black"],
   },
-  feedbackType: { Success: 'Success', Error: 'Error', Warning: 'Warning' }
 });

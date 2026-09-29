@@ -1,11 +1,12 @@
 // app.js
 'use strict';
 
-import { CONFIG } from './config.js';
+import { summarizeAnswer, summarizeWarning } from './services/answer-summary.js';
 import { AudioEngine } from './services/audio-engine.js';
 import { FxEngine } from './services/fx-engine.js';
 import { GameState } from './state.js';
 import { loadKatas } from './katas/registry.js';
+import { clearAnswerMarks, setSectionLocked } from './ui/answer-view.js';
 import { DashboardView } from './ui/dashboard-view.js';
 import { dom } from './ui/dom.js';
 import { FocusView } from './ui/focus-view.js';
@@ -31,6 +32,8 @@ class App {
     #entries = new Map(); // kata id -> { kata, dataset }
     #datasets = new Map(); // dataset URL -> Promise<dataset>
     #focusModeActive = false;
+    #phase = 'answering';
+    #advanceTimer = null;
 
     constructor() {
         this.#audio = new AudioEngine();
@@ -72,10 +75,7 @@ class App {
         }
     }
 
-    #handleFeedback(id, isCorrect, message, fields) {
-        const feedbackType = isCorrect ? CONFIG.feedbackType.Success : CONFIG.feedbackType.Error;
-        this.#ui.showFeedback(feedbackType, message, fields);
-
+    #handleFeedback(id, isCorrect) {
         if (isCorrect) {
             const isPromoted = this.#state.incrementStreak(id);
             this.#renderProgress(id);
@@ -173,7 +173,43 @@ class App {
         if (item) kata.render(item);
     }
 
+    #setPhase(id, phase) {
+        this.#phase = phase;
+        const section = this.#entries.get(id)?.kata.el.section;
+        const locked = phase !== 'answering';
+        if (locked) this.#focus.releaseFocus(section);
+        setSectionLocked(section, locked);
+        dom.actions.checkLabel.textContent = locked ? 'Next' : 'Check';
+        // Skipping a graded answer would let the learner dodge the streak reset.
+        dom.actions.skipBtn.classList.toggle('hidden', locked);
+    }
+
+    #cancelAdvance() {
+        clearTimeout(this.#advanceTimer);
+        this.#advanceTimer = null;
+    }
+
+    #advance(id) {
+        const { kata } = this.#entries.get(id);
+        this.#cancelAdvance();
+        this.#ui.hideVerdict();
+        this.#setPhase(id, 'answering');
+        clearAnswerMarks(kata.el.section);
+        this.#loadNext(id);
+
+        const section = kata.el.section;
+        section.classList.remove('motion-safe:animate-kata-enter');
+        void section.offsetWidth;
+        section.classList.add('motion-safe:animate-kata-enter');
+        this.#focus.focusFirstInput();
+    }
+
     #check(id) {
+        if (this.#phase === 'reviewing') {
+            this.#advance(id);
+            return;
+        }
+
         const { kata, dataset } = this.#entries.get(id);
         if (!dataset) return;
         const item = this.#state.current[id];
@@ -181,15 +217,27 @@ class App {
 
         const result = kata.check(item);
         if (!result) return;
+
+        // A complaint about an unfinished answer is not a verdict: it grades
+        // nothing, leaves the section editable, and stays put until dismissed.
         if (result.warning) {
-            this.#ui.showFeedback(CONFIG.feedbackType.Warning, result.warning);
+            this.#ui.showVerdict(summarizeWarning(result.warning));
             return;
         }
 
         this.#state.recordAnswer(id, item.id, result.correct);
-        this.#handleFeedback(id, result.correct, result.message, result.fields);
+        this.#handleFeedback(id, result.correct);
         this.#refreshDue(id);
-        this.#loadNext(id);
+
+        const summary = summarizeAnswer(result);
+        this.#ui.showVerdict(summary, result.answer);
+        this.#setPhase(id, 'reviewing');
+    }
+
+    /** Skipping discards the pending answer and moves on without grading it. */
+    #skip(id) {
+        if (!this.#entries.has(id) || this.#phase !== 'answering') return;
+        this.#advance(id);
     }
 
     #showHelpModal(id) {
@@ -206,9 +254,13 @@ class App {
     }
 
     async #enterKata(id) {
+        this.#cancelAdvance();
         const { kata } = this.#entries.get(id);
         kata.mount(dom.focus.sections);
+        clearAnswerMarks(kata.el.section);
         this.#setKata(id);
+        this.#setPhase(id, 'answering');
+        this.#ui.hideVerdict();
         this.#focusModeActive = true;
         this.#state.setFocusModeActive(true);
         this.#focus.renderHeader(kata, this.#state);
@@ -224,6 +276,7 @@ class App {
     }
 
     #exitToMenu() {
+        this.#cancelAdvance();
         this.#focusModeActive = false;
         this.#state.setFocusModeActive(false);
         this.#dashboard.showDashboard();
@@ -249,7 +302,7 @@ class App {
         });
 
         dom.actions.checkBtn.addEventListener('click', () => this.#check(this.#state.activeKata));
-        dom.actions.skipBtn.addEventListener('click', () => this.#loadNext(this.#state.activeKata));
+        dom.actions.skipBtn.addEventListener('click', () => this.#skip(this.#state.activeKata));
         dom.actions.helpBtn.addEventListener('click', () => this.#showHelpModal(this.#state.activeKata));
 
         dom.share.btn.addEventListener('click', () => {
@@ -269,11 +322,12 @@ class App {
             modals: this.#modals,
             inputRoot: dom.focus.sections,
             isFocusModeActive: () => this.#focusModeActive,
+            isAnswering: () => this.#phase === 'answering',
             kataCount: () => this.#katas.length,
             enterKataAtSlot: (slot) => this.#enterKata(this.#katas[slot - 1].id),
             check: () => this.#check(this.#state.activeKata),
             showHelp: () => dom.actions.helpBtn.click(),
-            loadNext: () => this.#loadNext(this.#state.activeKata),
+            loadNext: () => this.#skip(this.#state.activeKata),
             exitToMenu: () => this.#exitToMenu(),
         });
     }

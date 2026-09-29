@@ -16,6 +16,7 @@ export function bindKeyboardShortcuts({
     modals,
     inputRoot,
     isFocusModeActive,
+    isAnswering,
     kataCount,
     enterKataAtSlot,
     check,
@@ -55,6 +56,9 @@ export function bindKeyboardShortcuts({
             run: (event) => {
                 event.preventDefault();
                 const target = event.target;
+                // While a verdict is up, the section is locked, so Enter means
+                // "next" rather than "check the next blank".
+                if (!isAnswering()) return check();
                 if (target instanceof HTMLInputElement) {
                     const inputs = getVisibleInputs(inputRoot);
                     const index = inputs.indexOf(target);

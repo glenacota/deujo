@@ -1,7 +1,8 @@
 // katas/nouns/kata.js
 // Self-contained noun kata: elements, local selection state, rendering, validation.
 
-import { escapeHtml, createSectionFromTemplate } from '../../services/utility.js';
+import { createSectionFromTemplate } from '../../services/utility.js';
+import { markControl } from '../../ui/answer-view.js';
 import { nounsManifest } from './manifest.js';
 import { nounsTemplate } from './template.js';
 
@@ -102,18 +103,12 @@ export function createNounKata() {
             el.plural.disabled = !hasPlural;
             el.plural.placeholder = hasPlural ? 'e.g. Kinder' : 'no plural';
 
-            el.plural.classList.remove('border-rose-500', 'border-emerald-500');
-            el.plural.removeAttribute('aria-invalid');
-            el.genderButtons.forEach((btn) => {
-                setGenderActive(btn, false);
-                btn.classList.remove('border-rose-500', 'border-emerald-500');
-                btn.removeAttribute('aria-invalid');
-            });
+            el.genderButtons.forEach((btn) => setGenderActive(btn, false));
         },
 
-        /** @returns {{correct:boolean,message:string,fields:object[]}|{warning:string}} */
+        /** @returns {{correct:boolean,fields:object[]}|{warning:string}} */
         check(noun) {
-            if (!gender) return { warning: '⚠️ Please select a gender (der, die, or das).' };
+            if (!gender) return { warning: 'Please select a gender (der, die, or das).' };
 
             const userPlural = el.plural.value.trim();
             const hasNoPlural = !noun.p;
@@ -121,24 +116,20 @@ export function createNounKata() {
             const pluralOk = hasNoPlural || userPlural.toLowerCase() === noun.p.toLowerCase();
             const correct = genderOk && pluralOk;
 
-            const selectedBtn = el.genderButtons.find((btn) => btn.dataset.gender === gender);
-            selectedBtn?.setAttribute('aria-invalid', String(!genderOk));
-            selectedBtn?.classList.toggle('border-rose-500', !genderOk);
-            selectedBtn?.classList.toggle('border-emerald-500', genderOk);
+            const genderButtonsByValue = new Map(el.genderButtons.map((btn) => [btn.dataset.gender, btn]));
+            markControl(genderButtonsByValue.get(gender), { ok: genderOk, inside: true, note: false });
+            if (!genderOk) markControl(genderButtonsByValue.get(noun.g), { ok: true, inside: true });
 
-            el.plural.setAttribute('aria-invalid', String(!pluralOk));
-            el.plural.classList.toggle('border-rose-500', !pluralOk);
-            el.plural.classList.toggle('border-emerald-500', pluralOk);
+            const pluralAnswer = hasNoPlural ? 'no plural' : `die ${noun.p}`;
+            markControl(el.plural, { ok: pluralOk, expected: pluralAnswer });
 
-            const pluralText = hasNoPlural ? 'no plural' : `die ${noun.p}`;
-            const fields = [
-                { label: 'Gender', expected: noun.g, given: gender, ok: genderOk },
-                { label: 'Plural', expected: pluralText, given: hasNoPlural ? 'no plural' : (userPlural || '—'), ok: pluralOk },
-            ];
-
-            const message = `${correct ? 'Excellent' : 'Not quite'}: <span class="font-extrabold underline">${escapeHtml(noun.w)}</span>`;
-
-            return { correct, message, fields };
+            return {
+                correct,
+                fields: [
+                    { label: 'Gender', expected: noun.g, given: gender, ok: genderOk },
+                    { label: 'Plural', expected: hasNoPlural ? pluralAnswer : `die ${noun.p}`, given: hasNoPlural ? pluralAnswer : (userPlural || '—'), ok: pluralOk },
+                ],
+            };
         },
     };
 }

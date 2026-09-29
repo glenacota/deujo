@@ -3,6 +3,7 @@
 // article it governs, so the case is part of the answer.
 
 import { escapeHtml, createSectionFromTemplate } from '../../services/utility.js';
+import { markControl } from '../../ui/answer-view.js';
 import {
     CASE_LABELS,
     DETERMINERS,
@@ -213,24 +214,19 @@ export function createPrepositionKata() {
                 const caseKey = item.b[i].c;
                 const { preposition, ok } = gradeBlank(given, item.b[i]);
 
-                input.setAttribute('aria-invalid', String(!ok));
-                input.classList.toggle('border-rose-500', !ok);
-                input.classList.toggle('border-emerald-500', ok);
+                markControl(input, { ok, expected });
                 return {
-                    label: preposition ? escapeHtml(`${preposition} + ${CASE_LABELS[caseKey]}`) : `#${i + 1}`,
+                    label: preposition ? `${preposition} + ${CASE_LABELS[caseKey]}` : `Blank ${i + 1}`,
                     expected,
                     given,
                     ok,
                 };
             });
 
-            const correct = fields.every((f) => f.ok);
-            const message = (correct
-                ? 'Excellent! Correct preposition and case.'
-                : 'Not quite. Review the blanks below.')
-                + `<br/><br/><span class="text-xs italic">Full sentence: "${escapeHtml(item.w)}"</span>.`;
-
-            return { correct, message, fields };
+            return {
+                correct: fields.every((f) => f.ok),
+                fields,
+            };
         },
     };
 }

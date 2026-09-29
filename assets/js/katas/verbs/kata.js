@@ -2,6 +2,7 @@
 // Self-contained verb-conjugation kata.
 
 import { escapeHtml, createSectionFromTemplate } from '../../services/utility.js';
+import { markControl } from '../../ui/answer-view.js';
 import { PERSONS, TENSES } from '../../services/grammar.js';
 import { getVerbManifest } from './manifest.js';
 import { verbsTemplate } from './template.js';
@@ -98,11 +99,10 @@ export function createVerbKata(tenseKey) {
         el.inputs.forEach((input, i) => {
             input.value = '';
             input.placeholder = TENSE_PLACEHOLDERS[tenseKey][i];
-            input.classList.remove('border-rose-500', 'border-emerald-500');
-            input.removeAttribute('aria-invalid');
         });
     },
 
+    /** @returns {{correct:boolean,fields:object[]}|{warning:string}|null} */
     check(verb) {
             const targetForms = verb[tenseKey];
             if (!targetForms) return null;
@@ -115,18 +115,11 @@ export function createVerbKata(tenseKey) {
                 const given = input.value.trim();
                 const expected = targetForms[i];
                 const ok = given.toLowerCase() === expected.toLowerCase();
-                input.setAttribute('aria-invalid', String(!ok));
-                input.classList.toggle('border-rose-500', !ok);
-                input.classList.toggle('border-emerald-500', ok);
+                markControl(input, { ok, note: false });
                 return { label: PERSONS[i].label, expected, given, ok };
             });
 
-            const correct = fields.every((f) => f.ok);
-            const message = correct
-                ? `Excellent! Perfect ${escapeHtml(tense.label)} conjugation for "${escapeHtml(verb.w)}"!`
-                : `Not quite. Review the ${escapeHtml(tense.label)} forms below.`;
-
-            return { correct, message, fields };
+            return { correct: fields.every((f) => f.ok), fields };
         },
     };
 }

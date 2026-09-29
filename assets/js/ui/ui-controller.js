@@ -1,9 +1,20 @@
 // ui/ui-controller.js
 // Rendering layer: takes state/data in, updates the DOM
 
-import { CONFIG } from '../config.js';
+import { VERDICT_TONE } from '../services/answer-summary.js';
 import { renderBeltBadge } from './belt-badge.js';
 import { dom } from './dom.js';
+
+const HINTS = {
+    [VERDICT_TONE.correct]: 'Enter for the next word',
+    [VERDICT_TONE.wrong]: 'Enter or Skip for the next word',
+    [VERDICT_TONE.warning]: 'Fill in the missing answer, then check again',
+};
+const VERDICT_TONE_CLASSES = {
+    correct: 'border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-[rgb(6_78_59/0.3)] dark:text-emerald-300',
+    wrong: 'border-rose-300 bg-rose-50 text-rose-800 dark:border-rose-900 dark:bg-[rgb(136_19_55/0.3)] dark:text-rose-300',
+    warning: 'border-amber-300 bg-yellow-100 text-amber-800 dark:border-amber-900 dark:bg-[rgb(120_53_15/0.3)] dark:text-amber-300',
+};
 
 export class UiController {
     #modals;
@@ -33,59 +44,21 @@ export class UiController {
         this.#modals.open(dom.modals.error.root);
     }
 
-    /** Builds the "you typed / expected" comparison list from structured per-field results (no HTML sink). */
-    #renderFieldComparison(fields) {
-        const list = document.createElement('ul');
-        list.className = 'mt-3 space-y-1.5 text-sm';
+    /** @param {{tone: string, icon: string, title: string, detail: string}} summary */
+    showVerdict(summary) {
+        const { root, icon, title, detail } = dom.verdict;
 
-        fields.forEach(({ label, expected, given, ok }) => {
-            const item = document.createElement('li');
-            item.className = 'flex flex-wrap items-baseline gap-x-1.5 ' + (ok ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300');
+        root.className = `verdict grid max-w-xl gap-2 mx-auto mt-4 rounded-2xl border border-transparent px-[1.1rem] py-[0.9rem] text-left animate-[verdict-in_220ms_cubic-bezier(0.2,0.9,0.3,1)] motion-reduce:animate-none ${VERDICT_TONE_CLASSES[summary.tone] ?? VERDICT_TONE_CLASSES.warning}`;
+        icon.textContent = summary.icon;
+        title.textContent = summary.title;
+        detail.textContent = summary.detail;
 
-            const labelEl = document.createElement('span');
-            labelEl.classList.add('font-bold', 'mr-2');
-            labelEl.textContent = `${ok? '✅' : '❌'} ${label}:`;
-            item.appendChild(labelEl);
-
-            const givenEl = document.createElement('span');
-            givenEl.textContent = `"${given || '—'}"`;
-            item.appendChild(givenEl);
-
-            const expectedEl = document.createElement('span');
-            expectedEl.classList.add("italic");
-            expectedEl.textContent = ok ? `- correct!` : `- expected "${expected}"`;
-            item.appendChild(expectedEl);
-            
-            list.appendChild(item);
-        });
-
-        return list;
+        root.title = HINTS[summary.tone] ?? '';
+        root.hidden = false;
     }
 
-    showFeedback(result, message, fields) {
-        window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-
-        const basePanelClasses = 'w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border ';
-        const themeStyles = {
-            [CONFIG.feedbackType.Success]: 'bg-emerald-50 dark:bg-emerald-950 border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-100',
-            [CONFIG.feedbackType.Error]: 'bg-rose-50 dark:bg-rose-950 border-rose-300 dark:border-rose-800 text-rose-900 dark:text-rose-100',
-            [CONFIG.feedbackType.Warning]: 'bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-800',
-        };
-
-        dom.modals.feedback.panel.className = basePanelClasses + (themeStyles[result] ?? themeStyles[CONFIG.feedbackType.Warning]);
-        const titles = {
-            [CONFIG.feedbackType.Success]: '✅ Correct!',
-            [CONFIG.feedbackType.Error]: '❌ Try again!',
-            [CONFIG.feedbackType.Warning]: '⚠️ Check your answer',
-        };
-        dom.modals.feedback.title.textContent = titles[result] ?? titles[CONFIG.feedbackType.Warning];
-        this.#setTrustedHtml(dom.modals.feedback.content, message);
-
-        if (Array.isArray(fields) && fields.length) {
-            dom.modals.feedback.content.appendChild(this.#renderFieldComparison(fields));
-        }
-
-        this.#modals.open(dom.modals.feedback.root);
+    hideVerdict() {
+        dom.verdict.root.hidden = true;
     }
 
     showHelpContent(title, html) {

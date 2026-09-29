@@ -2,6 +2,7 @@
 // Self-contained case-declension kata: fill-in-the-blank sentences with inline inputs.
 
 import { escapeHtml, createSectionFromTemplate } from '../../services/utility.js';
+import { markControl } from '../../ui/answer-view.js';
 import { CASE_LABELS, DEFINITE, INDEFINITE, PLURAL_DEFINITE } from '../../services/grammar.js';
 import { casesManifest } from './manifest.js';
 import { casesTemplate } from './template.js';
@@ -143,6 +144,7 @@ export function createCaseKata() {
             el.sentence.appendChild(fragment);
         },
 
+        /** @returns {{correct:boolean,fields:object[],answer:string}|{warning:string}|null} */
         check(item) {
             const targets = item.b.map((blank) => blank.a);
             if (!inputs.length) return null;
@@ -155,19 +157,14 @@ export function createCaseKata() {
                 const given = input.value.trim();
                 const expected = targets[i];
                 const ok = given.toLowerCase() === expected.toLowerCase();
-                input.setAttribute('aria-invalid', String(!ok));
-                input.classList.toggle('border-rose-500', !ok);
-                input.classList.toggle('border-emerald-500', ok);
-                return { label: `#${i + 1}`, expected, given, ok };
+                markControl(input, { ok, expected });
+                return { label: `Blank ${i + 1}`, expected, given, ok };
             });
 
-            const correct = fields.every((f) => f.ok);
-            const message = (correct
-                ? 'Excellent! Correct declension.'
-                : 'Not quite. Review the blanks below.')
-                + `<br/><br/><span class="text-xs italic">Full sentence: "${escapeHtml(item.w)}"</span>.`;
-
-            return { correct, message, fields };
+            return {
+                correct: fields.every((f) => f.ok),
+                fields,
+            };
         },
     };
 }

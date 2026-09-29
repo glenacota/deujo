@@ -104,12 +104,21 @@
         <!-- Each kata owns its own markup (see katas/<kata>/template.js) and mounts itself here. -->
         <div id="kataSections"></div>
 
+        <!-- Right answers read as ✅ green, wrong ones as ❌ red with the correct value always shown. -->
+        <div id="answerVerdict" class="verdict" hidden role="status" aria-live="polite">
+            <div class="verdict-head">
+                <span id="answerVerdictIcon" class="verdict-icon" aria-hidden="true"></span>
+                <span id="answerVerdictTitle" class="text-base font-extrabold uppercase"></span>
+                <span id="answerVerdictDetail" class="text-sm"></span>
+            </div>
+        </div>
+
         <div id="kataActions" class="lg:mt-auto px-6 pt-6 mb-4 lg:mb-0">
             <div class="max-w-xl mx-auto flex flex-col items-center gap-2 lg:gap-3">
                 <div class="flex w-full gap-3">
                     <button id="checkAnswerBtn" type="button" class="flex-1 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-bold py-2 lg:py-3.5 px-6 rounded-xl shadow-lg shadow-indigo-600/30 transition-all active:scale-[0.99] text-base">
                         <kbd class="hidden sm:inline-block px-1.5 py-0.5 mr-2 text-xs bg-indigo-200 dark:bg-indigo-900/80 text-indigo-800 dark:text-indigo-200 rounded border border-indigo-300 dark:border-indigo-700/60 font-mono">Enter</kbd>
-                        Check
+                        <span data-role="label">Check</span>
                     </button>
                     <button id="skipBtn" type="button" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 font-semibold py-2 lg:py-3.5 px-4 rounded-xl border border-slate-300 dark:border-slate-800 transition-all">
                         <kbd class="hidden sm:inline-block px-1.5 py-0.5 mr-2 text-xs bg-indigo-200 dark:bg-indigo-900/80 text-indigo-800 dark:text-indigo-200 rounded border border-indigo-300 dark:border-indigo-700/60 font-mono">/</kbd>
@@ -175,19 +184,6 @@
         </div>
     </div>
 
-    <!-- Answer Feedback Modal -->
-    <div id="feedbackModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="feedbackModalTitle">
-        <div id="feedbackModalPanel" class="w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
-            <div class="flex items-center justify-between px-5 py-4">
-                <h2 id="feedbackModalTitle" class="text-lg font-bold text-center"></h2>
-            </div>
-            <div id="feedbackModalContent" class="px-5 py-6 text-center text-sm leading-relaxed" aria-live="polite"></div>
-            <div class="px-5 pb-5 flex justify-center">
-                <button id="feedbackContinueBtn" type="button" data-modal-close data-modal-initial-focus class="min-h-11 w-full sm:w-auto px-8 py-3 rounded-xl bg-black/10 hover:bg-black/20 border border-current/20 font-bold text-sm transition-colors active:scale-[0.98]" aria-label="Continue to the next word">Continue</button>
-            </div>
-        </div>
-    </div>
-
     <!-- Active Kata Help Modal -->
     <div id="helpModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle">
         <div class="modal-panel">
@@ -227,13 +223,14 @@
                 </div>
                 <div>
                     <h4 class="font-bold text-slate-900 dark:text-white mb-1">Scoring</h4>
+                    <p class="mb-2">Your answers are marked in place. <span class="text-emerald-700 dark:text-emerald-300 font-bold">✅ green</span> is correct, <span class="text-rose-700 dark:text-rose-300 font-bold">❌ red</span> is wrong, and a wrong field shows the answer you needed next to it.</p>
                     <p>Each correct answer builds your streak and belt progress: ⚪ 🟡 🟠 🟢 🔵 🟤 ⚫. Every 5 correct answers earn you the next belt. Progress is tracked separately for each kata and saved locally.</p>
                 </div>
                 <div>
                     <h4 class="font-bold text-slate-900 dark:text-white mb-1">Hotkeys</h4>
                     <ul class="space-y-1">
                         <li><kbd class="modal-key font-sans">⇧ + 1</kbd>&ndash;<kbd class="modal-key font-sans">...</kbd>: Jump to a kata</li>
-                        <li><kbd class="modal-key font-sans">Enter</kbd>: Check answer</li>
+                        <li><kbd class="modal-key font-sans">Enter</kbd>: Check answer, then next word</li>
                         <li><kbd class="modal-key font-sans">/</kbd>: Skip current word</li>
                         <li><kbd class="modal-key font-sans">?</kbd>: Open kata tips</li>
                         <li><kbd class="modal-key font-sans">Backspace</kbd>: Back to the landing page</li>

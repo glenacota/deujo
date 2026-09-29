@@ -4,6 +4,21 @@ import { renderBeltBadge } from './belt-badge.js';
 import { dom } from './dom.js';
 
 export class FocusView {
+    /** The visible, enabled inputs of the mounted kata section, in reading order. */
+    #visibleInputs() {
+        const section = dom.focus.sections.querySelector('[data-role="section"]:not(.hidden)');
+        if (!section) return [];
+        return Array.from(section.querySelectorAll('input')).filter((input) => !input.disabled && !input.readOnly);
+    }
+
+    focusFirstInput() {
+        this.#visibleInputs()[0]?.focus();
+    }
+
+    releaseFocus(section) {
+        if (section?.contains(document.activeElement)) document.activeElement.blur();
+    }
+
     renderHeader(kata, state) {
         dom.focus.kataName.textContent = kata.name;
         dom.header.streak.textContent = state.streakByKata[kata.id] ?? 0;

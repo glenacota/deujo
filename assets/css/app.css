@@ -3,6 +3,98 @@
     background: linear-gradient(to bottom, #000 0%, #000 33.33%, #DD0000 33.33%, #DD0000 66.66%, #FFCC00 66.66%, #FFCC00 100%);
 }
 
+/* ---- Answer marking ---------------------------------------------------- */
+.answer-field {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    vertical-align: middle;
+}
+
+.answer-badge {
+    flex: none;
+    font-size: 0.95rem;
+    line-height: 1;
+    pointer-events: none;
+}
+button > .answer-badge { margin-left: 0.45rem; font-size: 0.85rem; }
+
+.answer-note {
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+.answer-note--correct { color: rgb(4 120 87); }
+.answer-note--wrong { color: rgb(190 18 60); }
+html.dark .answer-note--correct { color: rgb(110 231 183); }
+html.dark .answer-note--wrong { color: rgb(253 164 175); }
+
+/* Colour the control itself. Overrides the shared aria-invalid ring. */
+[data-answer-state="correct"] {
+    border-color: rgb(16 185 129) !important;
+    background-color: rgb(236 253 245) !important;
+    color: rgb(6 130 87) !important;
+    box-shadow: 0 0 0 1px rgb(16 185 129 / 0.45);
+}
+[data-answer-state="wrong"] {
+    border-color: rgb(244 63 94) !important;
+    background-color: rgb(255 241 242) !important;
+    color: rgb(159 18 57) !important;
+    box-shadow: 0 0 0 1px rgb(244 63 94 / 0.45);
+}
+html.dark [data-answer-state="correct"] {
+    border-color: rgb(52 211 153) !important;
+    background-color: rgb(6 78 59 / 0.35) !important;
+    color: rgb(110 231 183) !important;
+}
+html.dark [data-answer-state="wrong"] {
+    border-color: rgb(251 113 133) !important;
+    background-color: rgb(136 19 55 / 0.35) !important;
+    color: rgb(253 164 175) !important;
+}
+
+.answer-locked { pointer-events: none; }
+
+/* New item sliding in after a verdict. */
+.kata-enter { animation: kata-enter 260ms cubic-bezier(0.2, 0.9, 0.3, 1) both; }
+@keyframes kata-enter { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+/* ---- Verdict panel ------------------------------------------------------ */
+
+.verdict {
+    display: grid;
+    gap: 0.5rem;
+    margin: 1rem auto 0;
+    max-width: 36rem;
+    padding: 0.9rem 1.1rem;
+    border: 1px solid transparent;
+    border-radius: 1rem;
+    text-align: left;
+    /* No fill mode: if animations never run, the panel must still be readable. */
+    animation: verdict-in 220ms cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+.verdict[hidden] { display: none; }
+
+/* Each line states its own outcome in its own colour: a correct field reads
+   green, a wrong one red with the expected value in green beside it. */
+.verdict--correct { border-color: rgb(110 231 183); background: rgb(236 253 245); color: rgb(6 130 87); }
+.verdict--wrong { border-color: rgb(253 164 175); background: rgb(255 241 242); color: rgb(159 18 57); }
+.verdict--warning { border-color: rgb(252 211 77); background: rgb(254 249 195); color: rgb(146 64 14); }
+html.dark .verdict--correct { border-color: rgb(6 78 59); background: rgb(6 78 59 / 0.3); color: rgb(110 231 183); }
+html.dark .verdict--wrong { border-color: rgb(136 19 55); background: rgb(136 19 55 / 0.3); color: rgb(253 164 175); }
+html.dark .verdict--warning { border-color: rgb(120 53 15); background: rgb(120 53 15 / 0.3); color: rgb(252 211 77); }
+
+.verdict-head { display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap; }
+.verdict-icon { font-size: 1.1rem; line-height: 1; }
+
+@keyframes verdict-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes verdict-out { to { opacity: 0; transform: translateY(-6px); } }
+
+@media (prefers-reduced-motion: reduce) {
+    .verdict, .kata-enter { animation: none; }
+}
+
 /* Shared invalid-field marker for kata inputs/buttons, on top of the Tailwind border-rose-500 class. */
 [aria-invalid="true"] { box-shadow: 0 0 0 1px rgb(244 63 94 / 0.5); }
 
