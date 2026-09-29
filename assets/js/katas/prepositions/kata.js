@@ -186,9 +186,9 @@ export function createPrepositionKata() {
                 input.autocorrect = 'off';
                 input.lang = 'de';
                 input.dataset.index = part;
-                input.size = 8;
+                input.size = '12';
                 input.placeholder = 'e.g. zum';
-                input.className = 'lg:w-28 w-24 inline-block text-center bg-white dark:bg-slate-950 border placeholder-slate-400 dark:placeholder-slate-600 border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1 lg:px-3 lg:py-1.5 text-base lg:text-xl text-indigo-700 dark:text-indigo-300 focus:outline-none focus:border-purple-500 leading-[1.5rem] lg:leading-[2rem]';
+                input.className = 'inline-xl inline-block text-center bg-white dark:bg-slate-950 border placeholder-slate-400 dark:placeholder-slate-600 border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1 lg:px-3 lg:py-1.5 text-base lg:text-xl text-indigo-700 dark:text-indigo-300 focus:outline-none focus:border-purple-500 leading-[1.5rem] lg:leading-[2rem]';
                 inputs.push(input);
                 fragment.appendChild(input);
             });
