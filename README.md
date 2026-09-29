@@ -16,6 +16,7 @@ Just pure, disciplined practice.
 - **Verb Conjugation** katas: Train Präsens, Präteritum, and Perfekt tenses.
 - **Verb Charts**: Strike the `?` key to instantly view the complete conjugation chart.
 - **Cases**: Train Dativ, Genitiv, Akkusativ, and Nominativ cases.
+- **Prepositions**: Fill in the preposition *and* the case its article takes, including the contracted forms (`zum`, `im`, `aufs`).
 - **Just a spoon of gamification**: Unlock higher belt levels, hold your streak stance, and celebrate milestones.
 - **Kiai! Sound FX**.
 
@@ -46,7 +47,7 @@ To add exercises to an existing kata, append entries to its JSON file in `assets
 
 To add a kata:
 1. Add `assets/js/katas/<id>/manifest.js`, `template.js`, and `kata.js`, plus `assets/datasets/<id>.json`.
-2. Give the manifest a unique `id`, `name`, `subtitle`, `datasetUrl`, and `accent`. Dashboard accents must be `indigo`, `teal`, or `purple`.
+2. Give the manifest a unique `id`, `name`, `subtitle`, `datasetUrl`, and `accent`. Dashboard accents must be `indigo`, `teal`, `purple`, or `amber`.
 3. Export a `create...Kata()` factory from `kata.js`. Return the manifest fields, `el` with `kata`, `section`, and `cardBelt`, and these methods: `mount(container)`, `render(item)`, `check(item)`, `getHelpContent(item)`, and `validateDataset(dataset)`.
 4. In `mount`, create and append one `[data-role="section"]` from your template. Set `el.section` and connect `el.kata` to `kata-<id>` and `el.cardBelt` to `belt-<id>`.
 5. Make `validateDataset()` reject anything except a non-empty array of entries matching your kata's schema. `check()` returns `{ correct, message }`, `{ warning }`, or `null`; `getHelpContent()` returns an HTML string.

@@ -4,6 +4,7 @@
 
 import { createNounKata } from './nouns/kata.js';
 import { createCaseKata } from './cases/kata.js';
+import { createPrepositionKata } from './prepositions/kata.js';
 import { createVerbKata } from './verbs/kata.js';
 
 /**
@@ -55,6 +56,7 @@ export function loadKatas() {
     return [
         createNounKata(),
         createCaseKata(),
+        createPrepositionKata(),
         createVerbKata('pres'),
         createVerbKata('praet'),
         createVerbKata('perf'),

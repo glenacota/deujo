@@ -12,6 +12,7 @@ installBrowserStub();
 const { loadKatas, validateKata } = await import('../../assets/js/katas/registry.js');
 const { validateNounDataset } = await import('../../assets/js/katas/nouns/kata.js');
 const { validateCaseDataset } = await import('../../assets/js/katas/cases/kata.js');
+const { validatePrepositionDataset, gradeBlank } = await import('../../assets/js/katas/prepositions/kata.js');
 const { validateVerbDataset } = await import('../../assets/js/katas/verbs/kata.js');
 const { escapeHtml } = await import('../../assets/js/services/utility.js');
 
@@ -60,6 +61,11 @@ test('the shipped case dataset is valid', async () => {
   assert.doesNotThrow(() => validateCaseDataset(dataset));
 });
 
+test('the shipped preposition dataset is valid', async () => {
+  const dataset = await loadDataset(katas.find((k) => k.id === 'prepositions').datasetUrl);
+  assert.doesNotThrow(() => validatePrepositionDataset(dataset));
+});
+
 test('the shipped verb dataset is valid', async () => {
   const dataset = await loadDataset(katas.find((k) => k.id === 'verbs-pres').datasetUrl);
   assert.doesNotThrow(() => validateVerbDataset(dataset));
@@ -93,6 +99,51 @@ test('validateCaseDataset requires one blank per placeholder', () => {
   // This isolates the "blanks must be a non-empty array" rule.
   assert.throws(() => validateCaseDataset([{ ...goodCase, s: 'der Mann', b: [] }]), /entry 0/, 'no blanks');
   assert.throws(() => validateCaseDataset([{ ...goodCase, b: [{ a: 'der', c: 'vocative' }] }]), /entry 0/);
+});
+
+const goodPreposition = { id: 'p_1', w: 'Ich warte beim Arzt.', m: 'I am waiting at the doctor.', s: 'Ich warte {0} Arzt.', b: [{ a: 'beim', c: 'dat' }] };
+
+test('validatePrepositionDataset requires a real preposition plus a case-correct determiner', () => {
+  assert.doesNotThrow(() => validatePrepositionDataset([goodPreposition]));
+  assert.throws(() => validatePrepositionDataset([]), /non-empty array/);
+  // The determiner must belong to the case the entry declares.
+  assert.throws(() => validatePrepositionDataset([{ ...goodPreposition, b: [{ a: 'beim', c: 'akk' }] }]), /entry 0/);
+  assert.throws(() => validatePrepositionDataset([{ ...goodPreposition, b: [{ a: 'beim', c: 'nom' }] }]), /entry 0/);
+  // A bare determiner is not an answer, and a noun is not a preposition.
+  assert.throws(() => validatePrepositionDataset([{ ...goodPreposition, b: [{ a: 'dem', c: 'dat' }] }]), /entry 0/);
+  assert.throws(() => validatePrepositionDataset([{ ...goodPreposition, b: [{ a: 'Hause', c: 'dat' }] }]), /entry 0/);
+  // The written-out contraction is equally valid.
+  assert.doesNotThrow(() => validatePrepositionDataset([{ ...goodPreposition, b: [{ a: 'bei dem', c: 'dat' }] }]));
+  assert.throws(() => validatePrepositionDataset([{ ...goodPreposition, s: 'Ich warte beim Arzt.', b: [] }]), /entry 0/);
+  assert.throws(() => validatePrepositionDataset([{ ...goodPreposition, s: '{0} Arzt {1}' }]), /entry 0/);
+  // A repeated placeholder would send both blanks to the same answer.
+  assert.throws(() => validatePrepositionDataset([{ ...goodPreposition, s: '{0} Arzt und {0}' }]), /entry 0/);
+  // ...and a placeholder with no matching blank must be rejected too.
+  assert.throws(
+    () => validatePrepositionDataset([{ ...goodPreposition, s: '{0} Arzt und {1} Bahnhof.' }]),
+    /entry 0/,
+    'two placeholders but only one blank',
+  );
+  assert.doesNotThrow(
+    () => validatePrepositionDataset([{ ...goodPreposition, s: '{0} Arzt und {1} Bahnhof.', b: [goodPreposition.b[0], { a: 'zum', c: 'dat' }] }]),
+    'two blanks numbered 0 and 1 are valid',
+  );
+});
+
+test('gradeBlank accepts the contraction and its written-out form, in any case or spacing', () => {
+  const blank = { a: 'zum', c: 'dat' };
+  for (const given of ['zum', 'Zu dem', 'ZU  DEM', ' zu dem ']) {
+    assert.equal(gradeBlank(given, blank).ok, true, `expected "${given}" to be accepted`);
+  }
+  for (const given of ['zu', 'zur', 'zum Bahnhof', 'in dem', '']) {
+    assert.equal(gradeBlank(given, blank).ok, false, `expected "${given}" to be rejected`);
+  }
+  assert.deepEqual(gradeBlank('zum', blank).accepted, ['zum', 'zu dem']);
+  // A non-contracted answer has no alternative spelling.
+  assert.deepEqual(gradeBlank('auf dem', { a: 'auf dem', c: 'dat' }).accepted, ['auf dem']);
+  // Case matters: "auf" + Dativ is a location, + Akkusativ a movement.
+  assert.equal(gradeBlank('auf dem', { a: 'auf den', c: 'akk' }).ok, false);
+  assert.equal(gradeBlank('auf den', { a: 'auf den', c: 'akk' }).ok, true);
 });
 
 const sixForms = ['a', 'b', 'c', 'd', 'e', 'f'];
