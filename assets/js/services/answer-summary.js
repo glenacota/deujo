@@ -37,8 +37,8 @@ export function summarizeAnswer(result) {
                 ? `${wrong.length} wrong answers.`
                 : 'Wrong answer.',
         detail: correct
-            ? 'Nice work. Moving on.'
-            : 'Study the correct answers, then continue.',
+            ? 'Well done.'
+            : 'Review, learn, and continue.',
         wrongCount: wrong.length,
     };
 }
