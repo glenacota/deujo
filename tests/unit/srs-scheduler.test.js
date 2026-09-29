@@ -1,117 +1,70 @@
 // tests/unit/srs-scheduler.test.js
-// Pure scheduling rules. `now` and `rng` are injected, so no clock or Math.random stubbing.
+// Pure box rules. `now` is injected, so no clock or Math.random stubbing.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-  GRADES, DAY_MS, newRecord, isValidRecord, schedule,
+  BOX_COUNT, DAY_MS, newRecord, isValidRecord, schedule, weight,
 } from '../../assets/js/services/srs-scheduler.js';
 
 const NOW = 1_700_000_000_000;
-const noFuzz = () => 0.5; // keeps the ±5% multiplier at exactly 1.0
+const inBox = (box) => ({ box, dueAt: NOW });
 
-function graduated(interval, ease = 2.5) {
-  return { interval, ease, dueAt: NOW - DAY_MS, lapses: 0, step: null };
-}
-
-test('newRecord starts in the first learning step', () => {
-  assert.deepEqual(newRecord(), { interval: 0, ease: 2.5, dueAt: 0, lapses: 0, step: 0 });
-});
-
-test('schedule rejects an unknown grade', () => {
-  assert.throws(() => schedule('easy', newRecord(), NOW), /Unknown grade "easy"/);
+test('newRecord starts in the first box', () => {
+  assert.deepEqual(newRecord(), { box: 0, dueAt: 0 });
 });
 
 test('schedule never mutates its input record', () => {
-  const before = newRecord();
+  const before = inBox(2);
   const snapshot = { ...before };
-  schedule(GRADES.GOOD, before, NOW, noFuzz);
+  schedule(true, before, NOW);
   assert.deepEqual(before, snapshot);
 });
 
-test('a good answer walks the learning steps then graduates after one day', () => {
-  const step1 = schedule(GRADES.GOOD, newRecord(), NOW);
-  assert.equal(step1.step, 1);
-  assert.equal(step1.dueAt, NOW + 600_000);
-
-  const graduatedRec = schedule(GRADES.GOOD, step1, NOW);
-  assert.equal(graduatedRec.step, null);
-  assert.equal(graduatedRec.interval, 1);
-  assert.equal(graduatedRec.dueAt, NOW + DAY_MS);
+test('a correct answer moves the item up exactly one box', () => {
+  assert.equal(schedule(true, inBox(0), NOW).box, 1);
+  assert.equal(schedule(true, inBox(3), NOW).box, 4);
 });
 
-test('an again answer resets to the first learning step', () => {
-  const relearning = schedule(GRADES.AGAIN, graduated(10), NOW);
-  assert.equal(relearning.step, 0);
-  assert.equal(relearning.dueAt, NOW + 60_000);
+test('a correct answer makes the item due later the higher the box', () => {
+  const low = schedule(true, inBox(0), NOW);
+  const high = schedule(true, inBox(4), NOW);
+  assert.equal(low.dueAt, NOW + DAY_MS);
+  assert.ok(high.dueAt > low.dueAt, 'a higher box waits longer');
 });
 
-test('relearning after a lapse returns to the shortened interval, not to one day', () => {
-  const lapsed = schedule(GRADES.AGAIN, graduated(10), NOW);
-  assert.equal(lapsed.interval, 5, 'a lapse halves the interval');
-
-  const relearning = schedule(GRADES.GOOD, lapsed, NOW);
-  assert.equal(relearning.step, 1);
-
-  const back = schedule(GRADES.GOOD, relearning, NOW);
-  assert.equal(back.step, null);
-  assert.equal(back.interval, 5, 'relearning restores the lapsed interval instead of graduating at one day');
-  assert.equal(back.lapses, 1, 'the lapse is remembered');
+test('the last box is the ceiling', () => {
+  const top = schedule(true, inBox(BOX_COUNT - 1), NOW);
+  assert.equal(top.box, BOX_COUNT - 1);
+  assert.equal(schedule(true, top, NOW).box, BOX_COUNT - 1, 'it cannot climb higher');
 });
 
-test('a good answer on a not-yet-due graduated item does not inflate the interval', () => {
-  const future = { ...graduated(10), dueAt: NOW + 5 * DAY_MS };
-  const result = schedule(GRADES.GOOD, future, NOW, noFuzz);
-  assert.deepEqual(result, future);
+test('a mistake drops the item to the first box and makes it due immediately', () => {
+  assert.deepEqual(schedule(false, inBox(4), NOW), { box: 0, dueAt: NOW });
+  assert.deepEqual(schedule(false, inBox(0), NOW), { box: 0, dueAt: NOW });
 });
 
-test('a lapse halves the interval, cuts ease by 0.2, and never drops below one day', () => {
-  const lapse = schedule(GRADES.AGAIN, graduated(10), NOW);
-  assert.equal(lapse.lapses, 1);
-  assert.equal(lapse.ease, 2.3);
-  assert.equal(lapse.interval, 5);
-
-  const floored = schedule(GRADES.AGAIN, graduated(1, 1.3), NOW);
-  assert.equal(floored.ease, 1.3, 'ease floors at 1.3');
-});
-
-test('a lapse on a zero-interval record still floors at one day', () => {
-  // isValidRecord() accepts interval 0, so a hand-edited record can reach the floor.
-  const floored = schedule(GRADES.AGAIN, graduated(0), NOW);
-  assert.equal(floored.interval, 1, 'interval floors at one day');
-});
-
-test('a good answer multiplies the interval by ease', () => {
-  const result = schedule(GRADES.GOOD, graduated(4, 2.5), NOW, noFuzz);
-  assert.equal(result.interval, 10);
-  assert.equal(result.dueAt, NOW + 10 * DAY_MS);
-});
-
-test('the interval always advances by at least one day', () => {
-  const result = schedule(GRADES.GOOD, graduated(1, 1.3), NOW, noFuzz);
-  assert.equal(result.interval, 2);
-});
-
-test('fuzz stays within ±5% and only applies from three days up', () => {
-  const low = schedule(GRADES.GOOD, graduated(4, 2.5), NOW, () => 0);
-  const high = schedule(GRADES.GOOD, graduated(4, 2.5), NOW, () => 1);
-  assert.equal(low.interval, Math.round(4 * 2.5 * 0.95));
-  assert.equal(high.interval, Math.round(4 * 2.5 * 1.05));
-
-  const short = schedule(GRADES.GOOD, graduated(2, 1.5), NOW, () => 0);
-  assert.equal(short.interval, 3, 'a two-day interval is never fuzzed');
+test('weight favours low boxes, and an unseen item outranks every box', () => {
+  assert.equal(weight(null), BOX_COUNT, 'an unseen item is treated as box 0');
+  assert.equal(weight(newRecord()), BOX_COUNT);
+  assert.equal(weight(inBox(BOX_COUNT - 1)), 1, 'the top box still comes up, just rarely');
+  for (let box = 1; box < BOX_COUNT; box++) {
+    assert.ok(weight(inBox(box)) < weight(inBox(box - 1)), `box ${box} is not rarer than ${box - 1}`);
+  }
 });
 
 test('isValidRecord accepts real records and rejects corrupted ones', () => {
   assert.equal(isValidRecord(newRecord()), true);
-  assert.equal(isValidRecord(graduated(3)), true);
-  assert.equal(isValidRecord({ ...graduated(3), step: 1 }), true);
+  assert.equal(isValidRecord(inBox(3)), true);
 
   assert.equal(isValidRecord(null), false);
-  assert.equal(isValidRecord({ ...graduated(3), ease: '2.5' }), false);
-  assert.equal(isValidRecord({ ...graduated(3), dueAt: Number.NaN }), false);
-  assert.equal(isValidRecord({ ...graduated(3), step: 1.5 }), false);
-  assert.equal(isValidRecord({ ...graduated(3), step: 2 }), false, 'step is out of range');
-  assert.equal(isValidRecord({ ...graduated(3), step: -1 }), false);
+  assert.equal(isValidRecord({ ...inBox(3), dueAt: 'soon' }), false);
+  assert.equal(isValidRecord({ ...inBox(3), dueAt: Number.NaN }), false);
+  assert.equal(isValidRecord({ ...inBox(3), box: 1.5 }), false);
+  assert.equal(isValidRecord({ ...inBox(3), box: BOX_COUNT }), false, 'box is out of range');
+  assert.equal(isValidRecord({ ...inBox(3), box: -1 }), false);
+  assert.equal(isValidRecord({ box: 1 }), false, 'dueAt is required');
+  assert.equal(isValidRecord({ interval: 3, ease: 2.5, dueAt: 0, lapses: 0, step: null }), false,
+    'an old SM-2 record is not silently reused');
 });

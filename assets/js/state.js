@@ -4,7 +4,7 @@
 import { CONFIG } from './config.js';
 import { Storage } from './services/storage.js';
 import { SrsStore } from './services/srs-store.js';
-import { GRADES, newRecord, schedule } from './services/srs-scheduler.js';
+import { newRecord, schedule, weight } from './services/srs-scheduler.js';
 
 export class GameState {
   /** Correct answers in a row, across every kata. Any mistake resets it. */
@@ -104,56 +104,39 @@ export class GameState {
     return ((this.beltProgress[kataId] % CONFIG.rules.milestoneInterval) / CONFIG.rules.milestoneInterval) * 100;
   }
 
-  // ---- Spaced repetition -------------------------------------------------
-
   /**
-  * Priority: (1) most overdue item, (2) unseen item, (3) soonest-due item.
-  * Randomly breaks ties within each tier. Single O(n) pass.
+   * Weighted random draw: the lower an item's box, the more often it comes up.
+   * The most recently served `recentExclude` ids are skipped whenever the
+   * dataset is large enough to leave a choice
    */
-  pickNext(dataset, kataId, now = Date.now()) {
+  pickNext(dataset, kataId, rng = Math.random) {
     if (!dataset?.length) return null;
 
     const records = SrsStore.getKata(kataId);
     const recent = this.recent[kataId];
     const skip = dataset.length > CONFIG.rules.recentExclude ? new Set(recent) : null;
 
-    let due = null, dueAt = Infinity, dueCount = 0;
-    let fresh = null, freshCount = 0;
-    let upcoming = null, upcomingAt = Infinity, upcomingCount = 0;
+    const pool = skip ? dataset.filter((item) => !skip.has(item.id)) : dataset;
+    const candidates = pool.length ? pool : dataset; // everything is recent: fall back
 
-    for (const item of dataset) {
-      if (skip?.has(item.id)) continue;
-      const rec = records[item.id];
-      if (!rec) {
-        freshCount++;
-        if (Math.random() < 1 / freshCount) fresh = item;
-        continue;
-      }
-      if (rec.dueAt <= now) {
-        if (rec.dueAt < dueAt) { due = item; dueAt = rec.dueAt; dueCount = 1; }
-        else if (rec.dueAt === dueAt) {
-          dueCount++;
-          if (Math.random() < 1 / dueCount) due = item;
-        }
-      } else {
-        if (rec.dueAt < upcomingAt) { upcoming = item; upcomingAt = rec.dueAt; upcomingCount = 1; }
-        else if (rec.dueAt === upcomingAt) {
-          upcomingCount++;
-          if (Math.random() < 1 / upcomingCount) upcoming = item;
-        }
-      }
+    // Walk the list once, subtracting each item's weight until the ticket runs out.
+    const total = candidates.reduce((sum, item) => sum + weight(records[item.id]), 0);
+    let ticket = rng() * total;
+    let chosen = candidates[candidates.length - 1]; // guards against float drift
+    for (const item of candidates) {
+      ticket -= weight(records[item.id]);
+      if (ticket < 0) { chosen = item; break; }
     }
 
-    const chosen = due ?? fresh ?? upcoming ?? dataset[0];
     recent.push(chosen.id);
     if (recent.length > CONFIG.rules.recentExclude) recent.shift();
     return chosen;
   }
 
-  /** Records correct=Good / wrong=Again. Returns a ticket so the UI can re-grade it. */
+  /** Moves the item up a box on a correct answer, back to the first box on a mistake. */
   recordAnswer(kataId, itemId, correct) {
     const previous = SrsStore.get(kataId, itemId) ?? newRecord();
-    SrsStore.set(kataId, itemId, schedule(correct ? GRADES.GOOD : GRADES.AGAIN, previous));
+    SrsStore.set(kataId, itemId, schedule(correct, previous));
   }
 
   getDueCount(kataId) {

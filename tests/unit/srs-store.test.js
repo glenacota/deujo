@@ -11,12 +11,12 @@ const browser = installBrowserStub();
 
 const { CONFIG } = await import('../../assets/js/config.js');
 const { SrsStore } = await import('../../assets/js/services/srs-store.js');
-const { newRecord, DAY_MS } = await import('../../assets/js/services/srs-scheduler.js');
+const { DAY_MS } = await import('../../assets/js/services/srs-scheduler.js');
 
 const SRS_KEY = CONFIG.storage.srs;
 const KATA = 'store-kata';
 
-const valid = (over = {}) => ({ ...newRecord(), step: null, interval: 3, dueAt: 0, ...over });
+const valid = (over = {}) => ({ box: 2, dueAt: 0, ...over });
 const seedStorage = (raw) => localStorage.setItem(SRS_KEY, raw);
 
 beforeEach(() => {
@@ -31,22 +31,22 @@ test('a fresh kata reads as empty', () => {
 });
 
 test('set then get round-trips a record', () => {
-  const record = valid({ interval: 12, dueAt: 1_700_000_000_000 });
+  const record = valid({ box: 4, dueAt: 1_700_000_000_000 });
   SrsStore.set(KATA, 'item_a', record);
 
-  assert.equal(SrsStore.get(KATA, 'item_a').interval, 12);
+  assert.equal(SrsStore.get(KATA, 'item_a').box, 4);
   assert.deepEqual(Object.keys(SrsStore.getKata(KATA)), ['item_a']);
   assert.equal(Object.getPrototypeOf(SrsStore.getKata(KATA)), null, 'null prototype');
 });
 
 test('corrupted records are dropped on load, valid siblings survive', () => {
-  // The whole point of isValidRecord: a hand-edited or truncated dm_srs_v1
-  // blob must not feed garbage intervals back into the scheduler.
+  // The whole point of isValidRecord: a hand-edited or truncated dm_srs blob
+  // must not feed garbage boxes back into the scheduler.
   seedStorage(JSON.stringify({
     [KATA]: {
       keep: valid(),
-      bad_ease: valid({ ease: '2.5' }),
-      bad_step: valid({ step: 7 }),
+      bad_box: valid({ box: 'two' }),
+      high_box: valid({ box: 99 }),
       bad_nan: valid({ dueAt: null }),
       bad_shape: 'not-a-record',
     },
@@ -56,11 +56,20 @@ test('corrupted records are dropped on load, valid siblings survive', () => {
 
   const loaded = SrsStore.getKata(KATA);
   assert.deepEqual(Object.keys(loaded), ['keep']);
-  assert.equal(SrsStore.get(KATA, 'bad_ease'), null);
-  assert.equal(SrsStore.get(KATA, 'bad_step'), null);
+  assert.equal(SrsStore.get(KATA, 'bad_box'), null);
+  assert.equal(SrsStore.get(KATA, 'high_box'), null);
   assert.equal(SrsStore.get(KATA, 'bad_shape'), null);
   assert.equal(SrsStore.get('scalar_kata', 'keep'), null);
   assert.equal(SrsStore.get('null_kata', 'keep'), null);
+});
+
+test('records from the old SM-2 format are discarded, not misread', () => {
+  // dm_srs_v1 stored { interval, ease, lapses, step }. The key moved to v2, but a
+  // stray v1-shaped record must still fail validation rather than look like box 0.
+  seedStorage(JSON.stringify({ [KATA]: { legacy: { interval: 20, ease: 2.5, dueAt: 0, lapses: 0, step: null } } }));
+
+  assert.equal(SrsStore.get(KATA, 'legacy'), null);
+  assert.deepEqual(Object.keys(SrsStore.getKata(KATA)), []);
 });
 
 test('a malformed or non-object storage blob yields an empty store', () => {
@@ -103,14 +112,14 @@ test('a debounced save flushes when the page is hidden', () => {
   }
 
   const saved = JSON.parse(localStorage.getItem(SRS_KEY));
-  assert.equal(saved[KATA].item_a.interval, 3, 'the record reached storage on hide');
+  assert.equal(saved[KATA].item_a.box, 2, 'the record reached storage on hide');
 });
 
 test('a debounced save flushes on pagehide', () => {
-  SrsStore.set(KATA, 'item_b', valid({ interval: 9 }));
+  SrsStore.set(KATA, 'item_b', valid({ box: 5 }));
   browser.emit('pagehide');
 
-  assert.equal(JSON.parse(localStorage.getItem(SRS_KEY))[KATA].item_b.interval, 9);
+  assert.equal(JSON.parse(localStorage.getItem(SRS_KEY))[KATA].item_b.box, 5);
 });
 
 test('the pagehide flush is a no-op when nothing changed', () => {

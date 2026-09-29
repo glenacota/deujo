@@ -1,5 +1,5 @@
 // tests/unit/state.test.js
-// Belt progression and spaced-repetition item selection.
+// Belt progression and review item selection.
 
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
@@ -11,7 +11,7 @@ const browser = installBrowserStub();
 const { CONFIG } = await import('../../assets/js/config.js');
 const { GameState } = await import('../../assets/js/state.js');
 const { SrsStore } = await import('../../assets/js/services/srs-store.js');
-const { newRecord, DAY_MS } = await import('../../assets/js/services/srs-scheduler.js');
+const { BOX_COUNT, DAY_MS } = await import('../../assets/js/services/srs-scheduler.js');
 
 const { milestoneInterval, maxBelt, recentExclude } = CONFIG.rules;
 
@@ -26,9 +26,30 @@ beforeEach(() => {
 
 const stateFor = (id = KATA_ID) => ({ kataId: id, state: new GameState([id]) });
 
-// A test that needs two SRS stores alive at once needs a second id.
-let uniqueCounter = 0;
-const freshUniqueId = () => `${KATA_ID}-${uniqueCounter++}`;
+/** A stored record for an item sitting in the given box. */
+const inBox = (box) => ({ box, dueAt: 0 });
+
+/**
+ * Draws `times` times with a sweep of evenly spaced tickets instead of real
+ * randomness, so the distribution assertions below are deterministic: every
+ * point of the [0,1) range gets exercised, and the only way to reach an item
+ * is for its slice of the range to be non-empty.
+ */
+const sweep = (times) => {
+  let i = 0;
+  return () => (i++ % times) / times + 0.5 / times;
+};
+
+/** Draws `times` times and returns how often each id came up. */
+const drawMany = (state, dataset, kataId, times = 100) => {
+  const rng = sweep(times);
+  const counts = new Map(dataset.map(({ id }) => [id, 0]));
+  for (let i = 0; i < times; i++) {
+    const id = state.pickNext(dataset, kataId, rng).id;
+    counts.set(id, counts.get(id) + 1);
+  }
+  return counts;
+};
 
 test('a correct answer promotes exactly once per milestone', () => {
   const { kataId, state } = stateFor();
@@ -149,23 +170,51 @@ test('pickNext returns null for an empty dataset', () => {
   assert.equal(state.pickNext(null, kataId), null);
 });
 
-test('pickNext prefers an overdue item over a new one', () => {
+test('pickNext draws low-box items far more often than top-box ones', () => {
   const { kataId, state } = stateFor();
-  const overdue = { id: 'overdue', w: 'Tag' };
-  const fresh = { id: 'fresh', w: 'Frau' };
-  SrsStore.set(kataId, 'overdue', { ...newRecord(), dueAt: Date.now() - DAY_MS, step: null, interval: 3 });
+  const dataset = [{ id: 'fresh' }, { id: 'top' }];
+  SrsStore.set(kataId, 'top', inBox(BOX_COUNT - 1));
 
-  assert.equal(state.pickNext([fresh, overdue], kataId).id, 'overdue');
+  // With BOX_COUNT boxes, box 0 takes the first 6/7 of the ticket range and the
+  // top box the last 1/7. A 100-step sweep lands 86 vs 14.
+  const counts = drawMany(state, dataset, kataId);
+  assert.equal(counts.get('fresh'), 86, `fresh was drawn ${counts.get('fresh')} times`);
+  assert.equal(counts.get('top'), 14, `top was drawn ${counts.get('top')} times`);
+  assert.ok(counts.get('top') > 0, 'the top box is not locked away, only rarer');
 });
 
-test('pickNext prefers a new item over one that is not due yet', () => {
+test('pickNext gives an unseen item the same odds as the first box', () => {
   const { kataId, state } = stateFor();
-  const fresh = { id: 'fresh', w: 'Frau' };
-  SrsStore.set(kataId, 'later', {
-    ...newRecord(), dueAt: Date.now() + DAY_MS, step: null, interval: 1,
-  });
+  const dataset = [{ id: 'unseen' }, { id: 'top' }];
+  SrsStore.set(kataId, 'top', inBox(BOX_COUNT - 1));
 
-  assert.equal(state.pickNext([{ id: 'later' }, fresh], kataId).id, 'fresh');
+  const counts = drawMany(state, dataset, kataId);
+  assert.equal(counts.get('unseen'), 86, 'no record must read as box 0, not as the top box');
+});
+
+test('pickNext spreads a dataset of equally weighted items', () => {
+  // Selection is a random draw, not a fixed order, so every item must come up.
+  const { kataId, state } = stateFor();
+  const dataset = Array.from({ length: 4 }, (_, i) => ({ id: `n_${i}` }));
+
+  // Equal weights split the range four ways: 25 tickets each out of 100.
+  const counts = drawMany(state, dataset, kataId);
+  for (const [id, count] of counts) {
+    assert.equal(count, 25, `item ${id} was drawn ${count} times, expected 25`);
+  }
+});
+
+test('pickNext ignores due times entirely', () => {
+  // dueAt only feeds the badge. A not-yet-due item is as drawable as an overdue one.
+  const { kataId, state } = stateFor();
+  const dataset = [{ id: 'overdue' }, { id: 'future' }];
+  SrsStore.set(kataId, 'overdue', { box: 0, dueAt: Date.now() - 30 * DAY_MS });
+  SrsStore.set(kataId, 'future', { box: 0, dueAt: Date.now() + 30 * DAY_MS });
+
+  // Same box, so an even 50/50 split. Any due-date bias would skew this.
+  const counts = drawMany(state, dataset, kataId);
+  assert.equal(counts.get('overdue'), 50, 'an overdue item is not privileged');
+  assert.equal(counts.get('future'), 50, 'a future item is not skipped');
 });
 
 test('pickNext serves every item once before repeating when the dataset is large', () => {
@@ -184,17 +233,13 @@ test('pickNext serves every item once before repeating when the dataset is large
 test('no item is excluded when the dataset fits inside the recent window', () => {
   const kataId = KATA_ID;
   const state = new GameState([kataId]);
-  // One item fewer than recentExclude, so the skip set must be disabled.
-  // dataset[0] can never mask a wrongly-skipped item here, because the due item
-  // is not first: if exclusion were active the fresh items would win instead.
-  const due = { id: 's_due' };
-  const fresh = Array.from({ length: recentExclude - 1 }, (_, i) => ({ id: `s_${i}` }));
-  const dataset = [...fresh, due];
-  SrsStore.set(kataId, due.id, { ...newRecord(), step: null, interval: 3, dueAt: Date.now() - DAY_MS });
+  // Exactly recentExclude items, so the skip set must be disabled. The last item
+  // in the list is the canary: if exclusion were active it would never be drawn.
+  const dataset = Array.from({ length: recentExclude }, (_, i) => ({ id: `s_${i}` }));
+  const canary = dataset[dataset.length - 1].id;
 
-  for (let i = 0; i < recentExclude + 2; i++) {
-    assert.equal(state.pickNext(dataset, kataId).id, due.id, 'the due item stays servable');
-  }
+  const counts = drawMany(state, dataset, kataId);
+  assert.ok(counts.get(canary) > 0, 'the last item is still servable');
 });
 
 test('max streak survives a mistake', () => {
@@ -213,88 +258,38 @@ test('max streak survives a mistake', () => {
   assert.equal(restored.maxStreak, 3, 'the best run is persisted');
 });
 
-test('pickNext treats an item due exactly now as due', () => {
-  const kataId = KATA_ID;
-  const state = new GameState([kataId]);
-  const now = 1_700_000_000_000;
-  SrsStore.set(kataId, 'exact', { ...newRecord(), step: null, interval: 4, dueAt: now });
-  SrsStore.set(kataId, 'later', { ...newRecord(), step: null, interval: 4, dueAt: now + DAY_MS });
-  const scheduled = [{ id: 'later' }, { id: 'exact' }];
-
-  assert.equal(state.pickNext(scheduled, kataId, now).id, 'exact', 'the boundary is inclusive');
-  // One millisecond earlier nothing is due yet, so the soonest upcoming item wins.
-  assert.equal(state.pickNext(scheduled, kataId, now - 1).id, 'exact');
-  // Same one millisecond, but now an unseen item is available to beat the
-  // merely-upcoming 'exact'. This is what pins the boundary as inclusive.
-  assert.equal(state.pickNext([{ id: 'exact' }, { id: 'newcomer' }], kataId, now).id, 'exact');
-  assert.equal(state.pickNext([{ id: 'exact' }, { id: 'newcomer' }], kataId, now - 1).id, 'newcomer');
-});
-
-test('pickNext spreads tied items instead of always returning the first', () => {
-  // Equal dueAt values must not pile up on one item, so ties are broken at
-  // random. Over many calls every tied item must come up.
-  const tied = ['tie_a', 'tie_b', 'tie_c'].map((id) => ({ id }));
-  const now = 1_700_000_000_000;
-
-  for (const dueAt of [now - DAY_MS, now + DAY_MS]) {
-    const kataId = freshUniqueId();
-    const state = new GameState([kataId]);
-    tied.forEach(({ id }) => SrsStore.set(kataId, id, { ...newRecord(), step: null, interval: 3, dueAt }));
-
-    const seen = new Set();
-    for (let i = 0; i < 200; i++) seen.add(state.pickNext(tied, kataId, now).id);
-    assert.equal(seen.size, tied.length, `dueAt ${dueAt} kept repeating one tied item`);
-  }
-});
-
-test('pickNext prefers the most overdue item when several are due', () => {
-  const kataId = KATA_ID;
-  const state = new GameState([kataId]);
-  const now = 1_700_000_000_000;
-  SrsStore.set(kataId, 'slightly', { ...newRecord(), step: null, interval: 4, dueAt: now - DAY_MS });
-  SrsStore.set(kataId, 'very', { ...newRecord(), step: null, interval: 9, dueAt: now - 9 * DAY_MS });
-  SrsStore.set(kataId, 'recent', { ...newRecord(), step: null, interval: 2, dueAt: now - 1 });
-
-  const dataset = [{ id: 'slightly' }, { id: 'recent' }, { id: 'very' }];
-  assert.equal(state.pickNext(dataset, kataId, now).id, 'very');
-});
-
-test('recordAnswer schedules from the stored record, not a fresh one', () => {
+test('recordAnswer moves the item up from its stored box, not from a fresh one', () => {
   const kataId = KATA_ID;
   const state = new GameState([kataId]);
   const itemId = 'n_1';
 
-  SrsStore.set(kataId, itemId, { interval: 20, ease: 2.5, dueAt: 0, lapses: 2, step: null });
+  SrsStore.set(kataId, itemId, inBox(3));
   state.recordAnswer(kataId, itemId, true);
 
-  // 20 * ease 2.5 = 50 days, then the ±5% fuzz. A fresh record would give 1 day.
-  const after = SrsStore.get(kataId, itemId);
-  assert.ok(after.interval >= 47 && after.interval <= 53, `interval was ${after.interval}, expected ~50`);
-  assert.equal(after.lapses, 2, 'the lapse history carried over');
+  // 3 -> 4. A fresh record would have landed on box 1.
+  assert.equal(SrsStore.get(kataId, itemId).box, 4);
 });
 
-test('recordAnswer schedules good answers and re-schedules on failure', () => {
+test('recordAnswer promotes on a correct answer and resets on a mistake', () => {
   const kataId = KATA_ID;
   const state = new GameState([kataId]);
   const itemId = 'n_1';
 
   state.recordAnswer(kataId, itemId, true);
-  const afterGood = SrsStore.get(kataId, itemId);
-  assert.equal(afterGood.step, 1, 'a correct answer advances the learning step');
+  assert.equal(SrsStore.get(kataId, itemId).box, 1, 'a correct answer climbs one box');
 
+  state.recordAnswer(kataId, itemId, true);
   state.recordAnswer(kataId, itemId, false);
   const afterBad = SrsStore.get(kataId, itemId);
-  assert.equal(afterBad.step, 0, 'a wrong answer returns to the first step');
-  assert.equal(afterBad.dueAt, Date.now() + 60_000);
+  assert.equal(afterBad.box, 0, 'a mistake drops the item to the first box');
+  assert.ok(afterBad.dueAt <= Date.now(), 'and makes it due right away');
 });
 
 test('getDueCount counts only items due now', () => {
   const kataId = KATA_ID;
   const state = new GameState([kataId]);
 
-  SrsStore.set(kataId, 'due', { ...newRecord(), step: null, interval: 4, dueAt: Date.now() - 1 });
-  SrsStore.set(kataId, 'later', {
-    ...newRecord(), step: null, interval: 4, dueAt: Date.now() + 4 * DAY_MS,
-  });
+  SrsStore.set(kataId, 'due', { box: 1, dueAt: Date.now() - 1 });
+  SrsStore.set(kataId, 'later', { box: 1, dueAt: Date.now() + 4 * DAY_MS });
   assert.equal(state.getDueCount(kataId), 1);
 });

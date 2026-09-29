@@ -1,5 +1,5 @@
 // services/srs-store.js
-// In-memory SRS records ({ kataId: { itemId: record } }) with debounced persistence.
+// In-memory review records ({ kataId: { itemId: record } }) with debounced persistence.
 // Only items the user has answered are stored; "no record" == new item.
 
 import { CONFIG } from '../config.js';

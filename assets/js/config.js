@@ -11,7 +11,7 @@ export const CONFIG = Object.freeze({
     maxStreak: 'dm_max_streak',
     streakMigration: 'dm_streak_global_v1',
     belt: 'dm_belt_progress',
-    srs: 'dm_srs_v1'      // spatial repetition strategy
+    srs: 'dm_srs_v2'
   },
   rules: {
     recentExclude: 10,    // last N served items are skipped by pickNext 
