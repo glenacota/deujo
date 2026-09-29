@@ -7,9 +7,11 @@ import { SrsStore } from './services/srs-store.js';
 import { GRADES, newRecord, schedule } from './services/srs-scheduler.js';
 
 export class GameState {
-  streakByKata = {};
-  maxStreakByKata = {};
-  beltProgress = {};
+  /** Correct answers in a row, across every kata. Any mistake resets it. */
+  streak = 0;
+  /** The longest streak ever run, across all katas and all sessions. */
+  maxStreak = 0;
+  beltProgress = {};  // per kata: mastery points, unaffected by the global streak
   activeKata = '';
   current = {};   // kata id -> current item
   recent = {};    // kata id -> ids served most recently (session only)
@@ -19,9 +21,9 @@ export class GameState {
       this.current[id] = null;
       this.recent[id] = [];
       this.beltProgress[id] = Storage.getNumber(this.#beltKey(id));
-      this.streakByKata[id] = Storage.getNumber(this.#streakKey(id));
-      this.maxStreakByKata[id] = Storage.getNumber(this.#maxStreakKey(id));
     });
+
+    this.#loadStreak(kataIds);
 
     this.activeKata = kataIds[0] ?? '';
     const storedKata = Storage.getString(CONFIG.storage.kata, this.activeKata);
@@ -32,6 +34,25 @@ export class GameState {
   #streakKey(kataId) { return `${CONFIG.storage.streak}_${kataId}`; }
   #maxStreakKey(kataId) { return `${CONFIG.storage.maxStreak}_${kataId}`; }
 
+  /**
+   * The streak counts correct answers across every kata, so it no longer hangs
+   * off a kata id. One migration folds the per-kata counters written before
+   * this change into a single pair: the best live run becomes the streak and
+   * the best record becomes the max, so returning players keep their history.
+   */
+  #loadStreak(kataIds) {
+    if (Storage.getString(CONFIG.storage.streakMigration)) {
+      this.streak = Storage.getNumber(CONFIG.storage.streak);
+      this.maxStreak = Storage.getNumber(CONFIG.storage.maxStreak);
+      return;
+    }
+
+    this.streak = Math.max(0, ...kataIds.map((id) => Storage.getNumber(this.#streakKey(id))));
+    this.maxStreak = Math.max(this.streak, ...kataIds.map((id) => Storage.getNumber(this.#maxStreakKey(id))));
+    this.#persistStreak();
+    Storage.setString(CONFIG.storage.streakMigration, '1');
+  }
+
   setActiveKata(kata) {
     if (!(kata in this.current)) return;
     this.activeKata = kata;
@@ -41,17 +62,21 @@ export class GameState {
   setFocusModeActive(isActive) { Storage.setBoolean(CONFIG.storage.focusMode, isActive); }
   wasFocusModeActive() { return Storage.getBoolean(CONFIG.storage.focusMode); }
 
+  #persistStreak() {
+    Storage.setNumber(CONFIG.storage.streak, this.streak);
+    Storage.setNumber(CONFIG.storage.maxStreak, this.maxStreak);
+  }
+
   #persist(kataId) {
-    Storage.setNumber(this.#streakKey(kataId), this.streakByKata[kataId]);
-    Storage.setNumber(this.#maxStreakKey(kataId), this.maxStreakByKata[kataId]);
+    this.#persistStreak();
     Storage.setNumber(this.#beltKey(kataId), this.beltProgress[kataId]);
   }
 
   /** @returns {boolean} true if this answer completed a milestone (belt promotion) */
   incrementStreak(kataId) {
     const previousBelt = this.getCurrentBelt(kataId);
-    this.streakByKata[kataId]++;
-    this.maxStreakByKata[kataId] = Math.max(this.maxStreakByKata[kataId], this.streakByKata[kataId]);
+    this.streak++;
+    this.maxStreak = Math.max(this.maxStreak, this.streak);
     const maxProgress = CONFIG.rules.maxBelt * (CONFIG.rules.milestoneInterval + 1);
     this.beltProgress[kataId] = Math.min(this.beltProgress[kataId] + 1, maxProgress);
     this.#persist(kataId);
@@ -61,7 +86,7 @@ export class GameState {
   /** @returns {boolean} true if this mistake dropped the player into a lower belt */
   resetStreak(kataId) {
     const prevBelt = this.getCurrentBelt(kataId);
-    this.streakByKata[kataId] = 0;
+    this.streak = 0;
     this.beltProgress[kataId] = Math.max(0, this.beltProgress[kataId] - 1);
     this.#persist(kataId);
     return this.getCurrentBelt(kataId) < prevBelt;

@@ -32,7 +32,7 @@
 <body class="bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-100 min-h-screen font-sans flex flex-col justify-between selection:bg-indigo-500 selection:text-white transition-colors duration-200">
 
     <header class="border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md sticky top-0 z-30 transition-colors duration-200">
-        <div class="max-w-4xl mx-auto px-4 lg:py-2 py-1 flex items-center justify-between gap-4">
+        <div class="max-w-4xl mx-auto px-4 lg:py-2 py-1 flex items-center justify-between gap-2 lg:gap-4">
             <div class="flex items-center space-x-3 shrink-0">
                 <button id="logo" type="button" aria-label="Return to dashboard" title="Return to dashboard" class="lg:w-14 lg:h-14 w-8 h-8 my-2 lg:mr-1 mr-0.5 rounded-xl border-2 border-double hover:border-slate-200 border-slate-300 hover:dark:border-slate-700 dark:border-slate-800 cursor-pointer flex items-center justify-center german-flag-bg appearance-none">
                     <img src="./assets/logo.png" alt="Deujo logo" title="Deujo: Deutsch-Dojo">
@@ -42,12 +42,24 @@
                     <h1 class="lg:text-3xl text-2xl dark:text-slate-100 uppercase"><span class="font-extrabold">Deu</span>jo</h1>
                 </div>
             </div>
-            <div class="flex items-center justify-center gap-1.5 lg:text-xs text-[10px]">
-                <button id="howToBtn" type="button" data-modal-open="howToModal" aria-label="How to Play" title="How to play (!)" class="bg-white dark:bg-slate-950/80 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900 p-1.5 lg:px-3 lg:py-2 rounded-xl border border-slate-300 dark:border-slate-800 shadow-md transition-all flex items-center space-x-2 font-semibold">
+            <div class="flex items-center justify-center gap-1 lg:gap-2 shrink-0 lg:text-sm text-xs text-slate-800 dark:text-slate-100" role="group" aria-label="Training streak">
+                <div class="flex items-center gap-1 px-1.5 lg:px-2 py-1" title="Correct answers in a row, across every kata. A wrong answer resets it.">
+                    <span aria-hidden="true">&#128293;</span>
+                    <span id="streakDisplay" class="font-extrabold tabular-nums">0</span>
+                    <span class="hidden sm:inline text-slate-500 dark:text-slate-400 font-bold uppercase" aria-hidden="true">Streak</span>
+                </div>
+                <div class="flex items-center gap-1 px-1.5 lg:px-2 py-1" title="Your longest streak ever, across every kata.">
+                    <span aria-hidden="true">&#127942;</span>
+                    <span id="maxStreakDisplay" class="font-extrabold tabular-nums">0</span>
+                    <span class="hidden sm:inline text-slate-400 font-bold uppercase" aria-hidden="true">Best</span>
+                </div>
+            </div>
+            <div class="flex items-center justify-center gap-2 lg:text-xs text-[10px]">
+                <button id="howToBtn" type="button" data-modal-open="howToModal" aria-label="How to Play" title="How to play (!)" class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900 p-1.5 lg:px-3 lg:py-2 rounded-xl border border-slate-300 dark:border-slate-800 transition-all flex items-center space-x-2 font-semibold">
                     <kbd class="sm:inline-block text-sm px-0.5 py-0.5 py leading-none bg-black dark:bg-white text-white dark:text-black rounded-xl">&#9432;</kbd>
                     <span class="hidden lg:block">How To</span>
                 </button>
-                <button id="progressShareBtn" type="button" class="bg-white dark:bg-slate-950/80 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900 p-1.5 lg:px-3 lg:py-2 rounded-xl border border-slate-300 dark:border-slate-800 shadow-md transition-all flex items-center space-x-2 font-semibold" aria-label="Share progress">
+                <button id="progressShareBtn" type="button" class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900 p-1.5 lg:px-3 lg:py-2 rounded-xl border border-slate-300 dark:border-slate-800 transition-all flex items-center space-x-2 font-semibold" aria-label="Share progress">
                     <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
                 </button>
             </div>
@@ -81,24 +93,13 @@
                 <span class="mx-2 text-slate-300 dark:text-slate-600">/</span>
                 <span id="focusKataName" class="text-slate-900 text-base font-extrabold dark:text-slate-200 mr-3">Nouns</span>
                 
-            </div>      
-                <div class="flex items-center justify-end lg:gap-3 gap-2 lg:text-xs text-[10px]">
-                <div class="flex items-center space-x-1" title="Current Streak">
-                    <span>🔥</span>
-                    <span id="streakDisplay" class="font-bold text-slate-800 dark:text-slate-200">0</span>
-                    <span class="text-slate-400 font-bold hidden md:inline uppercase">Streak</span>
-                </div>
-                <div class="flex items-center space-x-1" title="Personal Record">
-                    <span>🏆</span>
-                    <span id="maxStreakDisplay" class="font-bold text-slate-800 dark:text-slate-200">0</span>
-                    <span class="text-slate-400 font-bold hidden md:inline uppercase">Max</span>
-                </div>
-                <div class="flex items-center space-x-1">
-                    <span>🥋</span>
-                    <span id="headerBeltBar" class="belt-label text-[10px] px-2 py-0.5 my-1 rounded-full font-semibold uppercase tracking-wider text-center" data-label="White Belt">White Belt</span>
-                </div>
-            </div>  
+            </div>
+            <div class="flex items-center space-x-1 shrink-0">
+                <span aria-hidden="true">&#129338;</span>
+                <span id="focusBeltBar" class="belt-label text-[10px] px-2 py-0.5 my-1 rounded-full font-semibold uppercase tracking-wider text-center" data-label="White Belt">White Belt</span>
+            </div>
         </div>
+        <!-- How many correct answers this kata still needs for its next belt. -->
         <p id="kataStatus" class="hidden mt-3 text-center text-sm font-semibold text-slate-500 dark:text-slate-400" role="status" aria-live="polite"></p>
 
         <!-- Each kata owns its own markup (see katas/<kata>/template.js) and mounts itself here. -->
@@ -143,13 +144,13 @@
                 </a> &bull; 2026
             </p>
             <div class="flex items-center gap-2">
-                <button id="muteToggleBtn" type="button" aria-label="Mute sound" title="Mute sound" class="bg-white dark:bg-slate-950/80 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900 p-1.5 lg:px-3 lg:py-2 rounded-xl border border-slate-300 dark:border-slate-800 shadow-md transition-all flex items-center space-x-2 font-semibold">
+                <button id="muteToggleBtn" type="button" aria-label="Mute sound" title="Mute sound" class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900 p-1.5 lg:px-3 lg:py-2 rounded-xl border border-slate-300 dark:border-slate-800 transition-all flex items-center space-x-2 font-semibold">
                     <span id="muteIcon">🔊</span><span id="muteLabel" class="hidden lg:block">Sound On</span>
                 </button>
-                <button id="themeToggleBtn" type="button" aria-label="Toggle Light/Dark Theme" class="bg-white dark:bg-slate-950/80 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900 p-1.5 lg:px-3 lg:py-2 rounded-xl border border-slate-300 dark:border-slate-800 shadow-md transition-all flex items-center space-x-2 font-semibold">
+                <button id="themeToggleBtn" type="button" aria-label="Toggle Light/Dark Theme" class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900 p-1.5 lg:px-3 lg:py-2 rounded-xl border border-slate-300 dark:border-slate-800 transition-all flex items-center space-x-2 font-semibold">
                     <span id="themeIcon">🌙</span><span id="themeLabel" class="hidden lg:block">Dark Mode</span>
                 </button>
-                <button id="buyMeCoffee" type="button" aria-label="Buy me a Coffee" class="bg-[#dc0100] opacity-90 hover:opacity-100 text-slate-100 p-1.5 lg:px-3 lg:py-2 rounded-xl border border-slate-300 dark:border-slate-800 shadow-md transition-all flex items-center space-x-2 font-semibold">
+                <button id="buyMeCoffee" type="button" aria-label="Buy me a Coffee" class="bg-[#dc0100] opacity-90 hover:opacity-100 text-slate-100 p-1.5 lg:px-3 lg:py-2 rounded-xl border border-slate-300 dark:border-slate-800 transition-all flex items-center space-x-2 font-semibold">
                     <span><img height="20" width="20" src="./assets/kofi_logo.png" alt="Buy me a Coffee"></span>
                     <span class="hidden lg:block">Buy me a Coffee</span>
                 </button>
@@ -224,7 +225,7 @@
                 <div>
                     <h4 class="font-bold text-slate-900 dark:text-white mb-1">Scoring</h4>
                     <p class="mb-2">Your answers are marked in place. <span class="text-emerald-700 dark:text-emerald-300 font-bold">✅ green</span> is correct, <span class="text-rose-700 dark:text-rose-300 font-bold">❌ red</span> is wrong, and a wrong field shows the answer you needed next to it.</p>
-                    <p>Each correct answer builds your streak and belt progress: ⚪ 🟡 🟠 🟢 🔵 🟤 ⚫. Every 5 correct answers earn you the next belt. Progress is tracked separately for each kata and saved locally.</p>
+                    <p>Every correct answer adds to your <strong class="font-extrabold">streak</strong> — the &#128293; counter up top counts consecutive hits across <em>all</em> katas, and any wrong answer resets it. It also earns <strong class="font-extrabold">belt</strong> progress for the kata you are training: ⚪ 🟡 🟠 🟢 🔵 🟤 ⚫. Every 5 correct answers promote you to the next belt. Belts are tracked per kata; the streak is not. Progress is saved locally.</p>
                 </div>
                 <div>
                     <h4 class="font-bold text-slate-900 dark:text-white mb-1">Hotkeys</h4>

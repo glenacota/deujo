@@ -9,6 +9,7 @@ export const CONFIG = Object.freeze({
     focusMode: 'dm_focus_mode',
     streak: 'dm_streak',
     maxStreak: 'dm_max_streak',
+    streakMigration: 'dm_streak_global_v1',
     belt: 'dm_belt_progress',
     srs: 'dm_srs_v1'      // spatial repetition strategy
   },

@@ -15,7 +15,7 @@ export class ShareController {
         const belt = state.getCurrentBelt(id);
         const text = [
             `🥋🇩🇪 I'm a ${CONFIG.belts.labels[belt]} in the ${name} kata on Deujo.`,
-            `Can you beat my ${state.maxStreakByKata[id]}-answer streak of flawless German mastery?`,
+            `Can you beat my ${state.maxStreak}-answer streak of flawless German mastery?`,
             'Join in: https://deujo.glenacota.me'
         ].join('\n');
         try {

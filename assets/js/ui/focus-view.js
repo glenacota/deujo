@@ -21,10 +21,8 @@ export class FocusView {
 
     renderHeader(kata, state) {
         dom.focus.kataName.textContent = kata.name;
-        dom.header.streak.textContent = state.streakByKata[kata.id] ?? 0;
-        dom.header.max.textContent = state.maxStreakByKata[kata.id] ?? 0;
         renderBeltBadge(
-            dom.header.beltBar,
+            dom.focus.beltBar,
             state,
             kata.id,
             'text-[10px] px-2 py-0.5 my-1 text-center'

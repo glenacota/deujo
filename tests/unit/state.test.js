@@ -38,7 +38,7 @@ test('a correct answer promotes exactly once per milestone', () => {
   assert.deepEqual(flags, [false, false, false, false, true]);
   assert.equal(state.getCurrentBelt(kataId), 1);
   assert.equal(state.getBeltProgressPct(kataId), 0);
-  assert.equal(state.maxStreakByKata[kataId], milestoneInterval);
+  assert.equal(state.maxStreak, milestoneInterval);
 });
 
 test('belt progress is capped and the final belt is always full', () => {
@@ -60,7 +60,7 @@ test('a mistake steps belt progress back and reports the belt drop', () => {
 
   assert.equal(state.resetStreak(kataId), true, 'promotion reversed, back to belt 0');
   assert.equal(state.getCurrentBelt(kataId), 0);
-  assert.equal(state.streakByKata[kataId], 0);
+  assert.equal(state.streak, 0);
   assert.equal(state.resetStreak(kataId), false, 'already at the first belt');
 });
 
@@ -70,15 +70,65 @@ test('belt progress never drops below zero', () => {
   assert.equal(state.beltProgress[kataId], 0);
 });
 
-test('belt progress and streak are persisted per kata', () => {
+test('belt progress is persisted per kata', () => {
   const { kataId, state } = stateFor();
   state.incrementStreak(kataId);
   state.incrementStreak(kataId);
 
   const restored = new GameState([kataId]);
   assert.equal(restored.beltProgress[kataId], 2);
-  assert.equal(restored.streakByKata[kataId], 2);
-  assert.equal(restored.maxStreakByKata[kataId], 2);
+});
+
+test('the streak carries across kata switches and is stored once, globally', () => {
+  const [first, second] = [KATA_ID, 'test-kata-two'];
+  const state = new GameState([first, second]);
+  state.incrementStreak(first);
+  state.incrementStreak(first);
+  // A different kata must extend the same run, not start a parallel counter.
+  state.incrementStreak(second);
+
+  assert.equal(state.streak, 3);
+  assert.equal(state.beltProgress[first], 2, 'belt progress stays per kata');
+  assert.equal(state.beltProgress[second], 1, 'belt progress stays per kata');
+
+  const restored = new GameState([first, second]);
+  assert.equal(restored.streak, 3, 'one global streak, not one per kata');
+  assert.equal(restored.maxStreak, 3);
+});
+
+test('a mistake in one kata breaks the global streak without touching another kata\'s belt', () => {
+  const [first, second] = [KATA_ID, 'test-kata-two'];
+  const state = new GameState([first, second]);
+  for (let i = 0; i < milestoneInterval; i++) state.incrementStreak(first);
+  assert.equal(state.getCurrentBelt(first), 1);
+
+  // Wrong answer in the *other* kata: the streak dies, the earned belt stands.
+  state.resetStreak(second);
+
+  assert.equal(state.streak, 0, 'the streak is global, so any mistake resets it');
+  assert.equal(state.getCurrentBelt(first), 1, 'belts are earned per kata and are not forfeit');
+  assert.equal(state.beltProgress[second], 0);
+});
+
+test('legacy per-kata streak counters are folded into one global streak', () => {
+  // What the app wrote before the streak became global: dm_streak_<kataId>.
+  browser.storage.setItem(`${CONFIG.storage.streak}_nouns`, '3');
+  browser.storage.setItem(`${CONFIG.storage.streak}_verbs`, '5');
+  browser.storage.setItem(`${CONFIG.storage.maxStreak}_nouns`, '4');
+  browser.storage.setItem(`${CONFIG.storage.maxStreak}_verbs`, '9');
+
+  const state = new GameState(['nouns', 'verbs']);
+
+  assert.equal(state.streak, 5, 'the best live run carries over');
+  assert.equal(state.maxStreak, 9, 'the best record carries over');
+  assert.equal(browser.storage.getItem(CONFIG.storage.streak), '5', 'migrated into the global key');
+  assert.equal(browser.storage.getItem(CONFIG.storage.maxStreak), '9');
+
+  // A later session must keep its own numbers, not re-run the migration.
+  state.incrementStreak('nouns');
+  const restored = new GameState(['nouns', 'verbs']);
+  assert.equal(restored.streak, 6);
+  assert.equal(restored.maxStreak, 9);
 });
 
 test('the active kata is restored from storage and rejects unknown ids', () => {
@@ -152,15 +202,15 @@ test('max streak survives a mistake', () => {
   for (let i = 0; i < 3; i++) state.incrementStreak(kataId);
   state.resetStreak(kataId);
 
-  assert.equal(state.streakByKata[kataId], 0);
-  assert.equal(state.maxStreakByKata[kataId], 3, 'the best run is remembered');
+  assert.equal(state.streak, 0);
+  assert.equal(state.maxStreak, 3, 'the best run is remembered');
 
   // A later run must not lower the record, so increment past the old best.
   state.incrementStreak(kataId);
-  assert.equal(state.maxStreakByKata[kataId], 3, 'a short new run does not erase the old best');
+  assert.equal(state.maxStreak, 3, 'a short new run does not erase the old best');
 
   const restored = new GameState([kataId]);
-  assert.equal(restored.maxStreakByKata[kataId], 3, 'the best run is persisted');
+  assert.equal(restored.maxStreak, 3, 'the best run is persisted');
 });
 
 test('pickNext treats an item due exactly now as due', () => {

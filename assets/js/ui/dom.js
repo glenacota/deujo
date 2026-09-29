@@ -31,13 +31,13 @@ export const dom = {
   header: {
     streak: byId('streakDisplay'),
     max: byId('maxStreakDisplay'),
-    beltBar: byId('headerBeltBar'),
   },
 
   focus: {
     view: byId('focusView'),
     backBtn: byId('backToMenuBtn'),
     kataName: byId('focusKataName'),
+    beltBar: byId('focusBeltBar'),
     status: byId('kataStatus'),
     sections: byId('kataSections'),
   },

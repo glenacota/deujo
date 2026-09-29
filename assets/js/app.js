@@ -64,7 +64,8 @@ class App {
         this.#theme.initTheme();
         this.#theme.toggleMute(this.#audio.isMuted());
         this.#dashboard.render(this.#katas);
-        this.#katas.forEach((kata) => this.#renderBelt(kata.id));
+        this.#ui.renderStreak(this.#state);
+        this.#katas.forEach((kata) => this.#renderBeltProgress(kata.id));
         this.#refreshAllDue();
         this.#bindEvents();
 
@@ -83,7 +84,7 @@ class App {
             if (isPromoted) {
                 this.#audio.playMilestone();
                 this.#fx.triggerShow();
-                this.#toast.show(true, this.#state.getCurrentBelt(id), this.#state.streakByKata[id]);
+                this.#toast.show(true, this.#state.getCurrentBelt(id), this.#state.streak);
             } else {
                 this.#audio.playCorrect();
             }
@@ -154,15 +155,20 @@ class App {
     }
 
     #renderProgress(id) {
-        this.#renderBelt(id);
+        this.#ui.renderStreak(this.#state);
+        this.#renderBeltProgress(id);
         if (this.#state.activeKata === id) {
             this.#focus.renderHeader(this.#entries.get(id).kata, this.#state);
         }
     }
 
     /** Belt badges live on the dashboard card, independent of the kata's own (lazy) focus-section mount. */
-    #renderBelt(id) {
-        this.#ui.renderKataBelt(this.#dashboard.getBelt(id), id, this.#state);
+    #renderBeltProgress(id) {
+        this.#ui.renderKataProgress(
+            this.#dashboard.getBelt(id),
+            id,
+            this.#state
+        );
     }
 
     #loadNext(id) {

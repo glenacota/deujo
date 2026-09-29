@@ -29,7 +29,14 @@ export class UiController {
         el.innerHTML = html;
     }
 
-    renderKataBelt(beltEl, kataId, state) {
+    /** The streak is global, so one pair of numbers serves every kata and both views. */
+    renderStreak(state) {
+        dom.header.streak.textContent = state.streak;
+        dom.header.max.textContent = state.maxStreak;
+    }
+
+    /** Belt pill + "n hits to next belt" readout for one kata's dashboard card. */
+    renderKataProgress(beltEl, kataId, state) {
         renderBeltBadge(
             beltEl,
             state,
