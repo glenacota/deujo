@@ -26,6 +26,10 @@ export function installBrowserStub() {
       addEventListener(type, handler) {
         (listeners.get(type) ?? listeners.set(type, []).get(type)).push(handler);
       },
+      // Real elements don't exist in this stub; modules that import ui/dom.js
+      // must overwrite the relevant `dom.*` entries before exercising DOM logic.
+      getElementById() { return null; },
+      querySelector() { return null; },
     },
     window: {
       addEventListener(type, handler) {

@@ -76,7 +76,10 @@
                         <div data-role="name" class="font-black text-lg text-slate-900 dark:text-white"></div>
                     </div>
                     <div data-role="subtitle" class="text-xs text-slate-500 dark:text-slate-400 lg:mt-0.5 mb-2"></div>
-                    <span data-role="belt" class="belt-label block w-full text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider">White Belt</span>
+                    <div class="flex items-center gap-2">
+                        <span data-role="belt" class="belt-label block w-full text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider">White Belt</span>
+                        <span data-role="due" class="hidden shrink-0 text-[10px] px-2 py-0.5 rounded-full font-semibold bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200 whitespace-nowrap"></span>
+                    </div>
                 </button>
             </template>
             <div id="dashboardGrid" class="grid grid-cols-2 gap-3"></div>

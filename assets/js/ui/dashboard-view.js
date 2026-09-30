@@ -38,7 +38,9 @@ export class DashboardView {
             // Cards/belts live in the dashboard, independent of a kata's own (lazy) focus-section mount.
             this.#cards.set(kata.id, card);
             this.#belts.set(kata.id, belt);
-            this.#dues.set(kata.id, card.querySelector('[data-role="due"]'));
+            const due = card.querySelector('[data-role="due"]');
+            if (!due) console.warn(`kataCardTemplate is missing [data-role="due"]; due-count badge for "${kata.id}" is disabled`);
+            this.#dues.set(kata.id, due);
         });
     }
 
