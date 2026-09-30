@@ -4,6 +4,7 @@ const ACCENT_HOVER_CLASSES = {
     indigo: 'hover:border-indigo-500',
     teal: 'hover:border-teal-500',
     purple: 'hover:border-purple-500',
+    amber: 'hover:border-amber-500',
 };
 
 export class DashboardView {

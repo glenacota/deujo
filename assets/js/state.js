@@ -117,10 +117,10 @@ export class GameState {
     const skip = dataset.length > CONFIG.rules.recentExclude ? new Set(recent) : null;
 
     const pool = skip ? dataset.filter((item) => !skip.has(item.id)) : dataset;
-    const candidates = pool.length ? pool : dataset; // everything is recent: fall back
+    const candidates = pool;
 
     // Walk the list once, subtracting each item's weight until the ticket runs out.
-    const total = candidates.reduce((sum, item) => sum + weight(records[item.id]), 0);
+    const total = pool.reduce((sum, item) => sum + weight(records[item.id]), 0);
     let ticket = rng() * total;
     let chosen = candidates[candidates.length - 1]; // guards against float drift
     for (const item of candidates) {

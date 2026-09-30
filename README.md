@@ -48,8 +48,8 @@ To add exercises to an existing kata, append entries to its JSON file in `assets
 To add a kata:
 1. Add `assets/js/katas/<id>/manifest.js`, `template.js`, and `kata.js`, plus `assets/datasets/<id>.json`.
 2. Give the manifest a unique `id`, `name`, `subtitle`, `datasetUrl`, and `accent`. Dashboard accents must be `indigo`, `teal`, `purple`, or `amber`.
-3. Export a `create...Kata()` factory from `kata.js`. Return the manifest fields, `el` with `kata`, `section`, and `cardBelt`, and these methods: `mount(container)`, `render(item)`, `check(item)`, `getHelpContent(item)`, and `validateDataset(dataset)`.
-4. In `mount`, create and append one `[data-role="section"]` from your template. Set `el.section` and connect `el.kata` to `kata-<id>` and `el.cardBelt` to `belt-<id>`.
+3. Export a `create...Kata()` factory from `kata.js`. Return the manifest fields, `el.section`, and these methods: `mount(container)`, `render(item)`, `check(item)`, `getHelpContent(item)`, and `validateDataset(dataset)`.
+4. In `mount`, create and append one `[data-role="section"]` from your template. Set `el.section` to the created section.
 5. Make `validateDataset()` reject anything except a non-empty array of entries matching your kata's schema. `check()` returns `{ correct, message }`, `{ warning }`, or `null`; `getHelpContent()` returns an HTML string.
 6. Import the factory in `assets/js/katas/registry.js` and add its call to `loadKatas()`.
 

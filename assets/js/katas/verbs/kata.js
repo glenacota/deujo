@@ -40,7 +40,7 @@ export function validateVerbDataset(dataset) {
     });
 }
 
-function mountElements(el, tenseKey, manifest, container) {
+function mountElements(el, tenseKey, container) {
     // Each tense gets its own parsed section (no shared ids), so multiple
     // tenses can coexist/be visible simultaneously in the future.
     const section = createSectionFromTemplate(verbsTemplate);
@@ -56,7 +56,7 @@ function mountElements(el, tenseKey, manifest, container) {
 export function createVerbKata(tenseKey) {
     const tense = TENSES[tenseKey];
     const manifest = getVerbManifest(tenseKey);
-    const el = { kata: null, section: null, cardBelt: null, word: null, meaning: null, inputs: [] };
+    const el = { section: null, word: null, meaning: null, inputs: [] };
 
     return {
         ...manifest,
@@ -90,7 +90,7 @@ export function createVerbKata(tenseKey) {
 
         mount(container) {
             if (el.section) return;
-            mountElements(el, tenseKey, manifest, container);
+            mountElements(el, tenseKey, container);
         },
 
     render(verb) {

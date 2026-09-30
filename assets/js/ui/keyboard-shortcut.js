@@ -1,15 +1,11 @@
 // ui/share-shortcut.js
 
+import { getActiveInputs } from './dom.js';
+
 function isTypingTarget(target) {
     return target instanceof HTMLInputElement ||
         target instanceof HTMLTextAreaElement ||
         target?.isContentEditable;
-}
-
-function getVisibleInputs(inputRoot) {
-    const section = inputRoot.querySelector('[data-role="section"]:not(.hidden)');
-    if (!section) return [];
-    return Array.from(section.querySelectorAll('input')).filter((input) => !input.disabled && !input.readOnly);
 }
 
 export function bindKeyboardShortcuts({
@@ -60,7 +56,7 @@ export function bindKeyboardShortcuts({
                 // "next" rather than "check the next blank".
                 if (!isAnswering()) return check();
                 if (target instanceof HTMLInputElement) {
-                    const inputs = getVisibleInputs(inputRoot);
+                    const inputs = getActiveInputs(inputRoot);
                     const index = inputs.indexOf(target);
                     if (index !== -1 && index !== inputs.length - 1) {
                         const next = inputs.slice(index + 1).find((input) => !input.value.trim())

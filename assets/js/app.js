@@ -33,7 +33,6 @@ class App {
     #datasets = new Map(); // dataset URL -> Promise<dataset>
     #focusModeActive = false;
     #phase = 'answering';
-    #advanceTimer = null;
 
     constructor() {
         this.#audio = new AudioEngine();
@@ -185,22 +184,16 @@ class App {
         const section = this.#entries.get(id)?.kata.el.section;
         const locked = phase !== 'answering';
         if (locked) this.#focus.releaseFocus(section);
-        setSectionLocked(section, locked);
+        setSectionLocked(dom.focus.sections, locked);
         dom.actions.checkLabel.textContent = locked ? 'Next' : 'Check';
         // Skipping a graded answer would let the learner dodge the streak reset.
         dom.actions.skipBtn.classList.toggle('hidden', locked);
-    }
-
-    #cancelAdvance() {
-        clearTimeout(this.#advanceTimer);
-        this.#advanceTimer = null;
     }
 
     #advance(id) {
         const section = this.#entries.get(id)?.kata.el.section;
         if (!section) return;
 
-        this.#cancelAdvance();
         this.#ui.hideVerdict();
         this.#setPhase(id, 'answering');
         clearAnswerMarks(section);
@@ -237,7 +230,7 @@ class App {
         this.#refreshDue(id);
 
         const summary = summarizeAnswer(result);
-        this.#ui.showVerdict(summary, result.answer);
+        this.#ui.showVerdict(summary);
         this.#setPhase(id, 'reviewing');
     }
 
@@ -261,7 +254,6 @@ class App {
     }
 
     async #enterKata(id) {
-        this.#cancelAdvance();
         const { kata } = this.#entries.get(id);
         kata.mount(dom.focus.sections);
         clearAnswerMarks(kata.el.section);
@@ -285,7 +277,6 @@ class App {
     }
 
     #exitToMenu() {
-        this.#cancelAdvance();
         this.#focusModeActive = false;
         this.#state.setFocusModeActive(false);
         this.#dashboard.showDashboard();

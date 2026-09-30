@@ -1,7 +1,16 @@
 // ui/dom.js
 // Single place that knows about element IDs
 
-const byId = (id) => document.getElementById(id);
+const byId = (id) => document.getElementById?.(id) ?? null;
+const ACTIVE_SECTION_SELECTOR = '[data-role="section"]:not(.hidden)';
+
+export function getActiveInputs(root) {
+  const section = root?.matches?.(ACTIVE_SECTION_SELECTOR)
+    ? root
+    : root?.querySelector?.(ACTIVE_SECTION_SELECTOR);
+  if (!section) return [];
+  return Array.from(section.querySelectorAll('input')).filter((input) => !input.disabled && !input.readOnly);
+}
 
 export const dom = {
   logo: byId('logo'),
@@ -44,7 +53,7 @@ export const dom = {
 
   actions: {
     checkBtn: byId('checkAnswerBtn'),
-    checkLabel: document.querySelector('#checkAnswerBtn [data-role="label"]'),
+    checkLabel: document.querySelector?.('#checkAnswerBtn [data-role="label"]') ?? null,
     skipBtn: byId('skipBtn'),
     helpBtn: byId('helpBtn'),
   },

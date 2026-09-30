@@ -136,9 +136,7 @@ export function gradeBlank(given, blank) {
 
 export function createPrepositionKata() {
     const el = {
-        kata: null,
         section: null,
-        cardBelt: null,
         sentence: null,
         translation: null,
     };

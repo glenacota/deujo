@@ -149,17 +149,3 @@ export function decomposePrepositionPhrase(answer, preposition) {
     if (!answer.startsWith(`${preposition} `)) return null;
     return answer.slice(preposition.length + 1);
 }
-
-/**
- * The contracted form is the standard spelling, but the written-out version is
- * still correct German, so both count as a correct answer.
- * @param {string} answer
- * @param {string} preposition
- * @returns {string[]}
- */
-export function acceptedPrepositionForms(answer, preposition) {
-    const forms = [answer];
-    const contracted = PREPOSITION_CONTRACTIONS[answer];
-    if (contracted) forms.push(`${preposition} ${contracted.article}`);
-    return forms;
-}

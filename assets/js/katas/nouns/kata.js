@@ -40,9 +40,7 @@ function setGenderActive(btn, active) {
 
 export function createNounKata() {
     const el = {
-        kata: null,
         section: null,
-        cardBelt: null,
         word: null,
         meaning: null,
         plural: null,

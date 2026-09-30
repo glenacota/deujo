@@ -14,7 +14,7 @@ import { createVerbKata } from './verbs/kata.js';
  * @property {string} subtitle
  * @property {string} datasetUrl
  * @property {string} accent Tailwind color name driving the dashboard card's hover border.
- * @property {{kata: HTMLElement|null, section: HTMLElement|null, cardBelt: HTMLElement|null}} el
+ * @property {{section: HTMLElement|null}} el
  * @property {function(HTMLElement): void} mount
  * @property {function(Object): void} render
  * @property {function(Object): Object|null} check
@@ -24,6 +24,7 @@ import { createVerbKata } from './verbs/kata.js';
 
 /** @param {Kata} kata */
 export function validateKata(kata) {
+    const supportedAccents = ['indigo', 'teal', 'purple', 'amber'];
     const requiredStrings = ['id', 'name', 'subtitle', 'datasetUrl', 'accent'];
     const requiredFunctions = ['mount', 'render', 'check', 'getHelpContent', 'validateDataset'];
 
@@ -37,17 +38,19 @@ export function validateKata(kata) {
         }
     });
 
+    if (!supportedAccents.includes(kata.accent)) {
+        throw new Error(`Kata "${kata.id}" requires a supported accent.`);
+    }
+
     requiredFunctions.forEach((field) => {
         if (typeof kata[field] !== 'function') {
             throw new Error(`Kata "${kata.id}" requires ${field}().`);
         }
     });
 
-    ['kata', 'section', 'cardBelt'].forEach((field) => {
-        if (!Object.hasOwn(kata.el ?? {}, field)) {
-            throw new Error(`Kata "${kata.id}" requires el.${field}.`);
-        }
-    });
+    if (!Object.hasOwn(kata.el ?? {}, 'section')) {
+        throw new Error(`Kata "${kata.id}" requires el.section.`);
+    }
 
     return kata;
 }

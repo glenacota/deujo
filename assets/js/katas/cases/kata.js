@@ -81,9 +81,7 @@ function renderHelpMatrix() {
 
 export function createCaseKata() {
     const el = {
-        kata: null,
         section: null,
-        cardBelt: null,
         sentence: null,
         translation: null,
     };

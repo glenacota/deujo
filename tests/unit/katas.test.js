@@ -46,8 +46,13 @@ test('validateKata rejects a kata with a missing field', () => {
   assert.throws(() => validateKata({ ...base, id: '' }), /requires non-empty id/);
   assert.throws(() => validateKata({ ...base, render: undefined }), /requires render\(\)/);
   assert.throws(() => validateKata({ ...base, check: undefined }), /requires check\(\)/);
-  assert.throws(() => validateKata({ ...base, el: {} }), /requires el\.kata/);
-  assert.throws(() => validateKata({ ...base, el: { kata: null, section: null } }), /requires el\.cardBelt/);
+  assert.throws(() => validateKata({ ...base, el: {} }), /requires el\.section/);
+});
+
+test('validateKata accepts supported accents and rejects unknown accents', () => {
+  const base = katas[0];
+  assert.doesNotThrow(() => validateKata({ ...base, accent: 'amber' }));
+  assert.throws(() => validateKata({ ...base, accent: 'chartreuse' }), /requires a supported accent/);
 });
 
 // validateXDataset already rejects an empty array, so length needs no separate check.
