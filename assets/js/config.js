@@ -3,8 +3,12 @@
 
 export const CONFIG = Object.freeze({
   storage: {
+    prefix: 'dm_',
     theme: 'dm_theme',
-    mute: 'dm_mute',
+    sound: 'dm_sound',
+    animations: 'dm_animations',
+    confetti: 'dm_confetti',
+    hotkeys: 'dm_hotkeys',
     kata: 'dm_active_kata',
     focusMode: 'dm_focus_mode',
     streak: 'dm_streak',
@@ -13,6 +17,7 @@ export const CONFIG = Object.freeze({
     belt: 'dm_belt_progress',
     srs: 'dm_srs_v2'
   },
+  themeModes: ['system', 'light', 'dark'],
   rules: {
     recentExclude: 10,    // last N served items are skipped by pickNext 
     milestoneInterval: 5, // belt points needed to advance one belt

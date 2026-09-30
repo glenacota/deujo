@@ -14,17 +14,9 @@ export function getActiveInputs(root) {
 
 export const dom = {
   logo: byId('logo'),
-  
-  theme: {
-    toggleBtn: byId('themeToggleBtn'),
-    icon: byId('themeIcon'),
-    label: byId('themeLabel'),
-  },
 
-  mute: {
-    toggleBtn: byId('muteToggleBtn'),
-    icon: byId('muteIcon'),
-    label: byId('muteLabel'),
+  settings: {
+    btn: byId('settingsBtn'),
   },
 
   buyMeCoffee: {
@@ -88,6 +80,22 @@ export const dom = {
     share: {
       root: byId('shareModal'),
       text: byId('shareModalText'),
+    },
+    settings: {
+      root: byId('settingsModal'),
+      themeInputs: Array.from(document.querySelectorAll?.('#settingsModal input[name="theme"]') ?? []),
+      switches: {
+        sound: byId('settingsSoundSwitch'),
+        confetti: byId('settingsConfettiSwitch'),
+        animations: byId('settingsAnimationsSwitch'),
+        hotkeys: byId('settingsHotkeysSwitch'),
+      },
+      testSoundBtn: byId('settingsTestSoundBtn'),
+      resetBtn: byId('settingsResetBtn'),
+      clearDataBtn: byId('settingsClearDataBtn'),
+      confirmBox: byId('settingsClearConfirm'),
+      confirmCancelBtn: byId('settingsClearCancelBtn'),
+      confirmOkBtn: byId('settingsClearOkBtn'),
     },
   },
 

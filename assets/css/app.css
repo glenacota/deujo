@@ -112,6 +112,195 @@ canvas#fireworksCanvas { position: fixed; inset: 0; width: 100vw; height: 100vh;
 
 @media (max-width: 639px) { .modal-footer { display: none; } }
 
+/* Settings panel: bottom sheet on phones, centred panel on wider screens. */
+#settingsModal .settings-esc-hint { margin-left: auto; }
+@media (max-width: 639px) {
+    #settingsModal { align-items: flex-end; padding: 0; }
+    #settingsModal .modal-panel { border-radius: 1rem 1rem 0 0; max-height: 85dvh; }
+    /* The Esc hint is desktop-only, but the settings actions must stay reachable. */
+    #settingsModal .modal-footer { display: flex; align-items: center; padding: 0.5rem 1rem; }
+    #settingsModal .settings-esc-hint { display: none; }
+}
+@media (min-width: 640px) {
+    #settingsModal .settings-modal-footer { display: flex; align-items: center; }
+}
+
+/* ---- Settings rows ------------------------------------------------------ */
+.settings-group { padding: 0.5rem 1rem; }
+.settings-legend {
+    padding: 0 0 0.125rem 0.5rem;
+    color: rgb(100 116 139);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+.settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 44px;
+}
+.settings-label { font-weight: 600;}
+.settings-label-stack { display: flex; flex-direction: column; min-width: 40%; }
+.settings-hint { color: rgb(100 116 139); font-size: 0.7rem; line-height: 1rem; }
+.settings-control-group { display: flex; align-items: center; gap: 0.5rem; }
+
+/* Hit area stays 44x44 even though the visible track is 44x18. */
+.settings-switch {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 44px;
+    height: 44px;
+    cursor: pointer;
+}
+.settings-switch-track {
+    position: relative;
+    display: block;
+    width: 44px;
+    height: 18px;
+    border-radius: 9999px;
+    background: rgb(203 213 225);
+    transition: background-color 150ms;
+}
+/* Thumb is smaller than the track (18px), so it travels 26px to reach the end. */
+.settings-switch-track::after {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 9999px;
+    background: white;
+    box-shadow: 0 1px 2px rgb(15 23 42 / 0.35);
+    content: '';
+    transition: transform 150ms;
+}
+.settings-switch input:checked + .settings-switch-track { background: rgb(79 70 229); }
+.settings-switch input:checked + .settings-switch-track::after { transform: translateX(26px); }
+.settings-switch input:focus-visible + .settings-switch-track { outline: 2px solid rgb(79 70 229); outline-offset: 2px; }
+
+.settings-segmented { display: flex; flex: 1 1 auto; gap: 0.25rem;}
+.settings-segment { flex: 1 1 0; min-width: 0; cursor: pointer; }
+.settings-segment-track {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 20px;
+    padding: 0.25rem;
+    border: 1px solid rgb(203 213 225);
+    border-radius: 0.75rem;
+    background: rgb(248 250 252);
+    color: rgb(71 85 105);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-align: center;
+}
+.settings-segment input:checked + .settings-segment-track {
+    border-color: rgb(79 70 229);
+    background: rgb(79 70 229);
+    color: white;
+}
+.settings-segment input:focus-visible + .settings-segment-track { outline: 2px solid rgb(79 70 229); outline-offset: 2px; }
+
+.settings-ghost-btn {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid rgb(203 213 225);
+    border-radius: 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: rgb(71 85 105);
+    transition: background-color 150ms, border-color 150ms;
+}
+.settings-ghost-btn:hover { border-color: rgb(148 163 184); background: rgb(241 245 249); }
+.settings-danger-btn {
+    flex: none;
+    min-height: 2ppx;
+    padding: 0.5rem 0.9rem;
+    border: 1px solid rgb(61, 68, 77);
+    border-radius: 0.75rem;
+    background: rgb(33 40 48);
+
+    color: rgb(250, 94, 85);
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+.settings-danger-btn:hover { background: rgb(182 35 36); color: white; }
+.settings-danger-btn[disabled] { opacity: 0.6; cursor: default; }
+.settings-text-btn { padding: 0.25rem 0; color: rgb(100 116 139); font-size: 0.75rem; font-weight: 600; text-decoration: underline; }
+.settings-text-btn:hover { color: rgb(15 23 42); }
+
+/* Collapsed by default so the panel stays short on a phone. */
+.settings-summary {
+    padding: 0.25rem 0 0.5rem;
+    color: rgb(100 116 139);
+    font-size: 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+.settings-hotkeys { display: grid; gap: 0.25rem; padding: 0 0 0.25rem 0.5rem; color: rgb(71 85 105); font-size: 0.7rem; }
+
+/* Danger zone: reads as a separate, hazardous block. */
+.settings-danger-zone { padding: 0.5rem 1rem; }
+.settings-danger-legend { color: rgb(190 18 60); }
+.settings-danger-zone .settings-row { padding: 1rem; border: 1px solid rgba(248, 81, 73, 0.4); border-radius: 8px }
+
+/* Confirmation dialog, nested in the settings panel: it covers the panel and
+   blurs it, so the destructive step is unmistakably a separate decision. */
+#settingsModal .modal-panel { position: relative; }
+.settings-confirm-backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgb(15 23 42 / 0.55);
+    backdrop-filter: blur(4px);
+}
+.settings-confirm-backdrop.hidden { display: none; }
+.settings-confirm-panel {
+    width: 100%;
+    max-width: 26rem;
+    padding: 1.25rem;
+    border: 1px solid rgb(226 232 240);
+    border-radius: 1rem;
+    background: white;
+    box-shadow: 0 25px 50px -12px rgb(15 23 42 / 0.35);
+}
+.settings-confirm-title {
+    margin-bottom: 0.5rem;
+    color: rgb(15 23 42);
+    font-size: 1.05rem;
+    font-weight: 800;
+}
+.settings-confirm-text { color: rgb(71 85 105); font-size: 0.8rem; line-height: 1.25rem; }
+.settings-confirm-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem; }
+
+html.dark .settings-confirm-panel { border-color: rgb(51 65 85); background: rgb(15 23 42); }
+html.dark .settings-confirm-title { color: white; }
+html.dark .settings-confirm-text { color: rgb(203 213 225); }
+
+html.dark .settings-legend, html.dark .settings-hint { color: rgb(148 163 184); }
+html.dark .settings-switch-track { background: rgb(51 65 85); }
+html.dark .settings-switch input:checked + .settings-switch-track { background: rgb(99 102 241); }
+html.dark .settings-segment-track { border-color: rgb(51 65 85); background: rgb(15 23 42 / 0.6); color: rgb(203 213 225); }
+html.dark .settings-ghost-btn { border-color: rgb(51 65 85); color: rgb(203 213 225); }
+html.dark .settings-ghost-btn:hover { background: rgb(30 41 59); }
+html.dark .settings-hotkeys { color: rgb(203 213 225); }
+html.dark .settings-text-btn { color: rgb(148 163 184); }
+html.dark .settings-text-btn:hover { color: white; }
+html.dark .settings-summary { color: rgb(148 163 184); }
+html.dark .settings-danger-legend { color: rgb(251 113 133); }
+
+/* Reduce motion: user setting, mirroring the prefers-reduced-motion media query. */
+html.reduce-motion .verdict, html.reduce-motion .animate-bounce, html.reduce-motion .animate-kata-enter { animation: none !important; }
+html.reduce-motion canvas#fireworksCanvas { display: none; }
+
 html.dark .modal-panel { border-color: rgb(51 65 85); background: rgb(15 23 42); }
 html.dark .modal-header, html.dark .modal-footer { border-color: rgb(30 41 59); background: rgb(2 6 23 / 0.5); }
 html.dark .modal-close { color: rgb(148 163 184); }

@@ -20,6 +20,32 @@ function safeSet(key, value) {
   }
 }
 
+function safeRemove(key) {
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    // Same as safeSet: nothing to do if storage is unavailable.
+  }
+}
+
+/**
+ * Removes every key starting with `prefix`. Progress keys are namespaced this
+ * way (`dm_belt_progress_<kataId>`), so a prefix scan is the only way to find
+ * them all - `removeItem` on the prefix alone would leave them behind.
+ */
+function safeRemoveByPrefix(prefix) {
+  try {
+    const keys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.startsWith(prefix)) keys.push(key);
+    }
+    keys.forEach(safeRemove);
+  } catch {
+    // Storage unavailable - nothing to clear.
+  }
+}
+
 export const Storage = {
   getNumber(key, fallback = 0) {
     const parsed = parseInt(safeGet(key), 10);
@@ -58,11 +84,24 @@ export const Storage = {
     safeSet(key, JSON.stringify(value));
   },
 
+  remove(key) {
+    safeRemove(key);
+  },
+
+  /** Wipes all app-owned keys, including prefixed ones like `dm_belt_progress_<id>`. */
+  removeByPrefix(prefix) {
+    safeRemoveByPrefix(prefix);
+  },
+
   getTheme() {
     return safeGet(CONFIG.storage.theme);
   },
 
   setTheme(value) {
+    if (value === 'system') {
+      safeRemove(CONFIG.storage.theme);
+      return;
+    }
     safeSet(CONFIG.storage.theme, value);
   },
 };

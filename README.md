@@ -20,6 +20,7 @@ Just pure, disciplined practice.
 - **Just a spoon of gamification**: Unlock higher belt levels, hold your streak stance, and celebrate milestones.
 - **Leitner spaced repetition**: Three boxes space reviews over time. New items and due items are eligible; due items are selected uniformly, with the 10 most recently shown items skipped when possible. Correct answers move items up one box: box 0 waits 2 days, while boxes 1 and 2 wait 9 days. Box 2 is the maximum. Wrong answers reset items to box 0 and make them due immediately. If no item is due, selection falls back to the available pool. Progress is saved locally.
 - **Kiai! Sound FX**.
+- **Settings**: press `,` or use the gear button in the footer. Theme (System / Light / Dark), sound effects with a test tone, confetti, animations, and hotkeys. Clearing the progress stored in this browser is behind a confirmation in a danger zone.
 
 
 ## ⚔️ Tech Stack

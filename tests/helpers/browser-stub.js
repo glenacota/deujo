@@ -11,6 +11,7 @@ class MemoryStorage {
   removeItem(key) { this.#map.delete(key); }
   clear() { this.#map.clear(); }
   get length() { return this.#map.size; }
+  key(index) { return [...this.#map.keys()][index] ?? null; }
 }
 
 /** Installs the stubs. Idempotent. Returns a handle to reset state between tests. */

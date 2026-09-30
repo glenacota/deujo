@@ -22,7 +22,7 @@ const KATA_COUNT = 3;
  * gets its own listener registry. `focusMode` flips the one predicate that
  * decides whether we are on the dashboard or inside a kata.
  */
-const loadModule = async ({ focusMode = false, modalOpen = false, callbacks = {} } = {}) => {
+const loadModule = async ({ focusMode = false, modalOpen = false, hotkeysEnabled = true, callbacks = {} } = {}) => {
     const listeners = [];
     const calls = [];
     const errors = [];
@@ -59,6 +59,8 @@ const loadModule = async ({ focusMode = false, modalOpen = false, callbacks = {}
         showHelp: record('showHelp'),
         loadNext: record('loadNext'),
         exitToMenu: record('exitToMenu'),
+        openSettings: record('openSettings'),
+        areHotkeysEnabled: () => hotkeysEnabled,
     });
 
     console.error = originalError;
@@ -162,6 +164,35 @@ test('a shortcut that throws is logged, and the next keypress still works', asyn
     press({ key: 'Backspace' });
     assert.equal(exited, true, 'the listener is still live after the failure');
     assert.equal(logged.length, 1, 'the healthy keypress logs nothing');
+});
+
+test(', opens settings from both views, like the ⇧+N kata jump', async () => {
+    for (const focusMode of [true, false]) {
+        const { press } = await loadModule({ focusMode });
+
+        const { calls, errors } = press({ key: ',' });
+
+        assert.ok(calls.includes('openSettings'), `, should open settings (focusMode ${focusMode})`);
+        assert.deepEqual(errors, []);
+    }
+});
+
+test(', is inert while typing and behind a modal', async () => {
+    const { press } = await loadModule({ focusMode: false, modalOpen: true });
+
+    assert.deepEqual(press({ key: ',' }).calls, [], 'no modal may stack behind another');
+    assert.deepEqual(press({ key: ',', target: {} }).calls, []);
+});
+
+test('disabling hotkeys silences every shortcut but not modal handling', async () => {
+    const { press } = await loadModule({ focusMode: true, hotkeysEnabled: false });
+
+    for (const key of ['Enter', '?', '/', 'Backspace', ',']) {
+        assert.deepEqual(press({ key }).calls, [], `${key} must not run with hotkeys off`);
+    }
+
+    const { press: shifting } = await loadModule({ focusMode: false, hotkeysEnabled: false });
+    assert.deepEqual(shifting({ key: '!', code: 'Digit1', shiftKey: true }).calls, [], 'nor may ⇧+1 jump katas');
 });
 
 test('a keypress with no physical code is a silent no-op', async () => {

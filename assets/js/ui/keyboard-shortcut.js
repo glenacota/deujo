@@ -19,13 +19,17 @@ export function bindKeyboardShortcuts({
     showHelp,
     loadNext,
     exitToMenu,
+    openSettings,
+    areHotkeysEnabled = () => true,
 }) {
+    // The umlaut replacement is typing behaviour, not a shortcut, so it stays
+    // live even when hotkeys are off.
     inputRoot.addEventListener('beforeinput', (event) => {
         if (event.inputType !== 'insertText' || event.data !== ':' || event.isComposing) return;
 
         const input = event.target;
         if (!(input instanceof HTMLInputElement) || input.type !== 'text' || input.readOnly || input.disabled) return;
-
+2
         const start = input.selectionStart;
         const end = input.selectionEnd;
         if (start === null || start !== end) return;
@@ -99,6 +103,14 @@ export function bindKeyboardShortcuts({
                 exitToMenu();
             },
         },
+        {
+            // Settings is reachable from both views, like the ⇧+N kata jump.
+            matches: (event, typing) => event.key === ',' && !typing && !modals.isOpen(),
+            run: (event) => {
+                event.preventDefault();
+                openSettings();
+            },
+        },
     ];
 
     window.addEventListener('keydown', (event) => {
@@ -108,6 +120,8 @@ export function bindKeyboardShortcuts({
             if (modals.handleKeydown(event)) return;
 
             const typing = isTypingTarget(event.target);
+            if (!areHotkeysEnabled()) return;
+
             const shortcut = shortcuts.find(({ matches }) => matches(event, typing));
             shortcut?.run(event);
         } catch (error) {

@@ -4,25 +4,29 @@
 // the AudioContext on first use, since browsers refuse to start one before
 // a user gesture - and resumes it if the tab suspended it in the background
 
-import { Storage } from './storage.js';
-import { CONFIG} from '../config.js';
+import { get, set } from './preferences.js';
 
 export class AudioEngine {
   #ctx = null;
-  #muted = Storage.getBoolean(CONFIG.storage.mute, false);
+  #soundOn = get('sound');
 
-  isMuted() {
-    return this.#muted;
+  isSoundOn() {
+    return this.#soundOn;
   }
 
-  toggleMute() {
-    this.#muted = !this.#muted;
-    Storage.setBoolean(CONFIG.storage.mute, this.#muted);
-    return this.#muted;
+  toggleSound() {
+    return this.setSoundOn(!this.#soundOn);
+  }
+
+  setSoundOn(isOn) {
+    if (this.#soundOn === isOn) return this.#soundOn;
+    this.#soundOn = isOn;
+    set('sound', isOn);
+    return this.#soundOn;
   }
 
   #ensureContext() {
-    if (this.#muted) return null;
+    if (!this.#soundOn) return null;
     if (!this.#ctx) {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       this.#ctx = AudioCtx ? new AudioCtx() : null;

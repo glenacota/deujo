@@ -6,6 +6,7 @@ import { AudioEngine } from './services/audio-engine.js';
 import { FxEngine } from './services/fx-engine.js';
 import { GameState } from './state.js';
 import { loadKatas } from './katas/registry.js';
+import { applyDocumentPreferences, get } from './services/preferences.js';
 import { clearAnswerMarks, setSectionLocked } from './ui/answer-view.js';
 import { DashboardView } from './ui/dashboard-view.js';
 import { dom } from './ui/dom.js';
@@ -13,6 +14,7 @@ import { FocusView } from './ui/focus-view.js';
 import { bindKeyboardShortcuts } from './ui/keyboard-shortcut.js';
 import { ModalController } from './ui/modal-controller.js';
 import { ShareController } from './ui/share-controller.js';
+import { SettingsView } from './ui/settings-view.js';
 import { ThemeController } from './ui/theme-controller.js';
 import { ToastController } from './ui/toast-controller.js';
 import { UiController } from './ui/ui-controller.js';
@@ -28,6 +30,7 @@ class App {
     #toast;
     #share;
     #modals;
+    #settings;
     #katas = [];
     #entries = new Map(); // kata id -> { kata, dataset }
     #datasets = new Map(); // dataset URL -> Promise<dataset>
@@ -45,6 +48,12 @@ class App {
         this.#theme = new ThemeController();
         this.#toast = new ToastController();
         this.#share = new ShareController(this.#modals);
+        this.#settings = new SettingsView({
+            audio: this.#audio,
+            theme: this.#theme,
+            // Stored state is gone, so a reload rebuilds state from the defaults.
+            onClearData: () => window.location.reload(),
+        });
     }
 
     async bootstrap() {
@@ -60,8 +69,8 @@ class App {
     }
 
     #init() {
+        applyDocumentPreferences();
         this.#theme.initTheme();
-        this.#theme.toggleMute(this.#audio.isMuted());
         this.#dashboard.render(this.#katas);
         this.#ui.renderStreak(this.#state);
         this.#katas.forEach((kata) => this.#renderBeltProgress(kata.id));
@@ -81,7 +90,7 @@ class App {
 
             if (isPromoted) {
                 this.#audio.playMilestone();
-                this.#fx.triggerShow();
+                if (get('confetti')) this.#fx.triggerShow();
                 this.#toast.show(true, this.#state.getCurrentBelt(id), this.#state.streak);
             } else {
                 this.#audio.playCorrect();
@@ -246,6 +255,11 @@ class App {
         this.#modals.open(dom.modals.help.root, dom.actions.helpBtn);
     }
 
+    #openSettings() {
+        this.#settings.render();
+        this.#modals.open(dom.modals.settings.root, dom.settings.btn);
+    }
+
     #setKata(kata) {
         this.#state.setActiveKata(kata);
         this.#focus.switchKata(this.#katas, kata);
@@ -281,11 +295,6 @@ class App {
     }
 
     #bindEvents() {
-        dom.theme.toggleBtn.addEventListener('click', () => this.#theme.toggleTheme());
-        dom.mute.toggleBtn.addEventListener('click', () => {
-            const isMuted = this.#audio.toggleMute();
-            this.#theme.toggleMute(isMuted);
-        });
         this.#katas.forEach(({ id }) => {
             this.#dashboard.getCard(id).addEventListener('click', () => this.#enterKata(id));
         });
@@ -293,6 +302,8 @@ class App {
         dom.actions.checkBtn.addEventListener('click', () => this.#check(this.#state.activeKata));
         dom.actions.skipBtn.addEventListener('click', () => this.#skip(this.#state.activeKata));
         dom.actions.helpBtn.addEventListener('click', () => this.#showHelpModal(this.#state.activeKata));
+
+        dom.settings.btn.addEventListener('click', () => this.#openSettings());
 
         dom.share.btn.addEventListener('click', () => {
             const kata = this.#entries.get(this.#state.activeKata)?.kata;
@@ -314,6 +325,8 @@ class App {
             showHelp: () => dom.actions.helpBtn.click(),
             loadNext: () => this.#skip(this.#state.activeKata),
             exitToMenu: () => this.#exitToMenu(),
+            openSettings: () => this.#openSettings(),
+            areHotkeysEnabled: () => get('hotkeys'),
         });
     }
 }

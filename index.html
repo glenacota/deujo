@@ -14,8 +14,14 @@
             try {
                 var stored = localStorage.getItem('dm_theme');
                 var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                var isDark = stored ? stored === 'dark' : prefersDark;
+                var isDark = stored === 'dark' || (stored !== 'light' && prefersDark);
                 document.documentElement.classList.toggle('dark', isDark);
+                var animations = localStorage.getItem('dm_animations');
+                var hasAnimations = animations === 'true' || animations === 'false';
+                var allowMotion = hasAnimations
+                    ? animations === 'true'
+                    : !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                document.documentElement.classList.toggle('reduce-motion', !allowMotion);
             } catch (e) {}
         })();
     </script>
@@ -143,11 +149,10 @@
                 </a> &bull; 2026
             </p>
             <div class="flex items-center gap-2">
-                <button id="muteToggleBtn" type="button" aria-label="Mute sound" title="Mute sound" class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900 p-1.5 lg:px-3 lg:py-2 rounded-xl border border-slate-300 dark:border-slate-800 transition-all flex items-center space-x-2 font-semibold">
-                    <span id="muteIcon">🔊</span><span id="muteLabel" class="hidden lg:block">Sound On</span>
-                </button>
-                <button id="themeToggleBtn" type="button" aria-label="Toggle Light/Dark Theme" class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900 p-1.5 lg:px-3 lg:py-2 rounded-xl border border-slate-300 dark:border-slate-800 transition-all flex items-center space-x-2 font-semibold">
-                    <span id="themeIcon">🌙</span><span id="themeLabel" class="hidden lg:block">Dark Mode</span>
+                <button id="settingsBtn" type="button" aria-label="Settings" title="Settings (,)" class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900 p-1.5 lg:px-3 lg:py-2 rounded-xl border border-slate-300 dark:border-slate-800 transition-all flex items-center space-x-2 font-semibold">
+                    <kbd class="hidden sm:inline-block px-1.5 py-0.5 mr-1 text-xs bg-indigo-200 dark:bg-indigo-900/80 text-indigo-800 dark:text-indigo-200 rounded border border-indigo-300 dark:border-indigo-700/60 font-sans">,</kbd>
+                    <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a6.759 6.759 0 0 1 0 .255c-.008.378.137.75.43.99l1.004.828c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 0 1 0-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"></path></svg>
+                    <span class="hidden lg:block">Settings</span>
                 </button>
                 <button id="buyMeCoffee" type="button" aria-label="Buy me a Coffee" class="bg-[#dc0100] opacity-90 hover:opacity-100 text-slate-100 p-1.5 lg:px-3 lg:py-2 rounded-xl border border-slate-300 dark:border-slate-800 transition-all flex items-center space-x-2 font-semibold">
                     <span><img height="20" width="20" src="./assets/kofi_logo.png" alt="Buy me a Coffee"></span>
@@ -228,18 +233,139 @@
                 </div>
                 <div>
                     <h4 class="font-bold text-slate-900 dark:text-white mb-1">Hotkeys</h4>
-                    <ul class="space-y-1">
-                        <li><kbd class="modal-key font-sans">⇧ + 1</kbd>&ndash;<kbd class="modal-key font-sans">...</kbd>: Jump to a kata</li>
-                        <li><kbd class="modal-key font-sans">Enter</kbd>: Check answer, then next word</li>
-                        <li><kbd class="modal-key font-sans">/</kbd>: Skip current word</li>
-                        <li><kbd class="modal-key font-sans">?</kbd>: Open kata tips</li>
-                        <li><kbd class="modal-key font-sans">Backspace</kbd>: Back to the landing page</li>
-                        <li><kbd class="modal-key font-sans">a:</kbd>, <kbd class="modal-key font-sans">o:</kbd>, <kbd class="modal-key font-sans">u:</kbd>,<kbd class="modal-key font-sans">ss:</kbd>: ä, ö, ü, ß</li>
-                    </ul>
+                    <p>Press <kbd class="modal-key">,</kbd> or use the gear button in the footer to see every shortcut, and to turn hotkeys off.</p>
                 </div>
             </div>
             <div class="modal-footer">
                 Press <kbd class="modal-key">Esc</kbd> to close
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle">
+        <div class="modal-panel">
+            <div class="modal-header">
+                <h3 id="settingsModalTitle" class="text-2xl font-black text-slate-900 dark:text-white">Settings</h3>
+                <button type="button" data-modal-close data-modal-initial-focus class="modal-close" aria-label="Close settings">✕</button>
+            </div>
+            <div id="settingsBody" class="p-3 sm:p-4 overflow-y-auto divide-y divide-slate-200 dark:divide-slate-800 text-sm text-slate-700 dark:text-slate-300">
+                <fieldset class="settings-group">
+                    <div class="settings-row">
+                        <span class="settings-label" id="settingsThemeLabel">Theme</span>
+                        <div class="settings-segmented" role="radiogroup" aria-labelledby="settingsThemeLabel">
+                            <label class="settings-segment">
+                                <input type="radio" name="theme" value="system" class="sr-only">
+                                <span class="settings-segment-track">System</span>
+                            </label>
+                            <label class="settings-segment">
+                                <input type="radio" name="theme" value="light" class="sr-only">
+                                <span class="settings-segment-track">Light</span>
+                            </label>
+                            <label class="settings-segment">
+                                <input type="radio" name="theme" value="dark" class="sr-only">
+                                <span class="settings-segment-track">Dark</span>
+                            </label>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset class="settings-group">
+                    <div class="settings-row">
+                        <div class="settings-label-stack">
+                            <span class="settings-label" id="settingsSoundLabel">Sound effects</span>
+                        </div>
+                        <div class="settings-control-group">
+                            <button type="button" id="settingsTestSoundBtn" data-action="test-sound" class="settings-ghost-btn" aria-describedby="settingsSoundLabel">Test sound</button>
+                            <label class="settings-switch">
+                                <input type="checkbox" id="settingsSoundSwitch" data-setting="sound" class="sr-only" aria-labelledby="settingsSoundLabel">
+                                <span class="settings-switch-track" aria-hidden="true"></span>
+                            </label>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset class="settings-group">
+                    <div class="settings-row">
+                        <div class="settings-label-stack">
+                            <span class="settings-label">Confetti</span>
+                            <span class="settings-hint">Celebrate belt promotions</span>
+                        </div>
+                        <label class="settings-switch">
+                            <input type="checkbox" id="settingsConfettiSwitch" data-setting="confetti" class="sr-only">
+                            <span class="settings-switch-track" aria-hidden="true"></span>
+                        </label>
+                    </div>
+                    <div class="settings-row">
+                        <div class="settings-label-stack">
+                            <span class="settings-label">Animations</span>
+                            <span class="settings-hint">Verdict slides and milestone bounces</span>
+                        </div>
+                        <label class="settings-switch">
+                            <input type="checkbox" id="settingsAnimationsSwitch" data-setting="animations" class="sr-only">
+                            <span class="settings-switch-track" aria-hidden="true"></span>
+                        </label>
+                    </div>
+                </fieldset>
+
+                <fieldset class="settings-group">
+                    <div class="settings-row">
+                        <div class="settings-label-stack">
+                            <span class="settings-label" id="settingsHotkeysLabel">Hotkeys</span>
+                            <span class="settings-hint">Keyboard shortcuts while training</span>
+                        </div>
+                        <label class="settings-switch">
+                            <input type="checkbox" id="settingsHotkeysSwitch" data-setting="hotkeys" class="sr-only" aria-labelledby="settingsHotkeysLabel">
+                            <span class="settings-switch-track" aria-hidden="true"></span>
+                        </label>
+                    </div>
+                    <!-- Read-only for now: rebinding is not implemented. -->
+                    <details class="settings-hotkeys-details">
+                        <summary class="settings-summary">Shortcut list</summary>
+                        <ul class="settings-hotkeys" aria-label="Keyboard shortcuts">
+                            <li><kbd class="modal-key font-sans">,</kbd>&ndash;Open settings</li>
+                            <li><kbd class="modal-key font-sans">⇧ + 1</kbd>&ndash;<kbd class="modal-key font-sans">...</kbd>: Jump to a kata</li>
+                            <li><kbd class="modal-key font-sans">Enter</kbd>: Check answer, then next word</li>
+                            <li><kbd class="modal-key font-sans">/</kbd>: Skip current word</li>
+                            <li><kbd class="modal-key font-sans">?</kbd>: Open kata tips</li>
+                            <li><kbd class="modal-key font-sans">Backspace</kbd>: Back to the landing page</li>
+                            <li><kbd class="modal-key font-sans">a:</kbd>, <kbd class="modal-key font-sans">o:</kbd>, <kbd class="modal-key font-sans">u:</kbd>,<kbd class="modal-key font-sans">ss:</kbd>: ä, ö, ü, ß</li>
+                        </ul>
+                    </details>
+                </fieldset>
+
+                <fieldset class="settings-danger-zone">
+                    <legend class="settings-legend settings-danger-legend">Danger zone</legend>
+                    <div class="settings-row">
+                        <div class="settings-label-stack">
+                            <span class="settings-label">Clear progress</span>
+                            <span class="settings-hint">Reset belts & streaks on this browser</span>
+                        </div>
+                        <button type="button" id="settingsClearDataBtn" data-action="clear-data" class="settings-danger-btn" aria-haspopup="dialog" aria-expanded="false" aria-controls="settingsClearConfirm">Clear</button>
+                    </div>
+                </fieldset>
+            </div>
+            <div class="modal-footer settings-modal-footer">
+                <button type="button" id="settingsResetBtn" data-action="reset" class="settings-text-btn">Reset all settings</button>
+                <span class="settings-esc-hint">Press <kbd class="modal-key">Esc</kbd> to close</span>
+            </div>
+
+            <!-- Two-step delete: consequences first, then an explicit OK. A nested
+                 dialog, not a ModalController modal: the settings panel stays open
+                 underneath, and Esc must reach this box first. -->
+            <div id="settingsClearConfirm" class="settings-confirm-backdrop hidden" tabindex="-1" role="alertdialog" aria-labelledby="settingsClearTitle" aria-describedby="settingsClearWarning">
+                <div class="settings-confirm-panel">
+                    <h4 id="settingsClearTitle" class="settings-confirm-title">Delete all progress?</h4>
+                    <p id="settingsClearWarning" class="settings-confirm-text">
+                        This permanently deletes everything Deujo stored in this browser: all belt levels,
+                        your streak and best streak, and every spaced-repetition record. It cannot be undone.
+                        Your settings are kept.
+                    </p>
+                    <div class="settings-confirm-actions">
+                        <button type="button" id="settingsClearCancelBtn" data-action="clear-cancel" class="settings-ghost-btn">Cancel</button>
+                        <button type="button" id="settingsClearOkBtn" data-action="clear-data-confirm" class="settings-danger-btn">Yes, delete everything</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

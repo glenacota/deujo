@@ -1,36 +1,27 @@
 // ui/theme-controller.js
 
-import { Storage } from '../services/storage.js';
-import { dom } from './dom.js';
+import { get } from '../services/preferences.js';
 
 export class ThemeController {
+    #media = null;
+
     initTheme() {
-        const stored = Storage.getTheme();
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const isDark = stored ? stored === 'dark' : prefersDark;
+        this.#media = window.matchMedia('(prefers-color-scheme: dark)');
+        this.applyTheme(get('theme'));
+
+        // "System" must follow the OS while the app is open, not just at boot.
+        this.#media.addEventListener?.('change', () => {
+            if (get('theme') === 'system') this.applyTheme('system');
+        });
+    }
+
+    /** Resolves a mode ('system' | 'light' | 'dark') and paints the document. */
+    applyTheme(mode) {
+        const isDark = mode === 'dark' || (mode === 'system' && this.#prefersDark());
         document.documentElement.classList.toggle('dark', isDark);
-        this.#applyTheme(isDark);
     }
 
-    toggleTheme() {
-        const isDark = document.documentElement.classList.toggle('dark');
-        Storage.setTheme(isDark ? 'dark' : 'light');
-        this.#applyTheme(isDark);
-    }
-
-    #applyTheme(isDark) {
-        dom.theme.icon.textContent = isDark ? '🌙' : '☀️';
-        if (dom.theme.label) dom.theme.label.textContent = isDark ? 'Dark Mode' : 'Light Mode';
-    }
-
-    toggleMute(isMuted) {
-        if (!dom.mute?.toggleBtn) return;
-
-        dom.mute.icon.textContent = isMuted ? '🔇' : '🔊';
-        if (dom.mute.label) {
-            dom.mute.label.textContent = isMuted ? 'Muted' : 'Sound On';
-        }
-        dom.mute.toggleBtn.setAttribute('aria-label', isMuted ? 'Enable sound' : 'Mute sound');
-        dom.mute.toggleBtn.title = isMuted ? 'Enable sound' : 'Mute sound';
+    #prefersDark() {
+        return this.#media?.matches ?? window.matchMedia('(prefers-color-scheme: dark)').matches;
     }
 }
