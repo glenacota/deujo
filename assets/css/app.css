@@ -1,3 +1,11 @@
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 400 800;
+    font-display: swap;
+    src: url('../fonts/inter-var-latin.woff2') format('woff2-variations');
+}
+
 .german-flag-bg {
     display: inline-block;
     background: linear-gradient(to bottom, #000 0%, #000 33.33%, #DD0000 33.33%, #DD0000 66.66%, #FFCC00 66.66%, #FFCC00 100%);
