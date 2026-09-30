@@ -15,14 +15,6 @@ const WRAPPER_CLASS = 'answer-field';
 const BADGE_CLASS = 'answer-badge';
 const NOTE_CLASS = 'answer-note';
 const CONTROL_SELECTOR = '.answer-field > [data-answer-state]';
-const CONTROL_STATE_CLASSES = [
-  '!border-emerald-500', '!bg-emerald-50', '!text-[rgb(6_130_87)]',
-  'shadow-[0_0_0_1px_rgb(16_185_129/0.45)]', 'dark:!border-emerald-400',
-  'dark:!bg-[rgb(6_78_59/0.35)]', 'dark:!text-emerald-300',
-  '!border-rose-500', '!bg-rose-50', '!text-rose-800',
-  'shadow-[0_0_0_1px_rgb(244_63_94/0.45)]', 'dark:!border-rose-400',
-  'dark:!bg-[rgb(136_19_55/0.35)]', 'dark:!text-rose-300',
-];
 
 function childOf(parent, className) {
   return Array.from(parent.children).find((child) => child.classList.contains(className)) ?? null;
@@ -39,7 +31,7 @@ function wrapControl(control) {
   return wrapper;
 }
 
-function setNote(parent, text, ok) {
+function setNote(parent, text, state) {
   const existing = childOf(parent, NOTE_CLASS);
   if (!text) {
     existing?.remove();
@@ -47,7 +39,8 @@ function setNote(parent, text, ok) {
   }
 
   const note = existing ?? parent.appendChild(document.createElement('span'));
-  note.className = `${NOTE_CLASS} text-xs font-semibold leading-[1.2] whitespace-nowrap ${ok ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'}`;
+  note.className = `${NOTE_CLASS} text-xs font-semibold leading-[1.2] whitespace-nowrap`;
+  note.dataset.answerState = state;
   note.textContent = text;
 }
 
@@ -76,10 +69,6 @@ export function markControl(control, { ok, expected = '', inside = false, note }
 
   // A button takes its badge as a child; an input gets a wrapper to hang it on.
   const host = inside ? control : wrapControl(control);
-  CONTROL_STATE_CLASSES.forEach((className) => control.classList.toggle(className, false));
-  control.classList.add(...(ok
-    ? CONTROL_STATE_CLASSES.slice(0, 7)
-    : CONTROL_STATE_CLASSES.slice(7)));
   control.dataset.answerState = ok ? 'correct' : 'wrong';
   control.setAttribute('aria-invalid', String(!ok));
   setBadge(inside ? control : host, ok, inside);
@@ -88,7 +77,7 @@ export function markControl(control, { ok, expected = '', inside = false, note }
     setNote(host, null, ok);
     return;
   }
-  setNote(host, note ?? (ok ? null : expected || '—'), ok);
+  setNote(host, note ?? (ok ? null : expected || '—'), ok ? 'correct' : 'wrong');
 }
 
 /** Removes every mark and unwraps the controls again, ready for the next item. */
@@ -104,7 +93,6 @@ export function clearAnswerMarks(root) {
 
   root.querySelectorAll('.answer-badge, .answer-note').forEach((node) => node.remove());
   root.querySelectorAll('[data-answer-state]').forEach((control) => {
-    CONTROL_STATE_CLASSES.forEach((className) => control.classList.toggle(className, false));
     delete control.dataset.answerState;
     control.removeAttribute('aria-invalid');
   });

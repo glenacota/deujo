@@ -5,12 +5,10 @@
     font-display: swap;
     src: url('../fonts/inter-var-latin.woff2') format('woff2-variations');
 }
-
 .german-flag-bg {
     display: inline-block;
     background: linear-gradient(to bottom, #000 0%, #000 33.33%, #DD0000 33.33%, #DD0000 66.66%, #FFCC00 66.66%, #FFCC00 100%);
 }
-
 /* ---- Answer marking ---------------------------------------------------- */
 .answer-field {
     display: inline-flex;
@@ -18,7 +16,6 @@
     gap: 0.35rem;
     vertical-align: middle;
 }
-
 .answer-badge {
     flex: none;
     font-size: 0.95rem;
@@ -26,18 +23,16 @@
     pointer-events: none;
 }
 button > .answer-badge { margin-left: 0.45rem; font-size: 0.85rem; }
-
 .answer-note {
     font-size: 0.75rem;
     font-weight: 600;
     line-height: 1.2;
     white-space: nowrap;
 }
-.answer-note--correct { color: rgb(4 120 87); }
-.answer-note--wrong { color: rgb(190 18 60); }
-html.dark .answer-note--correct { color: rgb(110 231 183); }
-html.dark .answer-note--wrong { color: rgb(253 164 175); }
-
+.answer-note[data-answer-state="correct"] { color: rgb(4 120 87); }
+.answer-note[data-answer-state="wrong"] { color: rgb(190 18 60); }
+html.dark .answer-note[data-answer-state="correct"] { color: rgb(110 231 183); }
+html.dark .answer-note[data-answer-state="wrong"] { color: rgb(253 164 175); }
 /* Colour the control itself. Overrides the shared aria-invalid ring. */
 [data-answer-state="correct"] {
     border-color: rgb(16 185 129) !important;
@@ -61,13 +56,6 @@ html.dark [data-answer-state="wrong"] {
     background-color: rgb(136 19 55 / 0.35) !important;
     color: rgb(253 164 175) !important;
 }
-
-.answer-locked { pointer-events: none; }
-
-/* New item sliding in after a verdict. */
-.kata-enter { animation: kata-enter 260ms cubic-bezier(0.2, 0.9, 0.3, 1) both; }
-@keyframes kata-enter { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-
 /* ---- Verdict panel ------------------------------------------------------ */
 
 .verdict {
@@ -83,26 +71,14 @@ html.dark [data-answer-state="wrong"] {
     animation: verdict-in 220ms cubic-bezier(0.2, 0.9, 0.3, 1);
 }
 .verdict[hidden] { display: none; }
-
-/* Each line states its own outcome in its own colour: a correct field reads
-   green, a wrong one red with the expected value in green beside it. */
-.verdict--correct { border-color: rgb(110 231 183); background: rgb(236 253 245); color: rgb(6 130 87); }
-.verdict--wrong { border-color: rgb(253 164 175); background: rgb(255 241 242); color: rgb(159 18 57); }
-.verdict--warning { border-color: rgb(252 211 77); background: rgb(254 249 195); color: rgb(146 64 14); }
-html.dark .verdict--correct { border-color: rgb(6 78 59); background: rgb(6 78 59 / 0.3); color: rgb(110 231 183); }
-html.dark .verdict--wrong { border-color: rgb(136 19 55); background: rgb(136 19 55 / 0.3); color: rgb(253 164 175); }
-html.dark .verdict--warning { border-color: rgb(120 53 15); background: rgb(120 53 15 / 0.3); color: rgb(252 211 77); }
-
 .verdict-head { display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap; }
 .verdict-icon { font-size: 1.1rem; line-height: 1; }
 
 @keyframes verdict-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-@keyframes verdict-out { to { opacity: 0; transform: translateY(-6px); } }
-
 @media (prefers-reduced-motion: reduce) {
-    .verdict, .kata-enter { animation: none; }
+    .verdict, .animate-bounce { animation: none !important; }
+    canvas#fireworksCanvas { display: none; }
 }
-
 /* Shared invalid-field marker for kata inputs/buttons, on top of the Tailwind border-rose-500 class. */
 [aria-invalid="true"] { box-shadow: 0 0 0 1px rgb(244 63 94 / 0.5); }
 
@@ -120,7 +96,6 @@ html.dark .verdict--warning { border-color: rgb(120 53 15); background: rgb(120 
 }
 .modal-backdrop.hidden { display: none; }
 #milestoneToast { z-index: 70; }
-
 canvas#fireworksCanvas { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 60; }
 
 .modal-panel {
@@ -152,22 +127,6 @@ html.dark .modal-key { border-color: rgb(51 65 85); background: rgb(30 41 59); c
     --belt-5-from: #d7b49e; --belt-5-to: #78350f;
     --belt-6-from: #334155; --belt-6-to: #0f172a;
 }
-.belt-0 { background: linear-gradient(90deg, var(--belt-0-from), var(--belt-0-to)); }
-.belt-1 { background: linear-gradient(90deg, var(--belt-1-from), var(--belt-1-to)); }
-.belt-2 { background: linear-gradient(90deg, var(--belt-2-from), var(--belt-2-to)); }
-.belt-3 { background: linear-gradient(90deg, var(--belt-3-from), var(--belt-3-to)); }
-.belt-4 { background: linear-gradient(90deg, var(--belt-4-from), var(--belt-4-to)); }
-.belt-5 { background: linear-gradient(90deg, var(--belt-5-from), var(--belt-5-to)); }
-.belt-6 { background: linear-gradient(90deg, var(--belt-6-from), var(--belt-6-to)); }
-
-.belt-label-0 { background: linear-gradient(90deg, var(--belt-0-from), var(--belt-0-to)); color: #334155; }
-.belt-label-1 { background: linear-gradient(90deg, var(--belt-1-from), var(--belt-1-to)); color: #713f12; }
-.belt-label-2 { background: linear-gradient(90deg, var(--belt-2-from), var(--belt-2-to)); color: #7c2d12; }
-.belt-label-3 { background: linear-gradient(90deg, var(--belt-3-from), var(--belt-3-to)); color: #064e3b; }
-.belt-label-4 { background: linear-gradient(90deg, var(--belt-4-from), var(--belt-4-to)); color: #082f49; }
-.belt-label-5 { background: linear-gradient(90deg, var(--belt-5-from), var(--belt-5-to)); color: #fff7ed; }
-.belt-label-6 { background: linear-gradient(90deg, var(--belt-6-from), var(--belt-6-to)); color: #f8fafc; }
-
 .belt-label {
     position: relative; overflow: hidden; color: transparent;
     background: linear-gradient(90deg, var(--belt-fill-from) 0%, var(--belt-fill-to) var(--belt-progress), var(--belt-rest) var(--belt-progress), var(--belt-rest) 100%);
@@ -188,5 +147,3 @@ html.dark .modal-key { border-color: rgb(51 65 85); background: rgb(30 41 59); c
 .belt-label-6 { --belt-fill-from: var(--belt-6-from); --belt-fill-to: var(--belt-6-to); --belt-fill-text: #f8fafc; }
 .belt-label { --belt-rest: #334155; --belt-rest-text: #f8fafc; }
 html:not(.dark) .belt-label { --belt-rest: #e2e8f0; --belt-rest-text: #334155; }
-
-.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }

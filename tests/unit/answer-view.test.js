@@ -104,6 +104,7 @@ test('a wrong control is flagged red and shows the expected value inline', async
   const wrapper = input.parentElement;
   assert.ok(wrapper.classList.has('answer-field'), 'the control is wrapped for the badge');
   assert.equal(input.dataset.answerState, 'wrong');
+  assert.equal(noteOf(wrapper).dataset.answerState, 'wrong');
   assert.equal(input.getAttribute('aria-invalid'), 'true');
   assert.equal(badgeOf(wrapper).textContent, '❌');
   assert.match(noteOf(wrapper).textContent, /die Bäume/);

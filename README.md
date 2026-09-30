@@ -69,6 +69,7 @@ Rules of the harness:
 
 ## 🎨 Rebuilding the stylesheet
 The production Tailwind CSS is a committed, static file (`assets/css/tailwind.css`) generated at build time — no CDN compiler runs in the browser. Node is only needed if you change Tailwind classes or `tailwind.config.cjs`.
+Tailwind provides utility classes; `assets/css/app.css` owns answer-state colors through `data-answer-state` attributes.
 
 ```console
 npm install
