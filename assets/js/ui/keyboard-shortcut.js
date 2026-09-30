@@ -80,9 +80,9 @@ export function bindKeyboardShortcuts({
         },
         {
             matches: (event, typing) => {
+                if (!event.shiftKey || !event.code?.startsWith('Digit')) return false;
                 const slot = Number(event.code.slice(5));
-                return event.shiftKey && event.code.startsWith('Digit') && !modals.isOpen() &&
-                    !typing && slot >= 1 && slot <= kataCount();
+                return !modals.isOpen() && !typing && slot >= 1 && slot <= kataCount();
             },
             run: (event) => {
                 event.preventDefault();
@@ -90,7 +90,7 @@ export function bindKeyboardShortcuts({
             },
         },
         {
-            matches: (event, typing) => event.key === '/' && !typing && !modals.isOpen(),
+            matches: (event, typing) => event.key === '/' && isFocusModeActive() && !typing && !modals.isOpen(),
             run: (event) => {
                 event.preventDefault();
                 loadNext();
@@ -106,10 +106,16 @@ export function bindKeyboardShortcuts({
     ];
 
     window.addEventListener('keydown', (event) => {
-        if (modals.handleKeydown(event)) return;
+        // A throwing shortcut must not take down the turn loop: log it and let
+        // the keypress be a no-op.
+        try {
+            if (modals.handleKeydown(event)) return;
 
-        const typing = isTypingTarget(event.target);
-        const shortcut = shortcuts.find(({ matches }) => matches(event, typing));
-        shortcut?.run(event);
+            const typing = isTypingTarget(event.target);
+            const shortcut = shortcuts.find(({ matches }) => matches(event, typing));
+            shortcut?.run(event);
+        } catch (error) {
+            console.error('Keyboard shortcut failed:', error);
+        }
     });
 }

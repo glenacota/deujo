@@ -177,6 +177,7 @@ class App {
         const item = this.#state.pickNext(dataset, id);
         this.#state.current[id] = item;
         if (item) kata.render(item);
+        this.#focus.releaseFocus(kata.el.section);
     }
 
     #setPhase(id, phase) {
@@ -196,18 +197,18 @@ class App {
     }
 
     #advance(id) {
-        const { kata } = this.#entries.get(id);
+        const section = this.#entries.get(id)?.kata.el.section;
+        if (!section) return;
+
         this.#cancelAdvance();
         this.#ui.hideVerdict();
         this.#setPhase(id, 'answering');
-        clearAnswerMarks(kata.el.section);
+        clearAnswerMarks(section);
         this.#loadNext(id);
 
-        const section = kata.el.section;
         section.classList.remove('motion-safe:animate-kata-enter');
         void section.offsetWidth;
         section.classList.add('motion-safe:animate-kata-enter');
-        this.#focus.focusFirstInput();
     }
 
     #check(id) {
@@ -216,7 +217,7 @@ class App {
             return;
         }
 
-        const { kata, dataset } = this.#entries.get(id);
+        const { kata, dataset } = this.#entries.get(id) ?? {};
         if (!dataset) return;
         const item = this.#state.current[id];
         if (!item) return;
@@ -264,6 +265,7 @@ class App {
         const { kata } = this.#entries.get(id);
         kata.mount(dom.focus.sections);
         clearAnswerMarks(kata.el.section);
+        this.#focus.blurActive();
         this.#setKata(id);
         this.#setPhase(id, 'answering');
         this.#ui.hideVerdict();
@@ -276,6 +278,7 @@ class App {
         if (!dataset || this.#state.activeKata !== id) return;
         if (this.#state.current[id]) {
             kata.render(this.#state.current[id]);
+            this.#focus.releaseFocus(kata.el.section);
         } else {
             this.#loadNext(id);
         }
