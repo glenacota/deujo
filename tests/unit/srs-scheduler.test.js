@@ -34,6 +34,15 @@ test('a correct answer makes the item due later the higher the box', () => {
   assert.ok(high.dueAt > low.dueAt, 'a higher box waits longer');
 });
 
+test('Leitner box delays are 0, 1, 3, 7, 16, and 30 days', () => {
+  const dueAt = [
+    schedule(false, inBox(0), NOW).dueAt,
+    ...Array.from({ length: BOX_COUNT - 1 }, (_, box) => schedule(true, inBox(box), NOW).dueAt),
+  ];
+
+  assert.deepEqual(dueAt, [0, 1, 3, 7, 16, 30].map((days) => NOW + days * DAY_MS));
+});
+
 test('the last box is the ceiling', () => {
   const top = schedule(true, inBox(BOX_COUNT - 1), NOW);
   assert.equal(top.box, BOX_COUNT - 1);

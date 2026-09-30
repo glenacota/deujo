@@ -105,11 +105,11 @@ export class GameState {
   }
 
   /**
-   * Weighted random draw: the lower an item's box, the more often it comes up.
-   * The most recently served `recentExclude` ids are skipped whenever the
-   * dataset is large enough to leave a choice
+   * Weighted draw from due items, favouring lower boxes. New items are always
+   * due; if none of the available items are due, draw from the full pool.
+   * The most recently served `recentExclude` ids are skipped when possible.
    */
-  pickNext(dataset, kataId, rng = Math.random) {
+  pickNext(dataset, kataId, rng = Math.random, now = Date.now()) {
     if (!dataset?.length) return null;
 
     const records = SrsStore.getKata(kataId);
@@ -117,10 +117,14 @@ export class GameState {
     const skip = dataset.length > CONFIG.rules.recentExclude ? new Set(recent) : null;
 
     const pool = skip ? dataset.filter((item) => !skip.has(item.id)) : dataset;
-    const candidates = pool;
+    const due = pool.filter((item) => {
+      const record = records[item.id];
+      return !record || record.dueAt <= now;
+    });
+    const candidates = due.length ? due : pool;
 
     // Walk the list once, subtracting each item's weight until the ticket runs out.
-    const total = pool.reduce((sum, item) => sum + weight(records[item.id]), 0);
+    const total = candidates.reduce((sum, item) => sum + weight(records[item.id]), 0);
     let ticket = rng() * total;
     let chosen = candidates[candidates.length - 1]; // guards against float drift
     for (const item of candidates) {

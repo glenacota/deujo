@@ -204,17 +204,34 @@ test('pickNext spreads a dataset of equally weighted items', () => {
   }
 });
 
-test('pickNext ignores due times entirely', () => {
-  // dueAt only feeds the badge. A not-yet-due item is as drawable as an overdue one.
+test('pickNext skips known items whose due time is in the future', () => {
   const { kataId, state } = stateFor();
-  const dataset = [{ id: 'overdue' }, { id: 'future' }];
-  SrsStore.set(kataId, 'overdue', { box: 0, dueAt: Date.now() - 30 * DAY_MS });
-  SrsStore.set(kataId, 'future', { box: 0, dueAt: Date.now() + 30 * DAY_MS });
+  const now = 1_700_000_000_000;
+  const dataset = [{ id: 'due' }, { id: 'future' }];
+  SrsStore.set(kataId, 'due', { box: 0, dueAt: now });
+  SrsStore.set(kataId, 'future', { box: 0, dueAt: now + 30 * DAY_MS });
 
-  // Same box, so an even 50/50 split. Any due-date bias would skew this.
-  const counts = drawMany(state, dataset, kataId);
-  assert.equal(counts.get('overdue'), 50, 'an overdue item is not privileged');
-  assert.equal(counts.get('future'), 50, 'a future item is not skipped');
+  assert.equal(state.pickNext(dataset, kataId, () => 0.99, now).id, 'due');
+});
+
+test('pickNext always makes unseen items eligible alongside future records', () => {
+  const { kataId, state } = stateFor();
+  const now = 1_700_000_000_000;
+  const dataset = [{ id: 'unseen' }, { id: 'future' }];
+  SrsStore.set(kataId, 'future', { box: 0, dueAt: now + 30 * DAY_MS });
+
+  assert.equal(state.pickNext(dataset, kataId, () => 0.99, now).id, 'unseen');
+});
+
+test('pickNext falls back to the available pool when no item is due', () => {
+  const { kataId, state } = stateFor();
+  const now = 1_700_000_000_000;
+  const dataset = [{ id: 'future-a' }, { id: 'future-b' }];
+  for (const { id } of dataset) {
+    SrsStore.set(kataId, id, { box: 0, dueAt: now + 30 * DAY_MS });
+  }
+
+  assert.ok(dataset.some(({ id }) => id === state.pickNext(dataset, kataId, () => 0.99, now).id));
 });
 
 test('pickNext serves every item once before repeating when the dataset is large', () => {
