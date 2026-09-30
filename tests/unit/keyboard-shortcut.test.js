@@ -6,6 +6,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
+import { installBrowserStub } from '../helpers/browser-stub.js';
+
+// Only needed so ui/dom.js can be imported (keyboard-shortcut.js pulls in
+// getActiveInputs); the test's own fakes below take over from here.
+installBrowserStub();
+
 class FakeInputElement {}
 class FakeTextAreaElement {}
 
@@ -41,7 +47,7 @@ const loadModule = async ({ focusMode = false, modalOpen = false, callbacks = {}
     // Default callbacks just record the call; a test can override one to throw.
     const record = (name) => (callbacks[name] ?? (() => calls.push(name)));
 
-    const { bindKeyboardShortcuts } = await import('../../../../.local/share/opencode/worktree/2557a2/mighty-cactus/assets/js/ui/keyboard-shortcut.js');
+    const { bindKeyboardShortcuts } = await import('../../assets/js/ui/keyboard-shortcut.js');
     bindKeyboardShortcuts({
         modals,
         inputRoot: { addEventListener() {} },
