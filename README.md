@@ -18,7 +18,7 @@ Just pure, disciplined practice.
 - **Cases**: Train Dativ, Genitiv, Akkusativ, and Nominativ cases.
 - **Prepositions**: Fill in the preposition *and* the case its article takes, including the contracted forms (`zum`, `im`, `aufs`).
 - **Just a spoon of gamification**: Unlock higher belt levels, hold your streak stance, and celebrate milestones.
-- **Leitner spaced repetition**: Due items come first, weighted toward lower boxes. New items are always eligible. Box delays are 0, 1, 3, 7, 16, and 30 days; if no item is due, selection falls back to the available pool.
+- **Leitner spaced repetition**: Three boxes space reviews over time. New items and due items are eligible; due items are selected uniformly, with the 10 most recently shown items skipped when possible. Correct answers move items up one box: box 0 waits 2 days, while boxes 1 and 2 wait 9 days. Box 2 is the maximum. Wrong answers reset items to box 0 and make them due immediately. If no item is due, selection falls back to the available pool. Progress is saved locally.
 - **Kiai! Sound FX**.
 
 
