@@ -11,7 +11,6 @@ const browser = installBrowserStub();
 
 const { CONFIG } = await import('../../assets/js/config.js');
 const { SrsStore } = await import('../../assets/js/services/srs-store.js');
-const { DAY_MS } = await import('../../assets/js/services/srs-scheduler.js');
 
 const SRS_KEY = CONFIG.storage.srs;
 const KATA = 'store-kata';
@@ -27,14 +26,13 @@ beforeEach(() => {
 test('a fresh kata reads as empty', () => {
   assert.equal(SrsStore.get(KATA, 'anything'), null);
   assert.deepEqual(Object.keys(SrsStore.getKata(KATA)), []);
-  assert.equal(SrsStore.countDue(KATA), 0);
 });
 
 test('set then get round-trips a record', () => {
-  const record = valid({ box: 4, dueAt: 1_700_000_000_000 });
+  const record = valid({ box: 1, dueAt: 1_700_000_000_000 });
   SrsStore.set(KATA, 'item_a', record);
 
-  assert.equal(SrsStore.get(KATA, 'item_a').box, 4);
+  assert.equal(SrsStore.get(KATA, 'item_a').box, 1);
   assert.deepEqual(Object.keys(SrsStore.getKata(KATA)), ['item_a']);
   assert.equal(Object.getPrototypeOf(SrsStore.getKata(KATA)), null, 'null prototype');
 });
@@ -77,28 +75,10 @@ test('a malformed or non-object storage blob yields an empty store', () => {
     SrsStore.reset();
     seedStorage(raw);
     assert.equal(SrsStore.get(KATA, 'keep'), null, `raw: ${raw}`);
-    assert.equal(SrsStore.countDue(KATA), 0, `raw: ${raw}`);
+    assert.deepEqual(Object.keys(SrsStore.getKata(KATA)), [], `raw: ${raw}`);
   }
 });
 
-test('countDue counts only records at or past their due time', () => {
-  const now = Date.now();
-  SrsStore.set(KATA, 'overdue', valid({ dueAt: now - DAY_MS }));
-  SrsStore.set(KATA, 'later', valid({ dueAt: now + DAY_MS }));
-  SrsStore.set(KATA, 'future', valid({ dueAt: now + 30 * DAY_MS }));
-
-  assert.equal(SrsStore.countDue(KATA), 1);
-  assert.equal(SrsStore.countDue(KATA, now + 2 * DAY_MS), 2, 'the later item becomes due');
-  assert.equal(SrsStore.countDue('never-seen-kata'), 0);
-});
-
-test('countDue treats a record due at exactly now as due', () => {
-  const now = Date.now();
-  SrsStore.set(KATA, 'exact', valid({ dueAt: now }));
-
-  assert.equal(SrsStore.countDue(KATA, now), 1, 'the boundary is inclusive');
-  assert.equal(SrsStore.countDue(KATA, now - 1), 0, 'one millisecond earlier is not due');
-});
 
 test('a debounced save flushes when the page is hidden', () => {
   SrsStore.set(KATA, 'item_a', valid());
@@ -116,10 +96,10 @@ test('a debounced save flushes when the page is hidden', () => {
 });
 
 test('a debounced save flushes on pagehide', () => {
-  SrsStore.set(KATA, 'item_b', valid({ box: 5 }));
+  SrsStore.set(KATA, 'item_b', valid({ box: 0 }));
   browser.emit('pagehide');
 
-  assert.equal(JSON.parse(localStorage.getItem(SRS_KEY))[KATA].item_b.box, 5);
+  assert.equal(JSON.parse(localStorage.getItem(SRS_KEY))[KATA].item_b.box, 0);
 });
 
 test('the pagehide flush is a no-op when nothing changed', () => {

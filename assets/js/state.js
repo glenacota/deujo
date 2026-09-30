@@ -4,7 +4,7 @@
 import { CONFIG } from './config.js';
 import { Storage } from './services/storage.js';
 import { SrsStore } from './services/srs-store.js';
-import { newRecord, schedule, weight } from './services/srs-scheduler.js';
+import { newRecord, schedule } from './services/srs-scheduler.js';
 
 export class GameState {
   /** Correct answers in a row, across every kata. Any mistake resets it. */
@@ -105,8 +105,8 @@ export class GameState {
   }
 
   /**
-   * Weighted draw from due items, favouring lower boxes. New items are always
-   * due; if none of the available items are due, draw from the full pool.
+   * Uniform random draw from due items. New items are always due; if none of
+   * the available items are due, draw from the full pool.
    * The most recently served `recentExclude` ids are skipped when possible.
    */
   pickNext(dataset, kataId, rng = Math.random, now = Date.now()) {
@@ -123,14 +123,7 @@ export class GameState {
     });
     const candidates = due.length ? due : pool;
 
-    // Walk the list once, subtracting each item's weight until the ticket runs out.
-    const total = candidates.reduce((sum, item) => sum + weight(records[item.id]), 0);
-    let ticket = rng() * total;
-    let chosen = candidates[candidates.length - 1]; // guards against float drift
-    for (const item of candidates) {
-      ticket -= weight(records[item.id]);
-      if (ticket < 0) { chosen = item; break; }
-    }
+    const chosen = candidates[Math.floor(rng() * candidates.length)];
 
     recent.push(chosen.id);
     if (recent.length > CONFIG.rules.recentExclude) recent.shift();
@@ -141,9 +134,5 @@ export class GameState {
   recordAnswer(kataId, itemId, correct) {
     const previous = SrsStore.get(kataId, itemId) ?? newRecord();
     SrsStore.set(kataId, itemId, schedule(correct, previous));
-  }
-
-  getDueCount(kataId) {
-    return SrsStore.countDue(kataId);
   }
 }

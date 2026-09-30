@@ -170,26 +170,24 @@ test('pickNext returns null for an empty dataset', () => {
   assert.equal(state.pickNext(null, kataId), null);
 });
 
-test('pickNext draws low-box items far more often than top-box ones', () => {
+test('pickNext draws due items uniformly, whatever box they sit in', () => {
   const { kataId, state } = stateFor();
   const dataset = [{ id: 'fresh' }, { id: 'top' }];
   SrsStore.set(kataId, 'top', inBox(BOX_COUNT - 1));
 
-  // With BOX_COUNT boxes, box 0 takes the first 6/7 of the ticket range and the
-  // top box the last 1/7. A 100-step sweep lands 86 vs 14.
+  // A 100-step sweep of [0,1) splits evenly between two candidates: 50 vs 50.
   const counts = drawMany(state, dataset, kataId);
-  assert.equal(counts.get('fresh'), 86, `fresh was drawn ${counts.get('fresh')} times`);
-  assert.equal(counts.get('top'), 14, `top was drawn ${counts.get('top')} times`);
-  assert.ok(counts.get('top') > 0, 'the top box is not locked away, only rarer');
+  assert.equal(counts.get('fresh'), 50, `fresh was drawn ${counts.get('fresh')} times`);
+  assert.equal(counts.get('top'), 50, `top was drawn ${counts.get('top')} times`);
 });
 
-test('pickNext gives an unseen item the same odds as the first box', () => {
+test('pickNext gives an unseen item the same odds as a due record', () => {
   const { kataId, state } = stateFor();
   const dataset = [{ id: 'unseen' }, { id: 'top' }];
   SrsStore.set(kataId, 'top', inBox(BOX_COUNT - 1));
 
   const counts = drawMany(state, dataset, kataId);
-  assert.equal(counts.get('unseen'), 86, 'no record must read as box 0, not as the top box');
+  assert.equal(counts.get('unseen'), 50, 'an unseen item is due, so it competes on equal odds');
 });
 
 test('pickNext spreads a dataset of equally weighted items', () => {
@@ -197,7 +195,7 @@ test('pickNext spreads a dataset of equally weighted items', () => {
   const { kataId, state } = stateFor();
   const dataset = Array.from({ length: 4 }, (_, i) => ({ id: `n_${i}` }));
 
-  // Equal weights split the range four ways: 25 tickets each out of 100.
+  // Four candidates, one quarter of the [0,1) range each: 25 out of 100.
   const counts = drawMany(state, dataset, kataId);
   for (const [id, count] of counts) {
     assert.equal(count, 25, `item ${id} was drawn ${count} times, expected 25`);
@@ -280,11 +278,11 @@ test('recordAnswer moves the item up from its stored box, not from a fresh one',
   const state = new GameState([kataId]);
   const itemId = 'n_1';
 
-  SrsStore.set(kataId, itemId, inBox(3));
+  SrsStore.set(kataId, itemId, inBox(1));
   state.recordAnswer(kataId, itemId, true);
 
-  // 3 -> 4. A fresh record would have landed on box 1.
-  assert.equal(SrsStore.get(kataId, itemId).box, 4);
+  // 1 -> 2. A fresh record would have landed on box 1.
+  assert.equal(SrsStore.get(kataId, itemId).box, 2);
 });
 
 test('recordAnswer promotes on a correct answer and resets on a mistake', () => {
@@ -300,13 +298,4 @@ test('recordAnswer promotes on a correct answer and resets on a mistake', () => 
   const afterBad = SrsStore.get(kataId, itemId);
   assert.equal(afterBad.box, 0, 'a mistake drops the item to the first box');
   assert.ok(afterBad.dueAt <= Date.now(), 'and makes it due right away');
-});
-
-test('getDueCount counts only items due now', () => {
-  const kataId = KATA_ID;
-  const state = new GameState([kataId]);
-
-  SrsStore.set(kataId, 'due', { box: 1, dueAt: Date.now() - 1 });
-  SrsStore.set(kataId, 'later', { box: 1, dueAt: Date.now() + 4 * DAY_MS });
-  assert.equal(state.getDueCount(kataId), 1);
 });

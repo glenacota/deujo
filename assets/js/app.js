@@ -65,7 +65,6 @@ class App {
         this.#dashboard.render(this.#katas);
         this.#ui.renderStreak(this.#state);
         this.#katas.forEach((kata) => this.#renderBeltProgress(kata.id));
-        this.#refreshAllDue();
         this.#bindEvents();
 
         if (this.#state.wasFocusModeActive() && this.#state.activeKata) {
@@ -227,7 +226,6 @@ class App {
 
         this.#state.recordAnswer(id, item.id, result.correct);
         this.#handleFeedback(id, result.correct);
-        this.#refreshDue(id);
 
         const summary = summarizeAnswer(result);
         this.#ui.showVerdict(summary);
@@ -280,15 +278,6 @@ class App {
         this.#focusModeActive = false;
         this.#state.setFocusModeActive(false);
         this.#dashboard.showDashboard();
-        this.#refreshAllDue();
-    }
-
-    #refreshDue(id) {
-        this.#dashboard.setDueCount(id, this.#state.getDueCount(id));
-    }
-
-    #refreshAllDue() {
-        this.#katas.forEach(({ id }) => this.#refreshDue(id));
     }
 
     #bindEvents() {
@@ -313,10 +302,6 @@ class App {
         dom.logo.addEventListener('click', () => this.#exitToMenu());
         
         dom.buyMeCoffee.btn.addEventListener('click', () => window.open('https://ko-fi.com/A6C827EN29', '_blank', 'noopener,noreferrer'));
-
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible') this.#refreshAllDue();
-        });
 
         bindKeyboardShortcuts({
             modals: this.#modals,

@@ -66,12 +66,4 @@ export const SrsStore = {
     (all[kataId] ??= Object.create(null))[itemId] = record;
     scheduleSave();
   },
-
-  countDue(kataId, now = Date.now()) {
-    let n = 0;
-    for (const rec of Object.values(load()[kataId] ?? EMPTY)) {
-      if (rec.dueAt <= now) n++;
-    }
-    return n;
-  },
 };

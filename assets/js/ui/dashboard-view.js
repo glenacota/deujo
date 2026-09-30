@@ -10,7 +10,6 @@ const ACCENT_HOVER_CLASSES = {
 export class DashboardView {
     #cards = new Map();
     #belts = new Map();
-    #dues = new Map();
 
     showDashboard() {
         dom.dashboardHome.view.classList.remove('hidden');
@@ -22,7 +21,6 @@ export class DashboardView {
         grid.innerHTML = '';
         this.#cards.clear();
         this.#belts.clear();
-        this.#dues.clear();
 
         katas.forEach((kata, index) => {
             const fragment = cardTemplate.content.cloneNode(true);
@@ -39,9 +37,6 @@ export class DashboardView {
             // Cards/belts live in the dashboard, independent of a kata's own (lazy) focus-section mount.
             this.#cards.set(kata.id, card);
             this.#belts.set(kata.id, belt);
-            const due = card.querySelector('[data-role="due"]');
-            if (!due) console.warn(`kataCardTemplate is missing [data-role="due"]; due-count badge for "${kata.id}" is disabled`);
-            this.#dues.set(kata.id, due);
         });
     }
 
@@ -56,12 +51,5 @@ export class DashboardView {
     showFocusMode() {
         dom.dashboardHome.view.classList.add('hidden');
         dom.focus.view.classList.remove('hidden');
-    }
-
-    setDueCount(id, count) {
-        const el = this.#dues.get(id);
-        if (!el) return;
-        el.textContent = `${count} due`;
-        el.classList.toggle('hidden', count === 0);
     }
 }
