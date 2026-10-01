@@ -31,6 +31,14 @@ export const TENSES = {
     perf: { id: 'verbs-perf', label: 'Perfekt' },
 };
 
+/** True when sentence placeholders map to every blank once, in order. */
+export function hasOrderedBlankPlaceholders(sentence, blankCount) {
+    if (typeof sentence !== 'string' || !Number.isInteger(blankCount) || blankCount < 1) return false;
+
+    const placeholders = [...sentence.matchAll(/\{(\d+)\}/g)].map((match) => Number(match[1]));
+    return placeholders.length === blankCount && placeholders.every((index, position) => index === position);
+}
+
 // ---- Prepositions ---------------------------------------------------------
 
 /**

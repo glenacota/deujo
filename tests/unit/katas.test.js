@@ -104,10 +104,13 @@ test('validateNounDataset accepts a plural with a second correct spelling', () =
 
 const goodCase = { id: 'c_1', w: 'der Mann', m: 'the man', s: '{0} Mann', b: [{ a: 'der', c: 'nom' }] };
 
-test('validateCaseDataset requires one blank per placeholder', () => {
+test('validateCaseDataset requires ordered placeholders for every blank', () => {
   assert.doesNotThrow(() => validateCaseDataset([goodCase]));
   assert.throws(() => validateCaseDataset([{ ...goodCase, s: 'Mann' }]), /entry 0/, 'missing placeholder');
   assert.throws(() => validateCaseDataset([{ ...goodCase, s: '{0} und {1}' }]), /entry 0/, 'placeholder count mismatch');
+  assert.throws(() => validateCaseDataset([{ ...goodCase, s: '{1} Mann' }]), /entry 0/, 'out-of-order index');
+  assert.throws(() => validateCaseDataset([{ ...goodCase, s: '{0} und {0}', b: [goodCase.b[0], goodCase.b[0]] }]), /entry 0/, 'repeated index');
+  assert.throws(() => validateCaseDataset([{ ...goodCase, s: '{1} und {0}', b: [goodCase.b[0], goodCase.b[0]] }]), /entry 0/, 'reversed indices');
   // No placeholders AND no blanks, so the placeholder-count check cannot fire.
   // This isolates the "blanks must be a non-empty array" rule.
   assert.throws(() => validateCaseDataset([{ ...goodCase, s: 'der Mann', b: [] }]), /entry 0/, 'no blanks');

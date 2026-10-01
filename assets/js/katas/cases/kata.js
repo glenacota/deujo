@@ -3,7 +3,7 @@
 
 import { escapeHtml, createSectionFromTemplate } from '../../services/utility.js';
 import { markControl } from '../../ui/answer-view.js';
-import { CASE_LABELS, DEFINITE, INDEFINITE, PLURAL_DEFINITE } from '../../services/grammar.js';
+import { CASE_LABELS, DEFINITE, hasOrderedBlankPlaceholders, INDEFINITE, PLURAL_DEFINITE } from '../../services/grammar.js';
 import { formatAccepted, matchAnswer } from '../../services/answer-matcher.js';
 import { renderBlankSentence } from '../../services/blank-renderer.js';
 import { casesManifest } from './manifest.js';
@@ -29,9 +29,7 @@ export function validateCaseDataset(dataset) {
                 validAlt
             );
         });
-        const placeholderCount = typeof item?.s === 'string'
-            ? (item.s.match(/\{\d+\}/g) ?? []).length
-            : 0;
+        const placeholdersMatch = hasOrderedBlankPlaceholders(item?.s, item?.b?.length);
 
         if (
             !item ||
@@ -44,7 +42,7 @@ export function validateCaseDataset(dataset) {
             typeof item.m !== 'string' ||
             !item.m.trim() ||
             !validBlanks ||
-            placeholderCount !== item.b.length
+            !placeholdersMatch
         ) {
             throw new Error(`entry ${index} has invalid sentence, translation, or blank answers`);
         }

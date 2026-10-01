@@ -11,6 +11,7 @@ import {
     PREPOSITION_GROUP_LABELS,
     PREPOSITION_GROUPS,
     decomposePrepositionPhrase,
+    hasOrderedBlankPlaceholders,
     normalizePhrase,
 } from '../../services/grammar.js';
 import { matchAnswer, formatAccepted } from '../../services/answer-matcher.js';
@@ -66,15 +67,7 @@ export function validatePrepositionDataset(dataset) {
                 validAlt
             );
         });
-        const placeholders = typeof item?.s === 'string'
-            ? [...item.s.matchAll(/\{(\d+)\}/g)].map((m) => Number(m[1]))
-            : [];
-        // Placeholders must run 0..n-1 once each, in order, and match the number
-        // of blanks: a repeated, out-of-range, or missing index would point an
-        // answer at the wrong blank.
-        const placeholdersInOrder = placeholders.length > 0
-            && placeholders.length === item.b.length
-            && placeholders.every((n, i) => n === i);
+        const placeholdersMatch = hasOrderedBlankPlaceholders(item?.s, item?.b?.length);
 
         if (
             !item ||
@@ -87,7 +80,7 @@ export function validatePrepositionDataset(dataset) {
             typeof item.m !== 'string' ||
             !item.m.trim() ||
             !validBlanks ||
-            !placeholdersInOrder
+            !placeholdersMatch
         ) {
             throw new Error(`entry ${index} has an invalid sentence, translation, or preposition answers`);
         }
