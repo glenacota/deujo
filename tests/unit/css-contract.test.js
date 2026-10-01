@@ -41,12 +41,17 @@ test('the belt tick bar paints with the current belt gradient', () => {
     assert.match(body, /--belt-fill-to:\s*var\(--belt-\d+-to\)/, `belt ${rank} is missing its to stop`);
   }
 
-  // Filled ticks paint from those tokens, not from a hardcoded colour.
-  assert.match(appCss, /\.belt-tick\[data-filled='true'\][^}]*var\(--belt-fill-from\)[^}]*var\(--belt-fill-to\)/);
+  // Filled ticks paint a flat belt colour, not a two-stop ramp.
+  assert.match(appCss, /\.belt-tick\[data-filled='true'\]\s*\{[^}]*background-color:\s*var\(--belt-fill-to\)/);
   // Empty ticks ring in the same belt colour, so the bar reads as one colour.
   assert.match(appCss, /\.belt-tick\s*\{[^}]*var\(--belt-fill-to\)/);
-  // Focus-header belt colour dots paint from the rank tokens too.
-  assert.match(appCss, /\.belt-side\s*\{[^}]*var\(--belt-fill-from\)[^}]*var\(--belt-fill-to\)/);
+  // Belt colour dots are flat too.
+  assert.match(appCss, /\.belt-side\s*\{[^}]*background-color:\s*var\(--belt-fill-to\)/);
+  // No gradients anywhere in the widget: every rule must avoid background-image
+  // and the linear-gradient function.
+  const tickRules = appCss.slice(appCss.indexOf('.belt-ticks {'));
+  assert.doesNotMatch(tickRules, /linear-gradient/, 'a gradient crept back into the belt tick bar');
+  assert.doesNotMatch(tickRules, /background-image/, 'the tick bar paints with background-color only');
   // The label is a real text node now, so the old clip-path text trick is gone.
   assert.doesNotMatch(appCss, /\.belt-label::before/);
 });

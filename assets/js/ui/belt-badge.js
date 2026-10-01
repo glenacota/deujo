@@ -12,7 +12,7 @@ const TICKS = CONFIG.rules.milestoneInterval;
  * @param {HTMLElement} el container, rebuilt on every call
  * @param {import('../state.js').default} state
  * @param {string} kataId
- * @param {{compact?: boolean}} [options] compact: header variant, ticks only
+ * @param {{compact?: boolean}} [options] compact: header variant, no rank label
  */
 export function renderBeltBadge(el, state, kataId, options = {}) {
     if (!el) return;
@@ -49,11 +49,17 @@ export function renderBeltBadge(el, state, kataId, options = {}) {
         track.append(tick);
     }
 
-    // Focus header: belt colour dot, bar, next belt colour dot.
+    // Both surfaces share one bar row: current belt dot, ticks, next belt dot.
+    const bar = document.createElement('span');
+    bar.className = 'belt-tick-bar';
+    bar.append(sideDot(belt, `${rank} belt`));
+    bar.append(track);
+    // No next rank at Black belt, so the right dot is simply absent.
+    if (!isMaxBelt) bar.append(sideDot(belt + 1, `${nextRank} belt`));
+
+    // Focus header: bar only, the rank text is in #kataStatus below it.
     if (compact) {
-        const dots = [sideDot(belt, `${rank} belt`)];
-        if (!isMaxBelt) dots.push(sideDot(belt + 1, `${nextRank} belt`));
-        el.replaceChildren(...dots.slice(0, 1), track, ...dots.slice(1));
+        el.replaceChildren(bar);
         return;
     }
 
@@ -65,7 +71,7 @@ export function renderBeltBadge(el, state, kataId, options = {}) {
     name.textContent = `${rank} belt`;
 
     label.append(name);
-    el.replaceChildren(label, track);
+    el.replaceChildren(bar, label);
 }
 
 /** A small dot in a belt's own colour, decorative: the track carries the value. */

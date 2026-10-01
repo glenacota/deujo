@@ -315,8 +315,8 @@ html.dark .modal-key { border-color: rgb(51 65 85); background: rgb(30 41 59); c
     --belt-5-from: #d7b49e; --belt-5-to: #78350f;
     --belt-6-from: #334155; --belt-6-to: #0f172a;
 }
-/* Belt colour tokens, one class per rank. .belt-label-N only supplies the
-   gradient; the tick bar below paints with it. */
+/* Belt colour tokens, one class per rank. .belt-label-N supplies the solid
+   colour the tick bar paints with. */
 .belt-label-0 { --belt-fill-from: var(--belt-0-from); --belt-fill-to: var(--belt-0-to); }
 .belt-label-1 { --belt-fill-from: var(--belt-1-from); --belt-fill-to: var(--belt-1-to); }
 .belt-label-2 { --belt-fill-from: var(--belt-2-from); --belt-fill-to: var(--belt-2-to); }
@@ -326,45 +326,45 @@ html.dark .modal-key { border-color: rgb(51 65 85); background: rgb(30 41 59); c
 .belt-label-6 { --belt-fill-from: var(--belt-6-from); --belt-fill-to: var(--belt-6-to); }
 
 /* Belt tick bar: one tick per milestoneInterval point, so progress reads as an
-   exact count. The current belt's gradient (.belt-label-N supplies
-   --belt-fill-from/to) paints the filled ticks AND rings the empty ones, so the
-   whole widget wears the belt colour. The rank is a real text node, so nothing
-   depends on a gradient edge. */
+   exact count. Flat fills only, no gradients: the filled ticks and the empty
+   rings use the belt's solid colour (--belt-fill-to), so the whole widget wears
+   the belt colour and never a two-stop ramp. The rank is a real text node, so
+   nothing depends on a gradient edge. */
 .belt-ticks { display: flex; flex-direction: column; width: 100%; }
-.belt-ticks-compact { flex-direction: row; align-items: center; gap: 4px; width: auto; }
+.belt-ticks-compact { width: auto; }
 
-.belt-tick-track { display: flex; gap: 2px; }
-.belt-ticks-compact .belt-tick-track { width: 5.5rem; }
+/* The bar row: current belt dot, ticks, next belt dot. Shared by the card and
+   the focus header so both surfaces stay one grammar. */
+.belt-tick-bar { display: flex; align-items: center; gap: 4px; }
+.belt-tick-track { display: flex; flex: 1 1 auto; gap: 2px; }
+.belt-ticks-compact .belt-tick-track { flex: 0 0 auto; width: 5.5rem; }
 
 /* An empty slot is a belt-coloured trough, not a grey bar: White and Black
    belts both sit close to the page background, so a filled paint alone would be
-   ambiguous. The ring is the belt colour at reduced alpha, so an empty slot
-   always reads as less than a filled one. */
+   ambiguous. */
 .belt-tick {
     flex: 1 1 0; min-width: 0; height: 9px;
     background-color: transparent;
     box-shadow: inset 0 0 0 1px var(--belt-fill-to);
 }
 html.dark .belt-tick { box-shadow: inset 0 0 0 1px rgb(51 65 85); }
-.belt-tick[data-filled='true'] {
-    background-image: linear-gradient(90deg, var(--belt-fill-from), var(--belt-fill-to));
-}
+.belt-tick[data-filled='true'] { background-color: var(--belt-fill-to); }
 /* Black belt is near-invisible on the dark background, so its ring swaps to the
-   light slot colour rather than following the belt gradient. */
+   light slot colour rather than following the belt colour. */
 .belt-ticks.belt-label-6 .belt-tick { box-shadow: inset 0 0 0 1px rgb(100 116 139 / .6); }
 .belt-ticks-compact .belt-tick { height: 9px; }
 
-/* Belt colour dots flanking the compact (focus header) bar: current rank on the
+/* Belt colour dots flanking the bar on both surfaces: current rank on the
    left, next rank on the right. */
 .belt-side {
     flex: 0 0 auto; width: 9px; height: 9px; border-radius: 999px;
-    background-image: linear-gradient(90deg, var(--belt-fill-from), var(--belt-fill-to));
+    background-color: var(--belt-fill-to);
 }
 
 /* Rank row above the ticks: belt name, distance to next rank, exact count. */
 .belt-ticks-label {
-    display: flex; align-items: baseline; gap: 4px; margin-bottom: 3px;
-    font-size: 10px; font-weight: 700; line-height: 1.2; letter-spacing: 0.05em;
+    display: flex; align-items: baseline; gap: 4px;
+    font-size: 10px; margin-top:1em; letter-spacing: 0.05em;
     text-transform: uppercase;
 }
 
