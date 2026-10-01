@@ -73,17 +73,23 @@ To add a kata:
 Use unique IDs and keep dataset paths relative to the site root. Escape dataset text inserted into HTML; prefer `textContent` for plain text. Tailwind scans `index.html` and `assets/js/**/*.js`, so use literal class names and a supported accent. `npm test` checks every registered kata contract and validates all shipped datasets.
 
 ## 🧪 Tests
-Unit tests run on the Node.js built-in test runner. No test dependencies.
+Unit tests run on the Node.js built-in test runner. No test dependencies. A thin Playwright layer covers the few things Node cannot reach: real focus trapping, real key events, the confetti canvas, and the whole run at phone width.
 
 ```console
-npm test               # run every test
-node --test tests/unit/state.test.js   # run one file
+npm test               # unit tests
+npm run test:e2e       # browser smoke tests (chromium, iPhone 13 mini viewport)
+npm run test:all       # both
+node --test tests/unit/state.test.js   # run one unit file
+npx playwright test --headed           # watch the browser run
 ```
 
 Rules of the harness:
-- Tests live in `tests/unit/*.test.js` and are picked up by `npm test`.
+- Unit tests live in `tests/unit/*.test.js` and are picked up by `npm test`.
 - `tests/helpers/browser-stub.js` installs minimal `localStorage`, `window`, and `document` globals so DOM-adjacent modules import in Node. Call it before the dynamic `import()` of any module that touches those globals.
 - It is import-only: it has no `createElement`, so a test that mounts a kata needs its own element stub. `tests/unit/kata-check.test.js` has one that covers mounting, rendering, and grading a kata end to end.
+- Browser tests live in `tests/e2e/*.spec.js`, run from `playwright.config.js`, and start `tests/e2e/server.mjs` automatically. One-time setup: `npm install && npx playwright install chromium`.
+- The browser layer is deliberately a smoke test, not a second coverage suite. Keep it to the critical path; anything expressible as a pure function belongs in a unit test.
+- `Math.random` is seeded before the app boots, so a kata and its answers are reproducible. Never mock a module there: drive the real UI.
 
 ## 🎨 Rebuilding the stylesheet
 The production Tailwind CSS is a committed, static file (`assets/css/tailwind.css`) generated at build time — no CDN compiler runs in the browser. Node is only needed if you change Tailwind classes or `tailwind.config.cjs`.

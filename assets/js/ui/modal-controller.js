@@ -82,14 +82,25 @@ export class ModalController {
         modal.classList.add('hidden');
     }
 
+    /**
+     * Only controls that can actually take focus count as the trap's edges.
+     * A display:none control (the settings confirm box) still matches the
+     * selector, so counting it would make the last stop unreachable and the
+     * wrap-around would never fire, letting Tab walk out behind the modal.
+     */
+    #focusableIn(modal) {
+        return Array.from(modal.querySelectorAll(FOCUSABLE_SELECTOR))
+            .filter((element) => element.getClientRects().length > 0);
+    }
+
     #focusInitialElement(modal) {
         const initialFocus = modal.querySelector('[data-modal-initial-focus]')
-            ?? modal.querySelector(FOCUSABLE_SELECTOR);
+            ?? this.#focusableIn(modal)[0];
         initialFocus?.focus();
     }
 
     #trapFocus(event) {
-        const focusable = Array.from(this.#activeModal.querySelectorAll(FOCUSABLE_SELECTOR));
+        const focusable = this.#focusableIn(this.#activeModal);
         if (!focusable.length) {
             event.preventDefault();
             return;
