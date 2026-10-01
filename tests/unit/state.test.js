@@ -62,6 +62,30 @@ test('a correct answer promotes exactly once per milestone', () => {
   assert.equal(state.maxStreak, milestoneInterval);
 });
 
+test('getBeltPointsEarned counts whole points inside the current belt', () => {
+  const { kataId, state } = stateFor();
+  const earned = [];
+  // One extra point past the promotion so the counter resets to 0 at the boundary.
+  for (let i = 0; i <= milestoneInterval; i++) {
+    earned.push(state.getBeltPointsEarned(kataId));
+    state.incrementStreak(kataId);
+  }
+
+  assert.deepEqual(earned, [0, 1, 2, 3, 4, 0], 'the counter restarts on promotion');
+});
+
+test('getBeltPointsEarned fills the final belt and matches the percentage', () => {
+  const { kataId, state } = stateFor();
+  for (let i = 0; i < maxBelt * (milestoneInterval + 1); i++) state.incrementStreak(kataId);
+
+  assert.equal(state.getCurrentBelt(kataId), maxBelt);
+  assert.equal(state.getBeltPointsEarned(kataId), milestoneInterval, 'top rank reads as full, not 0');
+  assert.equal(
+    state.getBeltProgressPct(kataId),
+    (state.getBeltPointsEarned(kataId) / milestoneInterval) * 100
+  );
+});
+
 test('belt progress is capped and the final belt is always full', () => {
   const { kataId, state } = stateFor();
   for (let i = 0; i < (maxBelt + 1) * milestoneInterval * 2; i++) state.incrementStreak(kataId);

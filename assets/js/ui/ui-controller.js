@@ -35,14 +35,9 @@ export class UiController {
         dom.header.max.textContent = state.maxStreak;
     }
 
-    /** Belt pill + "n hits to next belt" readout for one kata's dashboard card. */
+    /** Belt tick bar + "n hits to next belt" readout for one kata's dashboard card. */
     renderKataProgress(beltEl, kataId, state) {
-        renderBeltBadge(
-            beltEl,
-            state,
-            kataId,
-            'block text-[10px] px-2 py-0.5'
-        );
+        renderBeltBadge(beltEl, state, kataId);
     }
 
     /** Shows the on-brand error modal, replacing the bootstrap failure alert(). */

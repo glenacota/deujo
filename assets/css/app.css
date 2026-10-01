@@ -315,23 +315,65 @@ html.dark .modal-key { border-color: rgb(51 65 85); background: rgb(30 41 59); c
     --belt-5-from: #d7b49e; --belt-5-to: #78350f;
     --belt-6-from: #334155; --belt-6-to: #0f172a;
 }
-.belt-label {
-    position: relative; overflow: hidden; color: transparent;
-    background: linear-gradient(90deg, var(--belt-fill-from) 0%, var(--belt-fill-to) var(--belt-progress), var(--belt-rest) var(--belt-progress), var(--belt-rest) 100%);
-}
-.belt-label::before, .belt-label::after {
-    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: inherit;
-    content: attr(data-label); pointer-events: none; text-shadow: 0 0 black;
-}
-.belt-label::before { color: var(--belt-fill-text); clip-path: inset(0 calc(100% - var(--belt-progress)) 0 0); }
-.belt-label::after { color: var(--belt-rest-text); clip-path: inset(0 0 0 var(--belt-progress)); }
+/* Belt colour tokens, one class per rank. .belt-label-N only supplies the
+   gradient; the tick bar below paints with it. */
+.belt-label-0 { --belt-fill-from: var(--belt-0-from); --belt-fill-to: var(--belt-0-to); }
+.belt-label-1 { --belt-fill-from: var(--belt-1-from); --belt-fill-to: var(--belt-1-to); }
+.belt-label-2 { --belt-fill-from: var(--belt-2-from); --belt-fill-to: var(--belt-2-to); }
+.belt-label-3 { --belt-fill-from: var(--belt-3-from); --belt-fill-to: var(--belt-3-to); }
+.belt-label-4 { --belt-fill-from: var(--belt-4-from); --belt-fill-to: var(--belt-4-to); }
+.belt-label-5 { --belt-fill-from: var(--belt-5-from); --belt-fill-to: var(--belt-5-to); }
+.belt-label-6 { --belt-fill-from: var(--belt-6-from); --belt-fill-to: var(--belt-6-to); }
 
-.belt-label-0 { --belt-fill-from: var(--belt-0-from); --belt-fill-to: var(--belt-0-to); --belt-fill-text: #0f172a; }
-.belt-label-1 { --belt-fill-from: var(--belt-1-from); --belt-fill-to: var(--belt-1-to); --belt-fill-text: #713f12; }
-.belt-label-2 { --belt-fill-from: var(--belt-2-from); --belt-fill-to: var(--belt-2-to); --belt-fill-text: #7c2d12; }
-.belt-label-3 { --belt-fill-from: var(--belt-3-from); --belt-fill-to: var(--belt-3-to); --belt-fill-text: #064e3b; }
-.belt-label-4 { --belt-fill-from: var(--belt-4-from); --belt-fill-to: var(--belt-4-to); --belt-fill-text: #082f49; }
-.belt-label-5 { --belt-fill-from: var(--belt-5-from); --belt-fill-to: var(--belt-5-to); --belt-fill-text: #fff7ed; }
-.belt-label-6 { --belt-fill-from: var(--belt-6-from); --belt-fill-to: var(--belt-6-to); --belt-fill-text: #f8fafc; }
-.belt-label { --belt-rest: #334155; --belt-rest-text: #f8fafc; }
-html:not(.dark) .belt-label { --belt-rest: #e2e8f0; --belt-rest-text: #334155; }
+/* Belt tick bar: one tick per milestoneInterval point, so progress reads as an
+   exact count. The current belt's gradient (.belt-label-N supplies
+   --belt-fill-from/to) paints the filled ticks AND rings the empty ones, so the
+   whole widget wears the belt colour. The rank is a real text node, so nothing
+   depends on a gradient edge. */
+.belt-ticks { display: flex; flex-direction: column; width: 100%; }
+.belt-ticks-compact { flex-direction: row; align-items: center; gap: 4px; width: auto; }
+
+.belt-tick-track { display: flex; gap: 2px; }
+.belt-ticks-compact .belt-tick-track { width: 5.5rem; }
+
+/* An empty slot is a belt-coloured trough, not a grey bar: White and Black
+   belts both sit close to the page background, so a filled paint alone would be
+   ambiguous. The ring is the belt colour at reduced alpha, so an empty slot
+   always reads as less than a filled one. */
+.belt-tick {
+    flex: 1 1 0; min-width: 0; height: 9px;
+    background-color: transparent;
+    box-shadow: inset 0 0 0 1px var(--belt-fill-to);
+}
+html.dark .belt-tick { box-shadow: inset 0 0 0 1px rgb(51 65 85); }
+.belt-tick[data-filled='true'] {
+    background-image: linear-gradient(90deg, var(--belt-fill-from), var(--belt-fill-to));
+}
+/* Black belt is near-invisible on the dark background, so its ring swaps to the
+   light slot colour rather than following the belt gradient. */
+.belt-ticks.belt-label-6 .belt-tick { box-shadow: inset 0 0 0 1px rgb(100 116 139 / .6); }
+.belt-ticks-compact .belt-tick { height: 9px; }
+
+/* Belt colour dots flanking the compact (focus header) bar: current rank on the
+   left, next rank on the right. */
+.belt-side {
+    flex: 0 0 auto; width: 9px; height: 9px; border-radius: 999px;
+    background-image: linear-gradient(90deg, var(--belt-fill-from), var(--belt-fill-to));
+}
+
+/* Rank row above the ticks: belt name, distance to next rank, exact count. */
+.belt-ticks-label {
+    display: flex; align-items: baseline; gap: 4px; margin-bottom: 3px;
+    font-size: 10px; font-weight: 700; line-height: 1.2; letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+/* Belt-appropriate label ink: dark on the light belts, light on Black. */
+.belt-ticks.belt-label-0 { --belt-ink: #334155; }
+.belt-ticks.belt-label-1 { --belt-ink: #713f12; }
+.belt-ticks.belt-label-2 { --belt-ink: #7c2d12; }
+.belt-ticks.belt-label-3 { --belt-ink: #065f46; }
+.belt-ticks.belt-label-4 { --belt-ink: #075985; }
+.belt-ticks.belt-label-5 { --belt-ink: #7c2d12; }
+.belt-ticks.belt-label-6 { --belt-ink: #e2e8f0; }
+html.dark .belt-ticks.belt-label-0 { --belt-ink: #cbd5e1; }

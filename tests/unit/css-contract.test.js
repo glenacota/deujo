@@ -30,6 +30,27 @@ test('answer-state colors and reduced-motion selectors use emitted attributes an
   assert.match(appCss, /canvas#fireworksCanvas/);
 });
 
+test('the belt tick bar paints with the current belt gradient', () => {
+  // Every rank class must supply both gradient stops, or a filled tick falls
+  // back to no background-image and silently renders as an empty tick.
+  const rankClasses = [...appCss.matchAll(/^\.belt-label-(\d)\s*\{([^}]*)\}/gm)];
+  assert.equal(rankClasses.length, 7, 'one .belt-label-N rule per rank');
+
+  for (const [, rank, body] of rankClasses) {
+    assert.match(body, /--belt-fill-from:\s*var\(--belt-\d+-from\)/, `belt ${rank} is missing its from stop`);
+    assert.match(body, /--belt-fill-to:\s*var\(--belt-\d+-to\)/, `belt ${rank} is missing its to stop`);
+  }
+
+  // Filled ticks paint from those tokens, not from a hardcoded colour.
+  assert.match(appCss, /\.belt-tick\[data-filled='true'\][^}]*var\(--belt-fill-from\)[^}]*var\(--belt-fill-to\)/);
+  // Empty ticks ring in the same belt colour, so the bar reads as one colour.
+  assert.match(appCss, /\.belt-tick\s*\{[^}]*var\(--belt-fill-to\)/);
+  // Focus-header belt colour dots paint from the rank tokens too.
+  assert.match(appCss, /\.belt-side\s*\{[^}]*var\(--belt-fill-from\)[^}]*var\(--belt-fill-to\)/);
+  // The label is a real text node now, so the old clip-path text trick is gone.
+  assert.doesNotMatch(appCss, /\.belt-label::before/);
+});
+
 test('the settings bottom sheet and reduce-motion override use emitted selectors', () => {
   // Phone layout: the panel docks to the bottom edge with only rounded top corners.
   assert.match(appCss, /@media \(max-width: 639px\)[\s\S]*#settingsModal\s*\{[^}]*align-items: flex-end/);

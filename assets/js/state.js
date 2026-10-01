@@ -99,9 +99,19 @@ export class GameState {
     );
   }
 
+  /**
+   * Correct-answer points earned inside the current belt. Integer, so the tick
+   * bar can show an exact count instead of a rounded percentage.
+   * @returns {number} 0..milestoneInterval
+   */
+  getBeltPointsEarned(kataId) {
+    const interval = CONFIG.rules.milestoneInterval;
+    if (this.getCurrentBelt(kataId) >= CONFIG.rules.maxBelt) return interval;
+    return this.beltProgress[kataId] % interval;
+  }
+
   getBeltProgressPct(kataId) {
-    if (this.getCurrentBelt(kataId) >= CONFIG.rules.maxBelt) return 100;
-    return ((this.beltProgress[kataId] % CONFIG.rules.milestoneInterval) / CONFIG.rules.milestoneInterval) * 100;
+    return (this.getBeltPointsEarned(kataId) / CONFIG.rules.milestoneInterval) * 100;
   }
 
   /**
