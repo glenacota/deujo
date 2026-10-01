@@ -67,6 +67,17 @@ export const PREPOSITION_CONTRACTIONS = {
     aufs: { preposition: 'auf', article: 'das' },
 };
 
+/**
+ * The written-out spelling behind each contraction: "zu dem" -> "zum". A dataset
+ * may store either spelling, so both directions have to be looked up.
+ */
+const CONTRACTED_FORMS = Object.fromEntries(
+    Object.entries(PREPOSITION_CONTRACTIONS).map(([fused, { preposition, article }]) => [
+        `${preposition} ${article}`,
+        fused,
+    ])
+);
+
 /** Possessive determiners per case; only the forms that can actually occur. */
 const POSSESSIVE = {
     akk: ['meinen', 'meine', 'mein', 'seinen', 'seine', 'sein', 'ihren', 'ihre', 'ihr', 'unseren', 'unsere', 'unser', 'deinen', 'deine', 'dein'],
@@ -148,4 +159,26 @@ export function decomposePrepositionPhrase(answer, preposition) {
     if (contracted) return contracted.preposition === preposition ? contracted.article : null;
     if (!answer.startsWith(`${preposition} `)) return null;
     return answer.slice(preposition.length + 1);
+}
+
+/**
+ * Every spelling of a prepositional phrase that is still correct German: the
+ * fused contraction and the written-out form, in whichever order the dataset
+ * stored them. "zum" also answers a blank whose answer is "zu dem", and the
+ * other way round; a phrase that cannot contract keeps its single spelling.
+ * @param {string} answer
+ * @returns {string[]} normalised, duplicate-free, dataset spelling first
+ */
+export function prepositionSpellings(answer) {
+    const phrase = normalizePhrase(answer);
+    if (!phrase) return [];
+
+    const variants = [phrase];
+    // Fused first: the dataset spelling, then the one standard alternative.
+    const fused = PREPOSITION_CONTRACTIONS[phrase];
+    if (fused) variants.push(`${fused.preposition} ${fused.article}`);
+    const contraction = CONTRACTED_FORMS[phrase];
+    if (contraction) variants.push(contraction);
+
+    return [...new Set(variants)];
 }

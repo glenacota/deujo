@@ -4,6 +4,7 @@
 import { escapeHtml, createSectionFromTemplate } from '../../services/utility.js';
 import { markControl } from '../../ui/answer-view.js';
 import { CASE_LABELS, DEFINITE, INDEFINITE, PLURAL_DEFINITE } from '../../services/grammar.js';
+import { formatAccepted, matchAnswer } from '../../services/answer-matcher.js';
 import { casesManifest } from './manifest.js';
 import { casesTemplate } from './template.js';
 
@@ -15,11 +16,18 @@ export function validateCaseDataset(dataset) {
     }
 
     dataset.forEach((item, index) => {
-        const validBlanks = Array.isArray(item?.b) && item.b.length > 0 && item.b.every((blank) =>
-            typeof blank?.a === 'string' &&
-            blank.a.trim() &&
-            VALID_CASE_NAMES.includes(blank.c)
-        );
+        const validBlanks = Array.isArray(item?.b) && item.b.length > 0 && item.b.every((blank) => {
+            // `alt` is optional, but when present every entry must be a real
+            // answer string, or the learner can never satisfy the blank.
+            const validAlt = blank?.alt === undefined
+                || (Array.isArray(blank.alt) && blank.alt.every((alt) => typeof alt === 'string' && alt.trim()));
+            return (
+                typeof blank?.a === 'string' &&
+                blank.a.trim() &&
+                VALID_CASE_NAMES.includes(blank.c) &&
+                validAlt
+            );
+        });
         const placeholderCount = typeof item?.s === 'string'
             ? (item.s.match(/\{\d+\}/g) ?? []).length
             : 0;
@@ -144,7 +152,6 @@ export function createCaseKata() {
 
         /** @returns {{correct:boolean,fields:object[],answer:string}|{warning:string}|null} */
         check(item) {
-            const targets = item.b.map((blank) => blank.a);
             if (!inputs.length) return null;
 
             if (inputs.some((input) => !input.value.trim())) {
@@ -153,10 +160,13 @@ export function createCaseKata() {
 
             const fields = inputs.map((input, i) => {
                 const given = input.value.trim();
-                const expected = targets[i];
-                const ok = given.toLowerCase() === expected.toLowerCase();
-                markControl(input, { ok, expected });
-                return { label: `Blank ${i + 1}`, expected, given, ok };
+                // The learner may type the article with the noun that follows it
+                // ("der Mann"), which is the same answer, not a different one.
+                const { ok, accepted } = matchAnswer(given, item.b[i], { allowExtraWords: true });
+                // The dataset spelling, not the whole answer object, goes on show.
+                const expected = accepted[0] ?? item.b[i].a;
+                markControl(input, { ok, expected, note: ok ? null : formatAccepted(accepted) });
+                return { label: `Blank ${i + 1}`, expected, accepted, given, ok };
             });
 
             return {

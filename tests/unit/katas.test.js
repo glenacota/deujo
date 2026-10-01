@@ -14,6 +14,7 @@ const { validateNounDataset } = await import('../../assets/js/katas/nouns/kata.j
 const { validateCaseDataset } = await import('../../assets/js/katas/cases/kata.js');
 const { validatePrepositionDataset, gradeBlank } = await import('../../assets/js/katas/prepositions/kata.js');
 const { validateVerbDataset } = await import('../../assets/js/katas/verbs/kata.js');
+const { PREPOSITION_CONTRACTIONS } = await import('../../assets/js/services/grammar.js');
 const { escapeHtml } = await import('../../assets/js/services/utility.js');
 
 const katas = loadKatas();
@@ -94,6 +95,13 @@ test('validateNounDataset rejects malformed entries', () => {
   assert.doesNotThrow(() => validateNounDataset([{ ...goodNoun, p: '' }]), 'an empty plural means "no plural"');
 });
 
+test('validateNounDataset accepts a plural with a second correct spelling', () => {
+  assert.doesNotThrow(() => validateNounDataset([{ ...goodNoun, p: { a: 'Tage', alt: ['Tagen'] } }]));
+  assert.throws(() => validateNounDataset([{ ...goodNoun, p: { alt: ['Tage'] } }]), /entry 0/, 'no primary answer');
+  assert.throws(() => validateNounDataset([{ ...goodNoun, p: { a: 'Tage', alt: [''] } }]), /entry 0/);
+  assert.throws(() => validateNounDataset([{ ...goodNoun, p: { a: 'Tage', alt: 'Tagen' } }]), /entry 0/);
+});
+
 const goodCase = { id: 'c_1', w: 'der Mann', m: 'the man', s: '{0} Mann', b: [{ a: 'der', c: 'nom' }] };
 
 test('validateCaseDataset requires one blank per placeholder', () => {
@@ -104,6 +112,12 @@ test('validateCaseDataset requires one blank per placeholder', () => {
   // This isolates the "blanks must be a non-empty array" rule.
   assert.throws(() => validateCaseDataset([{ ...goodCase, s: 'der Mann', b: [] }]), /entry 0/, 'no blanks');
   assert.throws(() => validateCaseDataset([{ ...goodCase, b: [{ a: 'der', c: 'vocative' }] }]), /entry 0/);
+});
+
+test('validateCaseDataset accepts an alt list and rejects a malformed one', () => {
+  assert.doesNotThrow(() => validateCaseDataset([{ ...goodCase, b: [{ a: 'der', c: 'nom', alt: ['der Mann'] }] }]));
+  assert.throws(() => validateCaseDataset([{ ...goodCase, b: [{ a: 'der', c: 'nom', alt: [''] }] }]), /entry 0/);
+  assert.throws(() => validateCaseDataset([{ ...goodCase, b: [{ a: 'der', c: 'nom', alt: 'der Mann' }] }]), /entry 0/);
 });
 
 const goodPreposition = { id: 'p_1', w: 'Ich warte beim Arzt.', m: 'I am waiting at the doctor.', s: 'Ich warte {0} Arzt.', b: [{ a: 'beim', c: 'dat' }] };
@@ -151,6 +165,51 @@ test('gradeBlank accepts the contraction and its written-out form, in any case o
   assert.equal(gradeBlank('auf den', { a: 'auf den', c: 'akk' }).ok, true);
 });
 
+test('gradeBlank accepts both spellings whichever one the dataset stored', () => {
+  // A dataset entry may spell the phrase out, and the learner may still type the
+  // fused form; the reverse must hold too.
+  const writtenOut = { a: 'zu dem', c: 'dat' };
+  assert.equal(gradeBlank('zum', writtenOut).ok, true);
+  assert.equal(gradeBlank('zu dem', writtenOut).ok, true);
+  assert.deepEqual(gradeBlank('zum', writtenOut).accepted, ['zu dem', 'zum']);
+
+  // Every standard contraction round-trips in both directions. Only "das" is
+  // Akkusativ here, so that is the only case the phrase can carry.
+  for (const [fused, { preposition, article }] of Object.entries(PREPOSITION_CONTRACTIONS)) {
+    const caseKey = article === 'das' ? 'akk' : 'dat';
+    for (const answer of [fused, `${preposition} ${article}`]) {
+      for (const given of [fused, `${preposition} ${article}`]) {
+        assert.equal(gradeBlank(given, { a: answer, c: caseKey }).ok, true, `"${given}" vs stored "${answer}"`);
+      }
+    }
+  }
+});
+
+test('gradeBlank honours an explicit alt list, and a bad one fails validation', () => {
+  const blank = { a: 'in die', c: 'akk', alt: ['in die Tür'] };
+  assert.equal(gradeBlank('in die Tür', blank).ok, true);
+  assert.equal(gradeBlank('ins', blank).ok, false, 'an alt list must not license a wrong case');
+  assert.deepEqual(gradeBlank('in die', blank).accepted, ['in die', 'in die tür']);
+
+  // The alt list itself is held to the same rules as the main answer.
+  assert.doesNotThrow(() => validatePrepositionDataset([{ ...goodPreposition, b: [{ a: 'in die', c: 'akk', alt: ['in die Tür'] }] }]));
+  assert.throws(
+    () => validatePrepositionDataset([{ ...goodPreposition, b: [{ a: 'in die', c: 'akk', alt: ['in dem'] }] }]),
+    /entry 0/,
+    'an alt in the wrong case must be rejected',
+  );
+  assert.throws(
+    () => validatePrepositionDataset([{ ...goodPreposition, b: [{ a: 'in die', c: 'akk', alt: [''] }] }]),
+    /entry 0/,
+    'an empty alt must be rejected',
+  );
+  assert.throws(
+    () => validatePrepositionDataset([{ ...goodPreposition, b: [{ a: 'in die', c: 'akk', alt: 'in der' }] }]),
+    /entry 0/,
+    'a non-array alt must be rejected',
+  );
+});
+
 const sixForms = ['a', 'b', 'c', 'd', 'e', 'f'];
 const goodVerb = { id: 'v_1', w: 'gehen', m: 'to go', pres: sixForms, praet: sixForms, perf: sixForms };
 
@@ -159,6 +218,14 @@ test('validateVerbDataset requires six forms per tense', () => {
   assert.throws(() => validateVerbDataset([{ ...goodVerb, pres: sixForms.slice(1) }]), /entry 0/);
   assert.throws(() => validateVerbDataset([{ ...goodVerb, perf: [...sixForms.slice(1), ' '] }]), /entry 0/);
   assert.throws(() => validateVerbDataset([{ ...goodVerb, praet: undefined }]), /entry 0/);
+});
+
+test('validateVerbDataset accepts a form with a second correct spelling', () => {
+  const forms = sixForms.map((form) => ({ a: form, alt: [`${form}!`] }));
+  assert.doesNotThrow(() => validateVerbDataset([{ ...goodVerb, perf: forms }]));
+  assert.throws(() => validateVerbDataset([{ ...goodVerb, pres: [...sixForms.slice(1), { alt: ['x'] }] }]), /entry 0/);
+  assert.throws(() => validateVerbDataset([{ ...goodVerb, pres: [...sixForms.slice(1), { a: 'x', alt: [''] }] }]), /entry 0/);
+  assert.throws(() => validateVerbDataset([{ ...goodVerb, pres: [...sixForms.slice(1), { a: 'x', alt: 'y' }] }]), /entry 0/);
 });
 
 test('escapeHtml neutralises markup in dataset strings', () => {

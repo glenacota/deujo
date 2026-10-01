@@ -42,7 +42,7 @@
   {"w":"Tisch","g":"der","m":"table","p":"Tische","id":"n_e94ea0c5"},
   {"w":"Stuhl","g":"der","m":"chair","p":"Stühle","id":"n_8d1f01f6"},
   {"w":"Buch","g":"das","m":"book","p":"Bücher","id":"n_d17a6957"},
-  {"w":"Name","g":"der","m":"name","p":"Namen","id":"n_5b2a8e1a"},
+  {"w":"Name","g":"der","m":"name","p":{"a":"Namen","alt":["Names"]},"id":"n_5b2a8e1a"},
   {"w":"Junge","g":"der","m":"boy","p":"Jungen","id":"n_b664b4fe"},
   {"w":"Mädchen","g":"das","m":"girl","p":"Mädchen","id":"n_f2e1bfb4"},
   {"w":"Woche","g":"die","m":"week","p":"Wochen","id":"n_99c80f81"},

@@ -2,6 +2,7 @@
 // Self-contained verb-conjugation kata.
 
 import { escapeHtml, createSectionFromTemplate } from '../../services/utility.js';
+import { acceptedAnswers, matchAnswer } from '../../services/answer-matcher.js';
 import { markControl } from '../../ui/answer-view.js';
 import { PERSONS, TENSES } from '../../services/grammar.js';
 import { getVerbManifest } from './manifest.js';
@@ -14,6 +15,14 @@ const TENSE_PLACEHOLDERS = {
     perf: ['e.g. bin gegangen', 'e.g. bist gegangen', 'e.g. ist gegangen', 'e.g. sind gegangen', 'e.g. seid gegangen', 'e.g. sind gegangen'],
 };
 
+/** A conjugated form is a string, or `{a, alt}` when two spellings are correct. */
+function isUsableForm(form) {
+    if (typeof form === 'string') return Boolean(form.trim());
+    if (!form || typeof form !== 'object' || typeof form.a !== 'string' || !form.a.trim()) return false;
+    return form.alt === undefined
+        || (Array.isArray(form.alt) && form.alt.every((alt) => typeof alt === 'string' && alt.trim()));
+}
+
 export function validateVerbDataset(dataset) {
     if (!Array.isArray(dataset) || dataset.length === 0) {
         throw new Error('dataset must be a non-empty array');
@@ -23,7 +32,7 @@ export function validateVerbDataset(dataset) {
         const validTenses = Object.keys(TENSES).every((tense) =>
             Array.isArray(verb?.[tense]) &&
             verb[tense].length === PERSONS.length &&
-            verb[tense].every((form) => typeof form === 'string' && form.trim())
+            verb[tense].every(isUsableForm)
         );
         if (
             !verb ||
@@ -79,7 +88,7 @@ export function createVerbKata(tenseKey) {
                         ${PERSONS.map((person, index) => `
                             <tr>
                                 <td class="py-2 px-3 font-bold">${escapeHtml(person.label)}</td>
-                                <td class="py-2 px-3">${escapeHtml(verb[tenseKey][index] ?? '—')}</td>
+                                <td class="py-2 px-3">${escapeHtml(acceptedAnswers(verb[tenseKey][index]).join(' / ') || '—')}</td>
                             </tr>
                         `).join('')}
                     </tbody>
@@ -113,10 +122,11 @@ export function createVerbKata(tenseKey) {
 
             const fields = el.inputs.map((input, i) => {
                 const given = input.value.trim();
-                const expected = targetForms[i];
-                const ok = given.toLowerCase() === expected.toLowerCase();
+                // A form may carry `alt` for the second accepted spelling, e.g. a
+                // Perfekt participle written with or without the "ge-" infix.
+                const { ok, accepted } = matchAnswer(given, targetForms[i]);
                 markControl(input, { ok, note: false });
-                return { label: PERSONS[i].label, expected, given, ok };
+                return { label: PERSONS[i].label, expected: accepted[0] ?? '', accepted, given, ok };
             });
 
             return { correct: fields.every((f) => f.ok), fields };

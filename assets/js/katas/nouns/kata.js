@@ -2,6 +2,7 @@
 // Self-contained noun kata: elements, local selection state, rendering, validation.
 
 import { createSectionFromTemplate } from '../../services/utility.js';
+import { acceptedAnswers, matchAnswer } from '../../services/answer-matcher.js';
 import { markControl } from '../../ui/answer-view.js';
 import { nounsManifest } from './manifest.js';
 import { nounsTemplate } from './template.js';
@@ -13,7 +14,13 @@ export function validateNounDataset(dataset) {
 
     dataset.forEach((noun, index) => {
         const validGender = ['der', 'die', 'das'].includes(noun?.g);
-        const validPlural = typeof noun?.p === 'string';
+        // A plural is a string, or `{a, alt}` when more than one spelling is
+        // correct. An empty string still means "this noun has no plural".
+        const validPlural = typeof noun?.p === 'string'
+            || (noun?.p && typeof noun.p === 'object'
+                && typeof noun.p.a === 'string'
+                && (noun.p.alt === undefined
+                    || (Array.isArray(noun.p.alt) && noun.p.alt.every((alt) => typeof alt === 'string' && alt.trim()))));
         if (
             !noun ||
             typeof noun.id !== 'string' ||
@@ -25,7 +32,7 @@ export function validateNounDataset(dataset) {
             !validGender ||
             !validPlural
         ) {
-            throw new Error(`entry ${index} must contain non-empty w and m strings, string p, and valid g`);
+            throw new Error(`entry ${index} must contain non-empty w and m strings, string or {a, alt} p, and valid g`);
         }
     });
 }
@@ -111,21 +118,24 @@ export function createNounKata() {
             const userPlural = el.plural.value.trim();
             const hasNoPlural = !noun.p;
             const genderOk = gender === noun.g;
-            const pluralOk = hasNoPlural || userPlural.toLowerCase() === noun.p.toLowerCase();
+            // "p" may be a plain string or {a, alt} for plurals with two
+            // accepted spellings, and the article is optional in the input.
+            const pluralOk = hasNoPlural
+                || matchAnswer(userPlural, noun.p, { allowExtraWords: true }).ok;
             const correct = genderOk && pluralOk;
 
             const genderButtonsByValue = new Map(el.genderButtons.map((btn) => [btn.dataset.gender, btn]));
             markControl(genderButtonsByValue.get(gender), { ok: genderOk, inside: true, note: false });
             if (!genderOk) markControl(genderButtonsByValue.get(noun.g), { ok: true, inside: true });
 
-            const pluralAnswer = hasNoPlural ? 'no plural' : `die ${noun.p}`;
+            const pluralAnswer = hasNoPlural ? 'no plural' : `die ${acceptedAnswers(noun.p)[0]}`;
             markControl(el.plural, { ok: pluralOk, expected: pluralAnswer });
 
             return {
                 correct,
                 fields: [
                     { label: 'Gender', expected: noun.g, given: gender, ok: genderOk },
-                    { label: 'Plural', expected: hasNoPlural ? pluralAnswer : `die ${noun.p}`, given: hasNoPlural ? pluralAnswer : (userPlural || '—'), ok: pluralOk },
+                    { label: 'Plural', expected: pluralAnswer, given: hasNoPlural ? pluralAnswer : (userPlural || '—'), ok: pluralOk },
                 ],
             };
         },

@@ -13,6 +13,7 @@ import {
     decomposePrepositionPhrase,
     normalizePhrase,
 } from '../../services/grammar.js';
+import { matchAnswer, formatAccepted } from '../../services/answer-matcher.js';
 import { prepositionsManifest } from './manifest.js';
 import { prepositionsTemplate } from './template.js';
 
@@ -36,19 +37,32 @@ export function validatePrepositionDataset(dataset) {
         throw new Error('dataset must be a non-empty array');
     }
 
+    /**
+     * A phrase is a usable answer only if it starts with a real preposition whose
+     * determiner exists in the claimed case. The determiner is the first word, so
+     * a longer phrase like "in die Tür" is still accepted as an answer.
+     */
+    const isUsableAnswer = (answer, caseKey) => {
+        const phrase = normalizePhrase(answer);
+        const preposition = prepositionOf(phrase);
+        const determiner = preposition ? decomposePrepositionPhrase(phrase, preposition)?.split(' ')[0] : null;
+        return preposition !== null && determiner !== null && Boolean(DETERMINERS[caseKey]?.has(determiner));
+    };
+
     dataset.forEach((item, index) => {
         const validBlanks = Array.isArray(item?.b) && item.b.length > 0 && item.b.every((blank) => {
-            const preposition = prepositionOf(blank?.a);
-            const determiner = preposition ? decomposePrepositionPhrase(normalizePhrase(blank.a), preposition) : null;
+            const validAlt = blank?.alt === undefined
+                || (Array.isArray(blank.alt) && blank.alt.every((alt) => (
+                    typeof alt === 'string' && alt.trim() && isUsableAnswer(alt, blank.c)
+                )));
             return (
                 typeof blank?.a === 'string' &&
                 blank.a.trim() &&
                 VALID_CASE_NAMES.includes(blank.c) &&
                 // The answer must really be a preposition plus a determiner...
-                preposition !== null &&
-                determiner !== null &&
-                // ...and that determiner must exist in the case the entry claims.
-                DETERMINERS[blank.c]?.has(determiner)
+                isUsableAnswer(blank.a, blank.c) &&
+                // ...and so must every extra accepted answer.
+                validAlt
             );
         });
         const placeholders = typeof item?.s === 'string'
@@ -109,10 +123,10 @@ function renderHelpMatrix() {
 }
 
 /**
- * Grades one blank. The fused spelling is the standard written form, but the
- * written-out version is still correct German, so "zum" and "zu dem" both pass.
+ * Grades one blank. Both spellings of a contractable phrase are correct German,
+ * so "zum" and "zu dem" each pass whichever one the dataset happens to store.
  * @param {string} given raw input from the learner
- * @param {{a: string, c: string}} blank
+ * @param {{a: string, c: string, alt?: string[]}} blank
  * @returns {{preposition: string|null, determiner: string|null, accepted: string[], ok: boolean}}
  */
 export function gradeBlank(given, blank) {
@@ -120,18 +134,9 @@ export function gradeBlank(given, blank) {
     const preposition = prepositionOf(expected);
     const determiner = preposition ? decomposePrepositionPhrase(expected, preposition) : null;
 
-    const accepted = [expected];
-    // Only a fused form gains a written-out alternative; "auf dem" is already
-    // written out, so adding the same string again would just duplicate it.
-    const writtenOut = preposition && determiner ? normalizePhrase(`${preposition} ${determiner}`) : null;
-    if (writtenOut && !accepted.includes(writtenOut)) accepted.push(writtenOut);
+    const { accepted, ok } = matchAnswer(given, blank);
 
-    return {
-        preposition,
-        determiner,
-        accepted,
-        ok: accepted.includes(normalizePhrase(given)),
-    };
+    return { preposition, determiner, accepted, ok };
 }
 
 export function createPrepositionKata() {
@@ -208,14 +213,19 @@ export function createPrepositionKata() {
 
             const fields = inputs.map((input, i) => {
                 const given = input.value.trim();
-                const expected = item.b[i].a;
                 const caseKey = item.b[i].c;
-                const { preposition, ok } = gradeBlank(given, item.b[i]);
+                const { preposition, ok, accepted } = gradeBlank(given, item.b[i]);
+                // accepted[0] is the dataset's own spelling, so the note and the
+                // summary always show what the data asked for first.
+                const expected = accepted[0] ?? item.b[i].a;
 
-                markControl(input, { ok, expected });
+                // On a miss the note lists every accepted spelling, so "zum" and
+                // "zu dem" are both visible before the learner retypes one.
+                markControl(input, { ok, expected, note: ok ? null : formatAccepted(accepted) });
                 return {
                     label: preposition ? `${preposition} + ${CASE_LABELS[caseKey]}` : `Blank ${i + 1}`,
                     expected,
+                    accepted,
                     given,
                     ok,
                 };
