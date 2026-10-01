@@ -5,7 +5,7 @@
 
 import { expect, test } from '@playwright/test';
 import {
-    answerCurrentNoun,
+    BELT_INTERVAL,
     canvasHasInk,
     checkAnswer,
     collectPageErrors,
@@ -14,10 +14,9 @@ import {
     focusStaysInside,
     gotoDashboard,
     nounAnswers,
+    playCorrectHits,
     seedRandom,
 } from './helpers/dojo.js';
-
-const BELT_INTERVAL = 5; // CONFIG.rules.milestoneInterval: hits per promotion
 
 test.beforeEach(async ({ page }) => {
     await seedRandom(page);
@@ -93,25 +92,9 @@ test('five correct answers promote the belt, fire confetti, and raise the toast'
 
     await gotoDashboard(page);
     await enterNounsKata(page);
+    await playCorrectHits(page, answers, BELT_INTERVAL, true);
 
-    for (let hit = 1; hit <= BELT_INTERVAL; hit++) {
-        await answerCurrentNoun(page, answers);
-        await checkAnswer(page);
-        await expect(page.locator('#answerVerdictTitle')).toHaveText('Correct!');
-        await expect(page.locator('#streakDisplay')).toHaveText(String(hit));
-
-        if (hit === BELT_INTERVAL) {
-            // Promotion fires here: toast, milestone sound, confetti burst.
-            await expect(page.locator('#milestoneToast')).toBeVisible();
-            await expect(page.locator('#milestoneToastTitle')).toHaveText('Belt Promoted!');
-            await expect(page.locator('#milestoneToastText')).toContainText('Promoted to \u{1F7E1} Yellow');
-        } else {
-            // No early promotion: this also pins the milestone interval.
-            await expect(page.locator('#milestoneToast')).toBeHidden();
-            // Enter while the section is locked means "next", not "check again".
-            await page.keyboard.press('Enter');
-        }
-    }
+    await expect(page.locator('#milestoneToastText')).toContainText('Promoted to \u{1F7E1} Yellow');
 
     // Bursts are staggered 220ms apart, so the canvas needs a moment to paint.
     await expect.poll(() => canvasHasInk(page), { timeout: 5_000 }).toBe(true);

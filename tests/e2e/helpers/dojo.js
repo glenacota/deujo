@@ -9,7 +9,10 @@ import { expect } from '@playwright/test';
 
 const ROOT = resolve(import.meta.dirname, '../../..');
 
-const ACTIVE_SECTION = '#kataSections [data-role="section"]:not(.hidden)';
+export const ACTIVE_SECTION = '#kataSections [data-role="section"]:not(.hidden)';
+
+/** CONFIG.rules.milestoneInterval: correct answers per belt promotion. */
+export const BELT_INTERVAL = 5;
 
 /** word -> { gender, plural } straight from the shipped dataset. */
 export function nounAnswers() {
@@ -59,9 +62,13 @@ export function currentWord(page) {
     return page.locator(`${ACTIVE_SECTION} [data-role="word"]`).textContent().then((text) => text.trim());
 }
 
+export function currentSection(page) {
+    return page.locator(ACTIVE_SECTION);
+}
+
 /** Fills gender and plural from the dataset entry for whatever word is up. */
 export async function answerCurrentNoun(page, answers) {
-    const section = page.locator(ACTIVE_SECTION);
+    const section = currentSection(page);
     const word = await currentWord(page);
     const answer = answers.get(word);
     if (!answer) throw new Error(`No dataset answer for the rendered word "${word}"`);
@@ -75,8 +82,62 @@ export async function answerCurrentNoun(page, answers) {
     return answer;
 }
 
+/** Picks the wrong gender on purpose, so the answer is wrong whatever the noun. */
+export async function answerCurrentNounWrongly(page, answers) {
+    const section = currentSection(page);
+    const word = await currentWord(page);
+    const answer = answers.get(word);
+    if (!answer) throw new Error(`No dataset answer for the rendered word "${word}"`);
+
+    const wrong = ['der', 'die', 'das'].filter((g) => g !== answer.gender)[0];
+    await section.locator(`[data-role="gender"][data-gender="${wrong}"]`).click();
+
+    const plural = section.locator('[data-role="plural"]');
+    if (await plural.isEnabled()) await plural.fill(answer.plural ?? '');
+
+    return wrong;
+}
+
+/**
+ * Answers `hits` exercises correctly, asserting the streak each time and
+ * advancing with Enter (which means "next" while the section is locked).
+ * @param {boolean} expectPromotion true when the last hit should hit a belt
+ */
+export async function playCorrectHits(page, answers, hits, expectPromotion = false) {
+    for (let hit = 1; hit <= hits; hit++) {
+        await answerCurrentNoun(page, answers);
+        await checkAnswer(page);
+
+        await expect(page.locator('#answerVerdictTitle')).toHaveText('Correct!');
+        await expect(page.locator('#streakDisplay')).toHaveText(String(hit));
+
+        const last = hit === hits;
+        if (last && expectPromotion) {
+            await expect(page.locator('#milestoneToast')).toBeVisible();
+            await expect(page.locator('#milestoneToastTitle')).toHaveText('Belt Promoted!');
+        } else {
+            // No early promotion: this also pins the milestone interval.
+            await expect(page.locator('#milestoneToast')).toBeHidden();
+        }
+
+        if (!last) await page.keyboard.press('Enter');
+    }
+}
+
 export async function checkAnswer(page) {
     await page.locator('#checkAnswerBtn').click();
+}
+
+/** Every app-owned localStorage key, so a wipe can be verified from the page. */
+export function appStorageKeys(page) {
+    return page.evaluate(() => {
+        const keys = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key?.startsWith('dm_')) keys.push(key);
+        }
+        return keys;
+    });
 }
 
 /** True when the confetti canvas holds at least one painted pixel. */

@@ -29,7 +29,7 @@ export function bindKeyboardShortcuts({
 
         const input = event.target;
         if (!(input instanceof HTMLInputElement) || input.type !== 'text' || input.readOnly || input.disabled) return;
-2
+
         const start = input.selectionStart;
         const end = input.selectionEnd;
         if (start === null || start !== end) return;
