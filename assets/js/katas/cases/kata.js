@@ -5,6 +5,7 @@ import { escapeHtml, createSectionFromTemplate } from '../../services/utility.js
 import { markControl } from '../../ui/answer-view.js';
 import { CASE_LABELS, DEFINITE, INDEFINITE, PLURAL_DEFINITE } from '../../services/grammar.js';
 import { formatAccepted, matchAnswer } from '../../services/answer-matcher.js';
+import { renderBlankSentence } from '../../services/blank-renderer.js';
 import { casesManifest } from './manifest.js';
 import { casesTemplate } from './template.js';
 
@@ -116,17 +117,7 @@ export function createCaseKata() {
         },
 
         render(item) {
-            el.sentence.textContent = '';
-            el.translation.textContent = item.m ? `🇬🇧 ${item.m}` : '';
-
-            const fragment = document.createDocumentFragment();
-            inputs = [];
-            const parts = item.s.split(/\{(\d+)\}/g);
-            parts.forEach((part, i) => {
-                if (i % 2 === 0) {
-                    if (part) fragment.appendChild(document.createTextNode(part));
-                    return;
-                }
+            inputs = renderBlankSentence(el, item, () => {
                 const input = document.createElement('input');
                 input.type = 'text';
                 input.autocomplete = 'off';
@@ -135,19 +126,10 @@ export function createCaseKata() {
                 input.autocapitalize = 'none';
                 input.autocorrect = 'off';
                 input.lang = 'de';
-                input.dataset.index = part;
                 input.size = 6;
                 input.className = 'lg:w-24 w-20 case-blank-input inline-block text-center bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg lg:px-3 px-2 py-1 lg:py-1.5 lg:text-xl text-base text-indigo-700 dark:text-indigo-300 focus:outline-none focus:border-purple-500 lg:leading-[2rem] leading-[1.5rem]';
-                inputs.push(input);
-                fragment.appendChild(input);
+                return input;
             });
-
-            inputs.forEach((input, i) => {
-                input.setAttribute('enterkeyhint', i === inputs.length - 1 ? 'done' : 'next');
-                input.setAttribute('aria-label', `Blank ${i + 1} of ${inputs.length}`);
-            });
-
-            el.sentence.appendChild(fragment);
         },
 
         /** @returns {{correct:boolean,fields:object[],answer:string}|{warning:string}|null} */

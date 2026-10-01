@@ -14,6 +14,7 @@ import {
     normalizePhrase,
 } from '../../services/grammar.js';
 import { matchAnswer, formatAccepted } from '../../services/answer-matcher.js';
+import { renderBlankSentence } from '../../services/blank-renderer.js';
 import { prepositionsManifest } from './manifest.js';
 import { prepositionsTemplate } from './template.js';
 
@@ -168,17 +169,7 @@ export function createPrepositionKata() {
         },
 
         render(item) {
-            el.sentence.textContent = '';
-            el.translation.textContent = item.m ? `🇬🇧 ${item.m}` : '';
-
-            const fragment = document.createDocumentFragment();
-            inputs = [];
-            const parts = item.s.split(/\{(\d+)\}/g);
-            parts.forEach((part, i) => {
-                if (i % 2 === 0) {
-                    if (part) fragment.appendChild(document.createTextNode(part));
-                    return;
-                }
+            inputs = renderBlankSentence(el, item, () => {
                 const input = document.createElement('input');
                 input.type = 'text';
                 input.autocomplete = 'off';
@@ -188,20 +179,11 @@ export function createPrepositionKata() {
                 input.autocapitalize = 'none';
                 input.autocorrect = 'off';
                 input.lang = 'de';
-                input.dataset.index = part;
                 input.size = '12';
                 input.placeholder = 'e.g. zum';
                 input.className = 'inline-xl inline-block text-center bg-white dark:bg-slate-950 border placeholder-slate-400 dark:placeholder-slate-600 border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1 lg:px-3 lg:py-1.5 text-base lg:text-xl text-indigo-700 dark:text-indigo-300 focus:outline-none focus:border-purple-500 leading-[1.5rem] lg:leading-[2rem]';
-                inputs.push(input);
-                fragment.appendChild(input);
+                return input;
             });
-
-            inputs.forEach((input, i) => {
-                input.setAttribute('enterkeyhint', i === inputs.length - 1 ? 'done' : 'next');
-                input.setAttribute('aria-label', `Blank ${i + 1} of ${inputs.length}`);
-            });
-
-            el.sentence.appendChild(fragment);
         },
 
         check(item) {
