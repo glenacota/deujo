@@ -13,12 +13,6 @@ const ICONS = {
     [VERDICT_TONE.warning]: '⚠️',
 };
 
-/** "—", so a missing answer never renders as an empty gap. */
-const dash = (value) => {
-    const text = String(value ?? '').trim();
-    return text || '—';
-};
-
 /**
  * Turns a kata's `check()` result into everything the verdict panel needs
  * @param {{correct?: boolean, fields?: {label: string, given: string, expected: string, ok: boolean}[]}|null} result
@@ -39,21 +33,20 @@ export function summarizeAnswer(result) {
         detail: correct
             ? 'Well done.'
             : 'Review, learn, and continue.',
-        wrongCount: wrong.length,
     };
 }
 
 /**
  * A blocking complaint (empty field, missing choice) is not an answer: it gets
- * an amber panel, no grading, and never advances on its own.
+ * an amber panel, no grading, and never advances on its own. "—", so a missing
+ * message never renders as an empty title.
  * @param {string} message
  */
 export function summarizeWarning(message) {
     return {
         tone: VERDICT_TONE.warning,
         icon: ICONS[VERDICT_TONE.warning],
-        title: dash(message).replace(/^\W*\s*(⚠️|⚠)\s*/u, ''),
+        title: String(message ?? '').trim() || '—',
         detail: '',
-        wrongCount: 0,
     };
 }

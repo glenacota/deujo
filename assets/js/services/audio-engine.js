@@ -14,10 +14,6 @@ export class AudioEngine {
     return this.#soundOn;
   }
 
-  toggleSound() {
-    return this.setSoundOn(!this.#soundOn);
-  }
-
   setSoundOn(isOn) {
     if (this.#soundOn === isOn) return this.#soundOn;
     this.#soundOn = isOn;

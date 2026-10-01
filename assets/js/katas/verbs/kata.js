@@ -49,19 +49,6 @@ export function validateVerbDataset(dataset) {
     });
 }
 
-function mountElements(el, tenseKey, container) {
-    // Each tense gets its own parsed section (no shared ids), so multiple
-    // tenses can coexist/be visible simultaneously in the future.
-    const section = createSectionFromTemplate(verbsTemplate);
-    section.dataset.tense = tenseKey;
-    container.appendChild(section);
-
-    el.section = section;
-    el.word = section.querySelector('[data-role="word"]');
-    el.meaning = section.querySelector('[data-role="meaning"]');
-    el.inputs = PERSONS.map((p) => section.querySelector(`[data-role="conj_${p.key}"]`));
-}
-
 export function createVerbKata(tenseKey) {
     const tense = TENSES[tenseKey];
     const manifest = getVerbManifest(tenseKey);
@@ -99,7 +86,17 @@ export function createVerbKata(tenseKey) {
 
         mount(container) {
             if (el.section) return;
-            mountElements(el, tenseKey, container);
+
+            // Each tense gets its own parsed section (no shared ids), so three
+            // verb katas can be mounted at once without clashing.
+            const section = createSectionFromTemplate(verbsTemplate);
+            section.dataset.tense = tenseKey;
+            container.appendChild(section);
+
+            el.section = section;
+            el.word = section.querySelector('[data-role="word"]');
+            el.meaning = section.querySelector('[data-role="meaning"]');
+            el.inputs = PERSONS.map((p) => section.querySelector(`[data-role="conj_${p.key}"]`));
         },
 
     render(verb) {

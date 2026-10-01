@@ -59,7 +59,6 @@ export const dom = {
 
   toast: {
     root: byId('milestoneToast'),
-    icon: byId('milestoneToastIcon'),
     card: byId('milestoneToastCard'),
     title: byId('milestoneToastTitle'),
     text: byId('milestoneToastText'),

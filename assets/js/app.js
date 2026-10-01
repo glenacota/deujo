@@ -249,7 +249,7 @@ class App {
 
     #showHelpModal(id) {
         const kata = this.#entries.get(id)?.kata;
-        if (!kata?.getHelpContent) return;
+        if (!kata) return;
 
         this.#ui.showHelpContent(kata.helpTitle, kata.getHelpContent(this.#state.current[id]));
         this.#modals.open(dom.modals.help.root, dom.actions.helpBtn);

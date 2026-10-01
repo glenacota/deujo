@@ -218,7 +218,6 @@ canvas#fireworksCanvas { position: fixed; inset: 0; width: 100vw; height: 100vh;
 .settings-ghost-btn:hover { border-color: rgb(148 163 184); background: rgb(241 245 249); }
 .settings-danger-btn {
     flex: none;
-    min-height: 2ppx;
     padding: 0.5rem 0.9rem;
     border: 1px solid rgb(61, 68, 77);
     border-radius: 0.75rem;
