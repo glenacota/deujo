@@ -345,13 +345,13 @@ html.dark .modal-key { border-color: rgb(51 65 85); background: rgb(30 41 59); c
 /* The lower bar row. Shared by the card and the focus header so both surfaces
    stay one grammar. */
 .belt-tick-bar { display: flex; align-items: center; }
-.belt-tick-track { display: flex; flex: 1 1 auto; gap: 2px; }
+.belt-tick-track { display: flex; flex: 1 1 auto; gap: 3px; }
 .belt-ticks-compact .belt-tick-track { flex: 0 0 auto; width: 5.5rem; }
 
 /* Upper bar: held belt, always 100%. Thinner than the ticks so the pair reads as
    "achieved" above "in progress". */
 .belt-tick-held {
-    height: 6px; border-radius: 2px; margin-bottom: 2px;
+    height: 12px; border-radius: 2px; margin-bottom: 2px;
     background-color: var(--belt-fill-to);
 }
 /* Black is invisible against the dark card, so it keeps a hairline edge. */
@@ -360,7 +360,7 @@ html.dark .modal-key { border-color: rgb(51 65 85); background: rgb(30 41 59); c
 /* Lower bar: earned ticks in the next belt's colour, unearned ones empty. Slim,
    since the upper bar already carries the belt's mass. */
 .belt-tick {
-    flex: 1 1 0; min-width: 0; height: 6px; border-radius: 1px;
+    flex: 1 1 0; min-width: 0; height: 3px; border-radius: 1px;
     background-color: transparent;
     box-shadow: inset 0 0 0 1px rgb(100 116 139 / .45);
 }
