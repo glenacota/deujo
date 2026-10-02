@@ -2,6 +2,15 @@ import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
+import { installBrowserStub } from '../helpers/browser-stub.js';
+import { installDomStub } from '../helpers/dom-stub.js';
+import { CONFIG } from '../../assets/js/config.js';
+
+// loadKatas() mounts every kata, so it needs elements at module scope.
+installBrowserStub();
+installDomStub();
+const { loadKatas } = await import('../../assets/js/katas/registry.js');
+
 const toneSource = readFileSync(new URL('../../assets/js/ui/ui-controller.js', import.meta.url), 'utf8');
 const tailwindCss = readFileSync(new URL('../../assets/css/tailwind.css', import.meta.url), 'utf8');
 const appCss = readFileSync(new URL('../../assets/css/app.css', import.meta.url), 'utf8');
@@ -18,6 +27,29 @@ test('every verdict tone utility has a generated CSS selector', () => {
 
   for (const className of classNames) {
     assert.ok(tailwindCss.includes(`.${escapeCssIdentifier(className)}`), `missing CSS rule for .${className}`);
+  }
+});
+
+test('every dashboard accent class has a generated CSS rule', () => {
+  // Tailwind only emits what it finds in the scanned sources, so a new accent
+  // needs a rebuild. Without this, a card silently renders its default border.
+  for (const [accent, className] of Object.entries(CONFIG.accents)) {
+    assert.ok(
+      tailwindCss.includes(`.${escapeCssIdentifier(className)}`),
+      `accent "${accent}" has no CSS rule for .${className}`,
+    );
+  }
+});
+
+test('every registered kata uses an accent that exists', () => {
+  // CONFIG.accents is the only source both sides read, so a kata cannot declare
+  // a colour the dashboard has no class for.
+  for (const kata of loadKatas(document.createElement('div'))) {
+    assert.ok(
+      Object.hasOwn(CONFIG.accents, kata.accent),
+      `kata ${kata.id} declares accent "${kata.accent}", which CONFIG.accents does not define`,
+    );
+    assert.ok(CONFIG.accents[kata.accent], `kata ${kata.id} resolves to no accent class`);
   }
 });
 

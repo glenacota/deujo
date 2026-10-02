@@ -14,6 +14,7 @@ installBrowserStub();
 installDomStub();
 
 const { loadKatas, validateKata } = await import('../../assets/js/katas/registry.js');
+const { CONFIG } = await import('../../assets/js/config.js');
 const { validateNounDataset } = await import('../../assets/js/katas/nouns/kata.js');
 const { validateCaseDataset } = await import('../../assets/js/katas/cases/kata.js');
 const { validatePrepositionDataset, gradeBlank } = await import('../../assets/js/katas/prepositions/kata.js');
@@ -78,10 +79,15 @@ test('loadKatas refuses to build without a container', () => {
   assert.throws(() => loadKatas(null), /requires the element/);
 });
 
-test('validateKata accepts supported accents and rejects unknown accents', () => {
+test('validateKata accepts configured accents and rejects unknown ones', () => {
   const base = katas[0];
-  assert.doesNotThrow(() => validateKata({ ...base, accent: 'amber' }));
-  assert.throws(() => validateKata({ ...base, accent: 'chartreuse' }), /requires a supported accent/);
+  for (const accent of Object.keys(CONFIG.accents)) {
+    assert.doesNotThrow(() => validateKata({ ...base, accent }), `accent ${accent} should be accepted`);
+  }
+  assert.throws(() => validateKata({ ...base, accent: 'chartreuse' }), /requires an accent from CONFIG\.accents/);
+  // The old hardcoded list is gone, so a key that used to be rejected is now
+  // accepted only if CONFIG.accents actually defines it.
+  assert.throws(() => validateKata({ ...base, accent: 'toString' }), /requires an accent from CONFIG\.accents/);
 });
 
 // validateXDataset already rejects an empty array, so length needs no separate check.

@@ -6,6 +6,7 @@
 // kata's `el.section` exists from the moment `loadKatas` returns and no caller
 // has to remember a second step.
 
+import { CONFIG } from '../config.js';
 import { createNounKata } from './nouns/kata.js';
 import { createCaseKata } from './cases/kata.js';
 import { createPrepositionKata } from './prepositions/kata.js';
@@ -17,7 +18,7 @@ import { createVerbKata } from './verbs/kata.js';
  * @property {string} name
  * @property {string} subtitle
  * @property {string} datasetUrl
- * @property {string} accent Tailwind color name driving the dashboard card's hover border.
+ * @property {string} accent Key of `CONFIG.accents`, driving the card's hover border.
  * @property {string} helpTitle
  * @property {{section: HTMLElement}} el Populated at construction; read-only afterwards.
  * @property {function(Object): void} render
@@ -28,7 +29,6 @@ import { createVerbKata } from './verbs/kata.js';
 
 /** @param {Kata} kata */
 export function validateKata(kata) {
-    const supportedAccents = ['indigo', 'teal', 'purple', 'amber'];
     const requiredStrings = ['id', 'name', 'subtitle', 'datasetUrl', 'accent'];
     const requiredFunctions = ['render', 'check', 'getHelpContent', 'validateDataset'];
 
@@ -42,8 +42,8 @@ export function validateKata(kata) {
         }
     });
 
-    if (!supportedAccents.includes(kata.accent)) {
-        throw new Error(`Kata "${kata.id}" requires a supported accent.`);
+    if (!Object.hasOwn(CONFIG.accents, kata.accent)) {
+        throw new Error(`Kata "${kata.id}" requires an accent from CONFIG.accents (${Object.keys(CONFIG.accents).join(', ')}).`);
     }
 
     requiredFunctions.forEach((field) => {

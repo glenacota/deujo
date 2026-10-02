@@ -1,11 +1,5 @@
+import { CONFIG } from '../config.js';
 import { dom } from './dom.js';
-
-const ACCENT_HOVER_CLASSES = {
-    indigo: 'hover:border-indigo-500',
-    teal: 'hover:border-teal-500',
-    purple: 'hover:border-purple-500',
-    amber: 'hover:border-amber-500',
-};
 
 export class DashboardView {
     #cards = new Map();
@@ -26,7 +20,7 @@ export class DashboardView {
             const fragment = cardTemplate.content.cloneNode(true);
             const card = fragment.querySelector('[data-role="card"]');
             card.id = `kata-${kata.id}`;
-            card.classList.add(ACCENT_HOVER_CLASSES[kata.accent] ?? ACCENT_HOVER_CLASSES.indigo);
+            card.classList.add(CONFIG.accents[kata.accent]);
             card.querySelector('[data-role="hotkey"]').textContent = `⇧ + ${index + 1}`;
             card.querySelector('[data-role="name"]').textContent = kata.name;
             card.querySelector('[data-role="subtitle"]').textContent = kata.subtitle;

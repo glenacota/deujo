@@ -42,4 +42,11 @@ export const CONFIG = Object.freeze({
     icons: ['⚪️', '🟡', '🟠', '🟢', '🔵', '🟤', '⚫️'],
     labels: ["White", "Yellow", "Orange", "Green", "Blue", "Brown", "Black"],
   },
+  // Dashboard card accent colours: kata `accent` -> the hover border class.
+  accents: {
+    indigo: 'hover:border-indigo-500',
+    teal: 'hover:border-teal-500',
+    purple: 'hover:border-purple-500',
+    amber: 'hover:border-amber-500',
+  },
 });

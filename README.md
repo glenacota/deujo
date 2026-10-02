@@ -63,7 +63,7 @@ A blank can have more than one right answer, so a correct variant is never score
 
 To add a kata:
 1. Add `assets/js/katas/<id>/manifest.js`, `template.js`, and `kata.js`, plus `assets/datasets/<id>.json`.
-2. Give the manifest a unique `id`, `name`, `subtitle`, `datasetUrl`, `helpTitle`, and `accent`. Dashboard accents must be `indigo`, `teal`, `purple`, or `amber`.
+2. Give the manifest a unique `id`, `name`, `subtitle`, `datasetUrl`, `helpTitle`, and `accent`. `accent` must be one of the keys in `CONFIG.accents` (`assets/js/config.js`). To add a colour, add it there and run `npm run build:css` — `tests/unit/css-contract.test.js` fails until the class is in the generated stylesheet.
 3. Export a `create...Kata(container)` factory from `kata.js`. It takes the element that holds the kata sections and **mounts the kata itself**: parse your template, append the `[data-role="section"]` it produces, and assign it to `el.section`. There is no separate `mount()` step — every kata is mounted when `loadKatas()` runs at boot, so `el.section` is never null. Any event listeners your controls need are wired in the factory too.
 4. Return the manifest fields, `el`, and these methods: `render(item)`, `check(item)`, `getHelpContent(item)`, and `validateDataset(dataset)`.
 5. Make `validateDataset()` reject anything except a non-empty array of entries matching your kata's schema. `check()` returns `{ correct, fields }`, `{ warning }`, or `null`; `getHelpContent()` returns an HTML string.
