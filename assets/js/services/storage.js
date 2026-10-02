@@ -48,7 +48,8 @@ function safeRemoveByPrefix(prefix) {
 
 export const Storage = {
   getNumber(key, fallback = 0) {
-    const parsed = parseInt(safeGet(key), 10);
+    // parseFloat, not parseInt: belt points are fractional (a skip costs half).
+    const parsed = parseFloat(safeGet(key));
     return Number.isNaN(parsed) ? fallback : parsed;
   },
 

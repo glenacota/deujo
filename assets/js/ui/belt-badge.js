@@ -2,12 +2,17 @@
 // Two bars per kata. The upper bar is always full and wears the current belt's
 // colour: it says which belt you hold. The lower bar tracks the points earned
 // toward the next belt, each earned tick wearing the next belt's colour and
-// each unearned one the neutral empty trough. The rank is a real text node, so
-// the value never rides on colour alone.
+// each unearned one the neutral empty trough. Points are fractional (a skip
+// costs half, a fresh belt starts a fifth in), so the tick being earned can be
+// part-filled. The rank is a real text node, so the value never rides on colour
+// alone.
 
 import { CONFIG } from '../config.js';
 
 const TICKS = CONFIG.rules.milestoneInterval;
+
+/** Belt points render as "2.5", not "2.5000000000000004" and not "2.5000001". */
+const formatPoints = (points) => String(Math.round(points * 100) / 100);
 
 /**
  * @param {HTMLElement} el container, rebuilt on every call
@@ -28,7 +33,7 @@ export function renderBeltBadge(el, state, kataId, options = {}) {
     const nextRank = CONFIG.belts.labels[belt + 1] ?? null;
     const progressText = isMaxBelt
         ? `${rank} belt, top rank`
-        : `${rank} belt, ${earned} of ${TICKS} points to ${nextRank} belt`;
+        : `${rank} belt, ${formatPoints(earned)} of ${TICKS} points to ${nextRank} belt`;
 
     el.className = `belt-ticks belt-label-${belt} belt-next-${nextBelt}`
         + (compact ? ' belt-ticks-compact' : '');
@@ -47,13 +52,17 @@ export function renderBeltBadge(el, state, kataId, options = {}) {
     track.setAttribute('role', 'progressbar');
     track.setAttribute('aria-valuemin', '0');
     track.setAttribute('aria-valuemax', String(TICKS));
-    track.setAttribute('aria-valuenow', String(earned));
+    track.setAttribute('aria-valuenow', formatPoints(earned));
     track.setAttribute('aria-label', progressText);
 
     for (let index = 0; index < TICKS; index += 1) {
         const tick = document.createElement('span');
         tick.className = 'belt-tick';
-        tick.dataset.filled = String(index < earned);
+        // Whole ticks fill; the one being earned is clipped to its share, so a
+        // half point reads as a half tick instead of rounding away.
+        const fill = Math.min(Math.max(earned - index, 0), 1);
+        tick.dataset.filled = fill >= 1 ? 'true' : (fill > 0 ? 'partial' : 'false');
+        if (fill > 0 && fill < 1) tick.style.setProperty('--tick-fill', `${Math.round(fill * 100)}%`);
         tick.setAttribute('aria-hidden', 'true');
         track.append(tick);
     }

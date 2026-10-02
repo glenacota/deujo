@@ -241,9 +241,18 @@ class App {
         this.#setPhase(id, 'reviewing');
     }
 
-    /** Skipping discards the pending answer and moves on without grading it. */
+    /**
+     * Skipping discards the pending answer and moves on without grading it.
+     * It still costs half a belt point, so dodging hard items has a price.
+     */
     #skip(id) {
         if (!this.#entries.has(id) || this.#phase !== 'answering') return;
+        const isDemoted = this.#state.applySkip(id);
+        this.#renderProgress(id);
+        if (isDemoted) {
+            this.#audio.playDemotion();
+            this.#toast.show(false, this.#state.getCurrentBelt(id));
+        }
         this.#advance(id);
     }
 

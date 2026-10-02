@@ -22,6 +22,18 @@ export const CONFIG = Object.freeze({
     recentExclude: 10,    // last N served items are skipped by pickNext 
     milestoneInterval: 5, // belt points needed to advance one belt
     maxBelt: 6,           // index of the last belt (Black Belt)
+    // Belt points per outcome. Negative values cost progress, so a belt has to
+    // be defended, not just climbed.
+    correctPoints: 1,
+    wrongPoints: -1,
+    skipPoints: -0.5,
+    // A promotion never lands on an empty bar: it starts one fifth of the way
+    // into the new belt, which is one whole point, one filled tick, 20% of the
+    // bar. Whatever overflow the winning answer carried is dropped.
+    promotionCredit: 1,
+    // A demotion is not a reset: the belt you drop into starts four fifths of the
+    // way in, so a mistake costs the gap plus the tick above the boundary.
+    demotionCredit: 4,
   },
   timing: {
     toastMs: 3500,

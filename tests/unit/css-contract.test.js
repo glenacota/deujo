@@ -49,6 +49,12 @@ test('the belt tick bar paints with the current belt gradient', () => {
     /\.belt-tick\[data-filled='true'\]\s*\{[^}]*background-color:\s*var\(--belt-next-to\)/
   );
   assert.match(appCss, /\.belt-tick\s*\{[^}]*background-color:\s*transparent/);
+  // A part-filled tick is a flat colour clipped to --tick-fill, so half points
+  // and a promotion's fifth are visible without a gradient.
+  assert.match(
+    appCss,
+    /\.belt-tick\[data-filled='partial'\]\s*\{[^}]*background-color:\s*var\(--belt-next-to\)[^}]*clip-path:\s*inset\(0 calc\(100% - var\(--tick-fill/
+  );
   // The rank name lives inside the held bar, not in a sibling label row, so it
   // cannot drift away from the colour it names.
   assert.match(appCss, /\.belt-tick-held \.belt-rank\s*\{[^}]*color:\s*var\(--belt-ink\)/);

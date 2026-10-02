@@ -103,7 +103,7 @@
                 <span id="focusBeltBar" class="belt-ticks belt-ticks-compact belt-label-0" data-label="White belt"></span>
             </div>
         </div>
-        <!-- How many correct answers this kata still needs for its next belt. -->
+        <!-- How many belt points this kata still needs for its next belt. -->
         <p id="kataStatus" class="hidden mt-3 text-center text-sm font-semibold text-slate-500 dark:text-slate-400" role="status" aria-live="polite"></p>
 
         <!-- Each kata owns its own markup (see katas/<kata>/template.js) and mounts itself here. -->
@@ -227,7 +227,8 @@
                 <div>
                     <h4 class="font-bold text-slate-900 dark:text-white mb-1">Scoring</h4>
                     <p class="mb-2">Your answers are marked in place. <span class="text-emerald-700 dark:text-emerald-300 font-bold">✅ green</span> is correct, <span class="text-rose-700 dark:text-rose-300 font-bold">❌ red</span> is wrong, and a wrong field shows the answer you needed next to it.</p>
-                    <p>Every correct answer adds to your <strong class="font-extrabold">streak</strong> — the &#128293; counter up top counts consecutive hits across <em>all</em> katas, and any wrong answer resets it. It also earns <strong class="font-extrabold">belt</strong> progress for the kata you are training: ⚪ 🟡 🟠 🟢 🔵 🟤 ⚫. Every 5 correct answers promote you to the next belt. Belts are tracked per kata; the streak is not. Progress is saved locally.</p>
+                    <p class="mb-2">Every correct answer adds to your <strong class="font-extrabold">streak</strong> — the &#128293; counter up top counts consecutive hits across <em>all</em> katas, and any wrong answer resets it. It also earns <strong class="font-extrabold">belt</strong> progress for the kata you are training: ⚪ 🟡 🟠 🟢 🔵 🟤 ⚫.</p>
+                    <p>A correct answer is worth 1 belt point, a wrong one costs 1, and skipping costs 0.5. Every 5 points promote you to the next belt. Belts are tracked per kata; the streak is not. Progress is saved locally.</p>
                 </div>
                 <div>
                     <h4 class="font-bold text-slate-900 dark:text-white mb-1">Hotkeys</h4>

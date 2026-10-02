@@ -13,7 +13,7 @@ const { GameState } = await import('../../assets/js/state.js');
 const { SrsStore } = await import('../../assets/js/services/srs-store.js');
 const { BOX_COUNT, DAY_MS } = await import('../../assets/js/services/srs-scheduler.js');
 
-const { milestoneInterval, maxBelt, recentExclude } = CONFIG.rules;
+const { milestoneInterval, maxBelt, recentExclude, promotionCredit, demotionCredit } = CONFIG.rules;
 
 // SrsStore.reset() in beforeEach drops its module cache, so a fixed kata id is
 // safe now -- no counter needed.
@@ -58,20 +58,105 @@ test('a correct answer promotes exactly once per milestone', () => {
 
   assert.deepEqual(flags, [false, false, false, false, true]);
   assert.equal(state.getCurrentBelt(kataId), 1);
-  assert.equal(state.getBeltProgressPct(kataId), 0);
+  assert.equal(state.getBeltProgressPct(kataId), (promotionCredit / milestoneInterval) * 100);
   assert.equal(state.maxStreak, milestoneInterval);
 });
 
 test('getBeltPointsEarned counts whole points inside the current belt', () => {
   const { kataId, state } = stateFor();
   const earned = [];
-  // One extra point past the promotion so the counter resets to 0 at the boundary.
+  // One extra point past the promotion so the counter restarts at the boundary.
   for (let i = 0; i <= milestoneInterval; i++) {
     earned.push(state.getBeltPointsEarned(kataId));
     state.incrementStreak(kataId);
   }
 
-  assert.deepEqual(earned, [0, 1, 2, 3, 4, 0], 'the counter restarts on promotion');
+  assert.deepEqual(earned, [0, 1, 2, 3, 4, promotionCredit], 'the counter restarts on promotion');
+});
+
+test('a promotion always starts the new belt one fifth in, overflow discarded', () => {
+  const { kataId, state } = stateFor();
+  const starts = [];
+
+  // The top rank always reads full, so the rule is only observable below it.
+  for (let belt = 0; belt < maxBelt - 1; belt++) {
+    // Walk up to the boundary from a fractional position, so the winning answer
+    // overshoots it and any carried-over overflow shows up in the next belt.
+    // A skip follows a hit, otherwise it would drop back out of the belt.
+    while (state.getCurrentBelt(kataId) === belt) {
+      state.incrementStreak(kataId);
+      if (state.getCurrentBelt(kataId) === belt) state.applySkip(kataId);
+    }
+    starts.push(state.getBeltPointsEarned(kataId));
+  }
+
+  assert.deepEqual(starts, Array(maxBelt - 1).fill(promotionCredit), 'every belt starts at 1/5');
+  assert.equal(promotionCredit / milestoneInterval, 0.2, 'one fifth of the belt');
+});
+
+test('a skip costs half a point and leaves the streak alone', () => {
+  const { kataId, state } = stateFor();
+  state.incrementStreak(kataId);
+  state.incrementStreak(kataId);
+
+  assert.equal(state.applySkip(kataId), false);
+  assert.equal(state.beltProgress[kataId], 1.5);
+  assert.equal(state.getBeltProgressPct(kataId), 30);
+  assert.equal(state.streak, 2, 'a skipped item is not a wrong answer');
+});
+
+test('a skip that crosses a belt boundary reports the drop', () => {
+  const { kataId, state } = stateFor();
+  for (let i = 0; i < milestoneInterval; i++) state.incrementStreak(kataId);
+  assert.equal(state.getCurrentBelt(kataId), 1);
+  assert.equal(state.getBeltPointsEarned(kataId), promotionCredit);
+
+  // The promotion credit is the first thing a skip spends, so it takes three of
+  // them to cross back over the boundary.
+  assert.equal(state.applySkip(kataId), false, '0.5 points into belt 1');
+  assert.equal(state.applySkip(kataId), false, '0 points is still belt 1');
+  assert.equal(state.applySkip(kataId), true, 'back over the boundary into belt 0');
+  assert.equal(state.getCurrentBelt(kataId), 0);
+  assert.equal(state.getBeltPointsEarned(kataId), demotionCredit, 'a demotion lands at 80%');
+  assert.equal(state.streak, milestoneInterval, 'a skip does not break the streak');
+});
+
+test('a demotion always lands the lower belt at four fifths', () => {
+  const { kataId, state } = stateFor();
+  // Climb to the second belt, then walk it down one point at a time.
+  for (let belt = 0; belt < 3; belt++) {
+    while (state.getCurrentBelt(kataId) === belt) {
+      state.incrementStreak(kataId);
+      if (state.getCurrentBelt(kataId) === belt) state.applySkip(kataId);
+    }
+  }
+  assert.equal(state.getCurrentBelt(kataId), 3);
+
+  // A mistake spends the promotion tick, the next one crosses the boundary.
+  assert.equal(state.resetStreak(kataId), false);
+  assert.equal(state.resetStreak(kataId), true);
+  assert.equal(state.getCurrentBelt(kataId), 2);
+  assert.equal(state.getBeltPointsEarned(kataId), demotionCredit);
+  assert.equal(demotionCredit / milestoneInterval, 0.8, '80% of the belt');
+});
+
+test('a skip never pushes belt progress below zero', () => {
+  const { kataId, state } = stateFor();
+  state.applySkip(kataId);
+  state.applySkip(kataId);
+
+  assert.equal(state.beltProgress[kataId], 0);
+  assert.equal(state.getCurrentBelt(kataId), 0);
+});
+
+test('a skip does not touch the SRS schedule of the skipped item', () => {
+  const { kataId, state } = stateFor();
+  const record = inBox(3);
+  SrsStore.set(kataId, 'item-1', record);
+
+  state.applySkip(kataId);
+
+  assert.deepEqual(SrsStore.get(kataId, 'item-1'), record, 'skipping grades nothing');
 });
 
 test('getBeltPointsEarned fills the final belt and matches the percentage', () => {
@@ -101,8 +186,11 @@ test('a mistake steps belt progress back and reports the belt drop', () => {
   const { kataId, state } = stateFor();
   for (let i = 0; i < milestoneInterval; i++) state.incrementStreak(kataId);
   assert.equal(state.getCurrentBelt(kataId), 1);
-  assert.equal(state.beltProgress[kataId], milestoneInterval);
+  assert.equal(state.beltProgress[kataId], milestoneInterval + promotionCredit);
 
+  // The promotion credit absorbs the first mistake, so the second one demotes.
+  assert.equal(state.resetStreak(kataId), false, 'still exactly on the boundary');
+  assert.equal(state.getCurrentBelt(kataId), 1);
   assert.equal(state.resetStreak(kataId), true, 'promotion reversed, back to belt 0');
   assert.equal(state.getCurrentBelt(kataId), 0);
   assert.equal(state.streak, 0);

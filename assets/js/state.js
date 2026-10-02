@@ -11,7 +11,7 @@ export class GameState {
   streak = 0;
   /** The longest streak ever run, across all katas and all sessions. */
   maxStreak = 0;
-  beltProgress = {};  // per kata: mastery points, unaffected by the global streak
+  beltProgress = {};  // per kata: fractional mastery points, unaffected by the global streak
   activeKata = '';
   current = {};   // kata id -> current item
   recent = {};    // kata id -> ids served most recently (session only)
@@ -72,24 +72,60 @@ export class GameState {
     Storage.setNumber(this.#beltKey(kataId), this.beltProgress[kataId]);
   }
 
+  /**
+   * Moves belt points by `points`, clamped to 0..maxProgress. Points are
+   * fractional, so the result is rounded to two decimals: repeated halves and
+   * fifths would otherwise drift into values like 4.700000000000001.
+   */
+  #addPoints(kataId, points) {
+    const maxProgress = CONFIG.rules.maxBelt * (CONFIG.rules.milestoneInterval + 1);
+    const next = this.beltProgress[kataId] + points;
+    this.beltProgress[kataId] = Math.min(Math.max(Math.round(next * 100) / 100, 0), maxProgress);
+  }
+
+  /** Rewrites progress as "belt N, credit points in", clamped inside the belt. */
+  #creditBelt(kataId, credit) {
+    const belt = this.getCurrentBelt(kataId);
+    const interval = CONFIG.rules.milestoneInterval;
+    this.beltProgress[kataId] = belt * interval + Math.min(credit, interval);
+  }
+
   /** @returns {boolean} true if this answer completed a milestone (belt promotion) */
   incrementStreak(kataId) {
     const previousBelt = this.getCurrentBelt(kataId);
     this.streak++;
     this.maxStreak = Math.max(this.maxStreak, this.streak);
-    const maxProgress = CONFIG.rules.maxBelt * (CONFIG.rules.milestoneInterval + 1);
-    this.beltProgress[kataId] = Math.min(this.beltProgress[kataId] + 1, maxProgress);
+    this.#addPoints(kataId, CONFIG.rules.correctPoints);
+    const promoted = this.getCurrentBelt(kataId) > previousBelt;
+    if (promoted) this.#creditBelt(kataId, CONFIG.rules.promotionCredit);
     this.#persist(kataId);
-    return this.getCurrentBelt(kataId) > previousBelt;
+    return promoted;
   }
 
   /** @returns {boolean} true if this mistake dropped the player into a lower belt */
   resetStreak(kataId) {
-    const prevBelt = this.getCurrentBelt(kataId);
+    const previousBelt = this.getCurrentBelt(kataId);
     this.streak = 0;
-    this.beltProgress[kataId] = Math.max(0, this.beltProgress[kataId] - 1);
+    this.#addPoints(kataId, CONFIG.rules.wrongPoints);
+    const demoted = this.getCurrentBelt(kataId) < previousBelt;
+    if (demoted) this.#creditBelt(kataId, CONFIG.rules.demotionCredit);
     this.#persist(kataId);
-    return this.getCurrentBelt(kataId) < prevBelt;
+    return demoted;
+  }
+
+  /**
+   * A skipped exercise costs half a point, and the SRS schedule is left alone:
+   * the item was never graded. The streak survives, because the streak counts
+   * answers and a skipped item is not a wrong one.
+   * @returns {boolean} true if the skip dropped the player into a lower belt
+   */
+  applySkip(kataId) {
+    const previousBelt = this.getCurrentBelt(kataId);
+    this.#addPoints(kataId, CONFIG.rules.skipPoints);
+    const demoted = this.getCurrentBelt(kataId) < previousBelt;
+    if (demoted) this.#creditBelt(kataId, CONFIG.rules.demotionCredit);
+    this.#persist(kataId);
+    return demoted;
   }
 
   getCurrentBelt(kataId) {
@@ -100,14 +136,18 @@ export class GameState {
   }
 
   /**
-   * Correct-answer points earned inside the current belt. Integer, so the tick
-   * bar can show an exact count instead of a rounded percentage.
+   * Points earned inside the current belt, so the tick bar can show an exact
+   * count instead of a rounded percentage. Fractional: a skip leaves half a
+   * point and a fresh belt starts with a fifth.
    * @returns {number} 0..milestoneInterval
    */
   getBeltPointsEarned(kataId) {
     const interval = CONFIG.rules.milestoneInterval;
-    if (this.getCurrentBelt(kataId) >= CONFIG.rules.maxBelt) return interval;
-    return this.beltProgress[kataId] % interval;
+    const belt = this.getCurrentBelt(kataId);
+    if (belt >= CONFIG.rules.maxBelt) return interval;
+    // Rounded: subtracting belt boundaries from a fifth- or half-point value
+    // leaves float dust like 0.20000000000000018.
+    return Math.round((this.beltProgress[kataId] - belt * interval) * 100) / 100;
   }
 
   getBeltProgressPct(kataId) {

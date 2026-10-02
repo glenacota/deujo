@@ -377,6 +377,14 @@ html.dark .belt-tick { box-shadow: inset 0 0 0 1px rgb(100 116 139 / .55); }
     background-color: var(--belt-next-to);
     box-shadow: none;
 }
+/* Part-filled tick: belt points are fractional, so a half point (a skip) or a
+   fresh belt's first fifth shows as a slice of the tick. Flat colour clipped to
+   a width, no gradient. --tick-fill carries the share from belt-badge.js. */
+.belt-tick[data-filled='partial'] {
+    background-color: var(--belt-next-to);
+    box-shadow: none;
+    clip-path: inset(0 calc(100% - var(--tick-fill, 0%)) 0 0);
+}
 
 /* Ink for the rank name printed on the held belt: dark on the pale belts,
    light on Brown and Black. The palette is unchanged in dark mode, so these

@@ -23,6 +23,14 @@ test('numbers round-trip and fall back on garbage', () => {
   assert.equal(Storage.getNumber('dm_test_num', 3), 3);
 });
 
+test('numbers keep their fraction, so half belt points survive a reload', () => {
+  Storage.setNumber('dm_test_frac', 5.2);
+  assert.equal(Storage.getNumber('dm_test_frac'), 5.2);
+
+  localStorage.setItem('dm_test_frac', '4.7');
+  assert.equal(Storage.getNumber('dm_test_frac'), 4.7, 'not truncated to 4');
+});
+
 test('booleans round-trip and treat anything but "true" as false', () => {
   Storage.setBoolean('dm_test_bool', true);
   assert.equal(Storage.getBoolean('dm_test_bool'), true);

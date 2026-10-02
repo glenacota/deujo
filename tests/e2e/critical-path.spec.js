@@ -113,6 +113,27 @@ test('five correct answers promote the belt, fire confetti, and raise the toast'
     expect(errors).toEqual([]);
 });
 
+test('a skip costs half a belt point and leaves the streak standing', async ({ page }) => {
+    const errors = collectPageErrors(page);
+    const answers = nounAnswers();
+
+    await gotoDashboard(page);
+    await enterNounsKata(page);
+    await playCorrectHits(page, answers, 1);
+    await expect(page.locator('#focusBeltBar')).toHaveAttribute('title', 'White belt, 1 of 5 points to Yellow belt');
+
+    // Enter advances past the verdict; the skip hotkey only counts while a
+    // question is still unanswered.
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('/');
+
+    // Half a point, so the bar shows a fraction and the streak is untouched.
+    await expect(page.locator('#focusBeltBar')).toHaveAttribute('title', 'White belt, 0.5 of 5 points to Yellow belt');
+    await expect(page.locator('#streakDisplay')).toHaveText('1');
+
+    expect(errors).toEqual([]);
+});
+
 test('375px viewport: dashboard and kata never scroll sideways', async ({ page }) => {
     const errors = collectPageErrors(page);
     await gotoDashboard(page);

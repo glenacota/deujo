@@ -87,6 +87,7 @@ test('a wrong answer demotes the belt, resets the streak, and shows the correcti
     // reaches the demotion branch, and a fourth hit would stay on White.
     await playCorrectHits(page, answers, BELT_INTERVAL, true);
     await expect(page.locator('#focusBeltBar')).toHaveAttribute('data-label', 'Yellow belt');
+    await expect(page.locator('#focusBeltBar')).toHaveAttribute('title', 'Yellow belt, 1 of 5 points to Orange belt');
 
     await page.keyboard.press('Enter');
     const wrongGender = await answerCurrentNounWrongly(page, answers);
@@ -100,11 +101,22 @@ test('a wrong answer demotes the belt, resets the streak, and shows the correcti
     await expect(page.locator(`${section} [data-gender="${wrongGender}"]`)).toHaveAttribute('data-answer-state', 'wrong');
     await expect(page.locator(`${section} [data-gender]:not([data-gender="${wrongGender}"])[data-answer-state="correct"]`)).toHaveCount(1);
 
-    // Dropped back to White, both in the header and on the dashboard card.
+    // A promotion lands a fifth into the new belt, so this first mistake only
+    // spends that credit and Yellow still holds.
+    await expect(page.locator('#milestoneToast')).toBeHidden();
+    await expect(page.locator('#focusBeltBar')).toHaveAttribute('data-label', 'Yellow belt');
+
+    // The next mistake crosses the boundary: dropped back to White, both in the
+    // header and on the dashboard card.
+    await page.keyboard.press('Enter');
+    await answerCurrentNounWrongly(page, answers);
+    await checkAnswer(page);
+
     await expect(page.locator('#milestoneToast')).toBeVisible();
     await expect(page.locator('#milestoneToastTitle')).toHaveText('Belt Demoted');
     await expect(page.locator('#focusBeltBar')).toHaveAttribute('data-label', 'White belt');
     await expect(page.locator('#belt-nouns')).toHaveAttribute('data-label', 'White belt');
+    await expect(page.locator('#focusBeltBar')).toHaveAttribute('title', 'White belt, 4 of 5 points to Yellow belt');
 
     expect(errors).toEqual([]);
 });
