@@ -351,7 +351,7 @@ html.dark .modal-key { border-color: rgb(51 65 85); background: rgb(30 41 59); c
 /* Upper bar: held belt, always 100%. Thinner than the ticks so the pair reads as
    "achieved" above "in progress". */
 .belt-tick-held {
-    height: 4px; border-radius: 2px; margin-bottom: 4px;
+    height: 6px; border-radius: 2px; margin-bottom: 2px;
     background-color: var(--belt-fill-to);
 }
 /* Black is invisible against the dark card, so it keeps a hairline edge. */
