@@ -1,8 +1,9 @@
 // ui/belt-badge.js
-// Belt progress as tick marks: one tick per CONFIG.rules.milestoneInterval
-// point. Filled ticks wear the current belt's gradient, so the bar keeps the
-// belt colour; the rank and the exact count are real text nodes, so the value
-// is never encoded by a gradient edge alone.
+// Two bars per kata. The upper bar is always full and wears the current belt's
+// colour: it says which belt you hold. The lower bar tracks the points earned
+// toward the next belt, each earned tick wearing the next belt's colour and
+// each unearned one the neutral empty trough. The rank is a real text node, so
+// the value never rides on colour alone.
 
 import { CONFIG } from '../config.js';
 
@@ -22,16 +23,25 @@ export function renderBeltBadge(el, state, kataId, options = {}) {
     const earned = state.getBeltPointsEarned(kataId);
     const isMaxBelt = belt >= CONFIG.rules.maxBelt;
     const rank = CONFIG.belts.labels[belt];
+    // Black belt has no next rank, so its earned ticks stay on the current colour.
+    const nextBelt = Math.min(belt + 1, CONFIG.rules.maxBelt);
     const nextRank = CONFIG.belts.labels[belt + 1] ?? null;
     const progressText = isMaxBelt
         ? `${rank} belt, top rank`
         : `${rank} belt, ${earned} of ${TICKS} points to ${nextRank} belt`;
 
-    el.className = `belt-ticks belt-label-${belt}${compact ? ' belt-ticks-compact' : ''}`;
+    el.className = `belt-ticks belt-label-${belt} belt-next-${nextBelt}`
+        + (compact ? ' belt-ticks-compact' : '');
     el.dataset.label = `${rank} belt`;
     // Hover text follows the render; index.html's static value is only a
     // placeholder for the first paint.
     el.title = progressText;
+
+    // Upper bar: the belt you already hold, so it is always 100% and needs no
+    // value semantics of its own.
+    const held = document.createElement('span');
+    held.className = 'belt-tick-held';
+    held.setAttribute('aria-hidden', 'true');
 
     const track = document.createElement('span');
     track.className = 'belt-tick-track';
@@ -49,17 +59,14 @@ export function renderBeltBadge(el, state, kataId, options = {}) {
         track.append(tick);
     }
 
-    // Both surfaces share one bar row: current belt dot, ticks, next belt dot.
+    // Lower bar: the tick track on its own. The belt colours now come from the
+    // upper bar and from the earned ticks, so no flanking dots are needed.
     const bar = document.createElement('span');
     bar.className = 'belt-tick-bar';
-    bar.append(sideDot(belt, `${rank} belt`));
     bar.append(track);
-    // No next rank at Black belt, so the right dot is simply absent.
-    if (!isMaxBelt) bar.append(sideDot(belt + 1, `${nextRank} belt`));
 
-    // Focus header: bar only, the rank text is in #kataStatus below it.
     if (compact) {
-        el.replaceChildren(bar);
+        el.replaceChildren(held, bar);
         return;
     }
 
@@ -71,14 +78,5 @@ export function renderBeltBadge(el, state, kataId, options = {}) {
     name.textContent = `${rank} belt`;
 
     label.append(name);
-    el.replaceChildren(bar, label);
-}
-
-/** A small dot in a belt's own colour, decorative: the track carries the value. */
-function sideDot(belt, label) {
-    const dot = document.createElement('span');
-    dot.className = `belt-side belt-label-${belt}`;
-    dot.title = label;
-    dot.setAttribute('aria-hidden', 'true');
-    return dot;
+    el.replaceChildren(held, bar, label);
 }

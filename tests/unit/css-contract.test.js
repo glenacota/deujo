@@ -41,12 +41,26 @@ test('the belt tick bar paints with the current belt gradient', () => {
     assert.match(body, /--belt-fill-to:\s*var\(--belt-\d+-to\)/, `belt ${rank} is missing its to stop`);
   }
 
-  // Filled ticks paint a flat belt colour, not a two-stop ramp.
-  assert.match(appCss, /\.belt-tick\[data-filled='true'\]\s*\{[^}]*background-color:\s*var\(--belt-fill-to\)/);
-  // Empty ticks ring in the same belt colour, so the bar reads as one colour.
-  assert.match(appCss, /\.belt-tick\s*\{[^}]*var\(--belt-fill-to\)/);
-  // Belt colour dots are flat too.
-  assert.match(appCss, /\.belt-side\s*\{[^}]*background-color:\s*var\(--belt-fill-to\)/);
+  // Upper bar: the held belt, always full, in the current belt's colour.
+  assert.match(appCss, /\.belt-tick-held\s*\{[^}]*background-color:\s*var\(--belt-fill-to\)/);
+  // Lower bar: earned ticks wear the NEXT belt's colour, unearned stay empty.
+  assert.match(
+    appCss,
+    /\.belt-tick\[data-filled='true'\]\s*\{[^}]*background-color:\s*var\(--belt-next-to\)/
+  );
+  assert.match(appCss, /\.belt-tick\s*\{[^}]*background-color:\s*transparent/);
+  // The lower bar is slim: the upper bar carries the belt's visual mass.
+  assert.match(appCss, /\.belt-tick\s*\{[^}]*height:\s*6px/);
+  assert.match(appCss, /\.belt-tick-held\s*\{[^}]*height:\s*4px/);
+  // The flanking colour dots are gone.
+  assert.doesNotMatch(appCss, /\.belt-side/);
+  // Every rank needs a next-colour class, or an earned tick would fall back to
+  // no background at all.
+  const nextClasses = [...appCss.matchAll(/^\.belt-next-(\d)\s*\{([^}]*)\}/gm)];
+  assert.equal(nextClasses.length, 7, 'one .belt-next-N rule per rank');
+  for (const [, rank, body] of nextClasses) {
+    assert.match(body, /--belt-next-to:\s*var\(--belt-\d+-to\)/, `rank ${rank} is missing its next colour`);
+  }
   // No gradients anywhere in the widget: every rule must avoid background-image
   // and the linear-gradient function.
   const tickRules = appCss.slice(appCss.indexOf('.belt-ticks {'));

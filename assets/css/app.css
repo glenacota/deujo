@@ -325,40 +325,49 @@ html.dark .modal-key { border-color: rgb(51 65 85); background: rgb(30 41 59); c
 .belt-label-5 { --belt-fill-from: var(--belt-5-from); --belt-fill-to: var(--belt-5-to); }
 .belt-label-6 { --belt-fill-from: var(--belt-6-from); --belt-fill-to: var(--belt-6-to); }
 
-/* Belt tick bar: one tick per milestoneInterval point, so progress reads as an
-   exact count. Flat fills only, no gradients: the filled ticks and the empty
-   rings use the belt's solid colour (--belt-fill-to), so the whole widget wears
-   the belt colour and never a two-stop ramp. The rank is a real text node, so
-   nothing depends on a gradient edge. */
+/* Belt progress, two bars per kata. The upper bar (.belt-tick-held) is always
+   full and wears the current belt's colour: the belt you hold. The lower bar
+   tracks the points toward the next belt: earned ticks wear the next belt's
+   colour (.belt-next-N supplies it), unearned ones the neutral empty trough.
+   Flat fills only, no gradients. The rank is a real text node, so nothing here
+   is carried by colour alone. */
 .belt-ticks { display: flex; flex-direction: column; width: 100%; }
 .belt-ticks-compact { width: auto; }
 
-/* The bar row: current belt dot, ticks, next belt dot. Shared by the card and
-   the focus header so both surfaces stay one grammar. */
-.belt-tick-bar { display: flex; align-items: center; gap: 4px; }
+.belt-next-0 { --belt-next-to: var(--belt-0-to); }
+.belt-next-1 { --belt-next-to: var(--belt-1-to); }
+.belt-next-2 { --belt-next-to: var(--belt-2-to); }
+.belt-next-3 { --belt-next-to: var(--belt-3-to); }
+.belt-next-4 { --belt-next-to: var(--belt-4-to); }
+.belt-next-5 { --belt-next-to: var(--belt-5-to); }
+.belt-next-6 { --belt-next-to: var(--belt-6-to); }
+
+/* The lower bar row. Shared by the card and the focus header so both surfaces
+   stay one grammar. */
+.belt-tick-bar { display: flex; align-items: center; }
 .belt-tick-track { display: flex; flex: 1 1 auto; gap: 2px; }
 .belt-ticks-compact .belt-tick-track { flex: 0 0 auto; width: 5.5rem; }
 
-/* An empty slot is a belt-coloured trough, not a grey bar: White and Black
-   belts both sit close to the page background, so a filled paint alone would be
-   ambiguous. */
-.belt-tick {
-    flex: 1 1 0; min-width: 0; height: 9px;
-    background-color: transparent;
-    box-shadow: inset 0 0 0 1px var(--belt-fill-to);
-}
-html.dark .belt-tick { box-shadow: inset 0 0 0 1px rgb(51 65 85); }
-.belt-tick[data-filled='true'] { background-color: var(--belt-fill-to); }
-/* Black belt is near-invisible on the dark background, so its ring swaps to the
-   light slot colour rather than following the belt colour. */
-.belt-ticks.belt-label-6 .belt-tick { box-shadow: inset 0 0 0 1px rgb(100 116 139 / .6); }
-.belt-ticks-compact .belt-tick { height: 9px; }
-
-/* Belt colour dots flanking the bar on both surfaces: current rank on the
-   left, next rank on the right. */
-.belt-side {
-    flex: 0 0 auto; width: 9px; height: 9px; border-radius: 999px;
+/* Upper bar: held belt, always 100%. Thinner than the ticks so the pair reads as
+   "achieved" above "in progress". */
+.belt-tick-held {
+    height: 4px; border-radius: 2px; margin-bottom: 4px;
     background-color: var(--belt-fill-to);
+}
+/* Black is invisible against the dark card, so it keeps a hairline edge. */
+.belt-ticks.belt-label-6 .belt-tick-held { box-shadow: inset 0 0 0 1px rgb(100 116 139 / .6); }
+
+/* Lower bar: earned ticks in the next belt's colour, unearned ones empty. Slim,
+   since the upper bar already carries the belt's mass. */
+.belt-tick {
+    flex: 1 1 0; min-width: 0; height: 6px; border-radius: 1px;
+    background-color: transparent;
+    box-shadow: inset 0 0 0 1px rgb(100 116 139 / .45);
+}
+html.dark .belt-tick { box-shadow: inset 0 0 0 1px rgb(100 116 139 / .55); }
+.belt-tick[data-filled='true'] {
+    background-color: var(--belt-next-to);
+    box-shadow: none;
 }
 
 /* Rank row above the ticks: belt name, distance to next rank, exact count. */
