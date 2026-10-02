@@ -116,22 +116,7 @@ function renderHelpMatrix() {
     `;
 }
 
-/**
- * Grades one blank. Both spellings of a contractable phrase are correct German,
- * so "zum" and "zu dem" each pass whichever one the dataset happens to store.
- * @param {string} given raw input from the learner
- * @param {{a: string, c: string, alt?: string[]}} blank
- * @returns {{preposition: string|null, determiner: string|null, accepted: string[], ok: boolean}}
- */
-export function gradeBlank(given, blank) {
-    const expected = normalizePhrase(blank?.a);
-    const preposition = prepositionOf(expected);
-    const determiner = preposition ? decomposePrepositionPhrase(expected, preposition) : null;
 
-    const { accepted, ok } = matchAnswer(given, blank);
-
-    return { preposition, determiner, accepted, ok };
-}
 
 /**
  * Builds the preposition kata and mounts its section into `container` straight
@@ -186,22 +171,13 @@ export function createPrepositionKata(container) {
 
             const fields = inputs.map((input, i) => {
                 const given = input.value.trim();
-                const caseKey = item.b[i].c;
-                const { preposition, ok, accepted } = gradeBlank(given, item.b[i]);
-                // accepted[0] is the dataset's own spelling, so the note and the
-                // summary always show what the data asked for first.
-                const expected = accepted[0] ?? item.b[i].a;
-
-                // On a miss the note lists every accepted spelling, so "zum" and
-                // "zu dem" are both visible before the learner retypes one.
-                markControl(input, { ok, expected, note: ok ? null : formatAccepted(accepted) });
-                return {
-                    label: preposition ? `${preposition} + ${CASE_LABELS[caseKey]}` : `Blank ${i + 1}`,
-                    expected,
-                    accepted,
-                    given,
-                    ok,
-                };
+                const { ok, accepted } = matchAnswer(given, item.b[i]);
+                // accepted[0] is the dataset's own spelling, so the note always
+                // shows what the data asked for first. On a miss it lists every
+                // accepted spelling, so "zum" and "zu dem" are both visible
+                // before the learner retypes one.
+                markControl(input, { ok, expected: accepted[0], note: ok ? null : formatAccepted(accepted) });
+                return { ok };
             });
 
             return {

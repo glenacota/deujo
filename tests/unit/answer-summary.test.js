@@ -6,17 +6,17 @@ import assert from 'node:assert/strict';
 
 import { summarizeAnswer, summarizeWarning, VERDICT_TONE } from '../../assets/js/services/answer-summary.js';
 
-const field = (over = {}) => ({ label: 'Gender', given: 'der', expected: 'der', ok: true, ...over });
+const field = (over = {}) => ({ ok: true, ...over });
 
 test('a fully correct answer reads as ✅ Correct!', () => {
-  const summary = summarizeAnswer({ correct: true, fields: [field(), field({ label: 'Plural' })] });
+  const summary = summarizeAnswer({ correct: true, fields: [field(), field()] });
   assert.equal(summary.tone, VERDICT_TONE.correct);
   assert.equal(summary.icon, '✅');
   assert.equal(summary.title, 'Correct!');
 });
 
 test('a wrong field flips the tone to ❌ and counts', () => {
-  const summary = summarizeAnswer({ correct: false, fields: [field(), field({ given: 'die', expected: 'das', ok: false })] });
+  const summary = summarizeAnswer({ correct: false, fields: [field(), field({ ok: false })] });
   assert.equal(summary.tone, VERDICT_TONE.wrong);
   assert.equal(summary.icon, '❌');
   assert.equal(summary.title, 'Wrong answer.');
@@ -33,6 +33,19 @@ test('the title pluralises with the number of wrong answers', () => {
 test('a kata cannot claim success while a field is still wrong', () => {
   const summary = summarizeAnswer({ correct: true, fields: [field({ ok: false })] });
   assert.equal(summary.tone, VERDICT_TONE.wrong, 'the fields outrank the kata own claim');
+});
+
+test('the summary needs nothing from a field but its ok flag', () => {
+  // The expected answer and the learner's input are painted inline by
+  // markControl, so a field carrying only `ok` must grade exactly the same.
+  const bare = [{ ok: true }, { ok: false }];
+  const decorated = [
+    { label: 'Gender', given: 'der', expected: 'das', ok: true },
+    { label: 'Plural', given: '—', expected: 'die Hunde', ok: false },
+  ];
+
+  assert.deepEqual(summarizeAnswer({ correct: false, fields: bare }),
+    summarizeAnswer({ correct: false, fields: decorated }));
 });
 
 test('a result with no fields still grades on the kata verdict alone', () => {

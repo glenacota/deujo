@@ -128,7 +128,9 @@ export function createCaseKata(container) {
             });
         },
 
-        /** @returns {{correct:boolean,fields:object[],answer:string}|{warning:string}|null} */
+        /**
+         * @returns {{correct:boolean,fields:{ok:boolean}[]}|{warning:string}|null}
+         */
         check(item) {
             if (!inputs.length) return null;
 
@@ -144,7 +146,7 @@ export function createCaseKata(container) {
                 // The dataset spelling, not the whole answer object, goes on show.
                 const expected = accepted[0] ?? item.b[i].a;
                 markControl(input, { ok, expected, note: ok ? null : formatAccepted(accepted) });
-                return { label: `Blank ${i + 1}`, expected, accepted, given, ok };
+                return { ok };
             });
 
             return {

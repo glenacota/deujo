@@ -104,7 +104,7 @@ export function createNounKata(container) {
             el.genderButtons.forEach((btn) => setGenderActive(btn, false));
         },
 
-        /** @returns {{correct:boolean,fields:object[]}|{warning:string}} */
+        /** @returns {{correct:boolean,fields:{ok:boolean}[]}|{warning:string}} */
         check(noun) {
             if (!gender) return { warning: 'Please select a gender (der, die, or das).' };
 
@@ -115,7 +115,6 @@ export function createNounKata(container) {
             // accepted spellings, and the article is optional in the input.
             const pluralOk = hasNoPlural
                 || matchAnswer(userPlural, noun.p, { allowExtraWords: true }).ok;
-            const correct = genderOk && pluralOk;
 
             const genderButtonsByValue = new Map(el.genderButtons.map((btn) => [btn.dataset.gender, btn]));
             markControl(genderButtonsByValue.get(gender), { ok: genderOk, inside: true, note: false });
@@ -125,11 +124,8 @@ export function createNounKata(container) {
             markControl(el.plural, { ok: pluralOk, expected: pluralAnswer });
 
             return {
-                correct,
-                fields: [
-                    { label: 'Gender', expected: noun.g, given: gender, ok: genderOk },
-                    { label: 'Plural', expected: pluralAnswer, given: hasNoPlural ? pluralAnswer : (userPlural || '—'), ok: pluralOk },
-                ],
+                correct: genderOk && pluralOk,
+                fields: [{ ok: genderOk }, { ok: pluralOk }],
             };
         },
     };

@@ -17,9 +17,12 @@ const { loadKatas, validateKata } = await import('../../assets/js/katas/registry
 const { CONFIG } = await import('../../assets/js/config.js');
 const { validateNounDataset } = await import('../../assets/js/katas/nouns/kata.js');
 const { validateCaseDataset } = await import('../../assets/js/katas/cases/kata.js');
-const { validatePrepositionDataset, gradeBlank } = await import('../../assets/js/katas/prepositions/kata.js');
+const { validatePrepositionDataset } = await import('../../assets/js/katas/prepositions/kata.js');
 const { validateVerbDataset } = await import('../../assets/js/katas/verbs/kata.js');
 const { PREPOSITION_CONTRACTIONS } = await import('../../assets/js/services/grammar.js');
+// The preposition kata grades straight through the shared matcher: both
+// spellings of a contractable phrase pass whichever one the dataset stored.
+const { matchAnswer } = await import('../../assets/js/services/answer-matcher.js');
 const { escapeHtml } = await import('../../assets/js/services/utility.js');
 
 // One container for all six, exactly as app.js does at boot.
@@ -186,29 +189,29 @@ test('validatePrepositionDataset requires a real preposition plus a case-correct
   );
 });
 
-test('gradeBlank accepts the contraction and its written-out form, in any case or spacing', () => {
+test('matchAnswer accepts the contraction and its written-out form, in any case or spacing', () => {
   const blank = { a: 'zum', c: 'dat' };
   for (const given of ['zum', 'Zu dem', 'ZU  DEM', ' zu dem ']) {
-    assert.equal(gradeBlank(given, blank).ok, true, `expected "${given}" to be accepted`);
+    assert.equal(matchAnswer(given, blank).ok, true, `expected "${given}" to be accepted`);
   }
   for (const given of ['zu', 'zur', 'zum Bahnhof', 'in dem', '']) {
-    assert.equal(gradeBlank(given, blank).ok, false, `expected "${given}" to be rejected`);
+    assert.equal(matchAnswer(given, blank).ok, false, `expected "${given}" to be rejected`);
   }
-  assert.deepEqual(gradeBlank('zum', blank).accepted, ['zum', 'zu dem']);
+  assert.deepEqual(matchAnswer('zum', blank).accepted, ['zum', 'zu dem']);
   // A non-contracted answer has no alternative spelling.
-  assert.deepEqual(gradeBlank('auf dem', { a: 'auf dem', c: 'dat' }).accepted, ['auf dem']);
+  assert.deepEqual(matchAnswer('auf dem', { a: 'auf dem', c: 'dat' }).accepted, ['auf dem']);
   // Case matters: "auf" + Dativ is a location, + Akkusativ a movement.
-  assert.equal(gradeBlank('auf dem', { a: 'auf den', c: 'akk' }).ok, false);
-  assert.equal(gradeBlank('auf den', { a: 'auf den', c: 'akk' }).ok, true);
+  assert.equal(matchAnswer('auf dem', { a: 'auf den', c: 'akk' }).ok, false);
+  assert.equal(matchAnswer('auf den', { a: 'auf den', c: 'akk' }).ok, true);
 });
 
-test('gradeBlank accepts both spellings whichever one the dataset stored', () => {
+test('matchAnswer accepts both spellings whichever one the dataset stored', () => {
   // A dataset entry may spell the phrase out, and the learner may still type the
   // fused form; the reverse must hold too.
   const writtenOut = { a: 'zu dem', c: 'dat' };
-  assert.equal(gradeBlank('zum', writtenOut).ok, true);
-  assert.equal(gradeBlank('zu dem', writtenOut).ok, true);
-  assert.deepEqual(gradeBlank('zum', writtenOut).accepted, ['zu dem', 'zum']);
+  assert.equal(matchAnswer('zum', writtenOut).ok, true);
+  assert.equal(matchAnswer('zu dem', writtenOut).ok, true);
+  assert.deepEqual(matchAnswer('zum', writtenOut).accepted, ['zu dem', 'zum']);
 
   // Every standard contraction round-trips in both directions. Only "das" is
   // Akkusativ here, so that is the only case the phrase can carry.
@@ -216,17 +219,17 @@ test('gradeBlank accepts both spellings whichever one the dataset stored', () =>
     const caseKey = article === 'das' ? 'akk' : 'dat';
     for (const answer of [fused, `${preposition} ${article}`]) {
       for (const given of [fused, `${preposition} ${article}`]) {
-        assert.equal(gradeBlank(given, { a: answer, c: caseKey }).ok, true, `"${given}" vs stored "${answer}"`);
+        assert.equal(matchAnswer(given, { a: answer, c: caseKey }).ok, true, `"${given}" vs stored "${answer}"`);
       }
     }
   }
 });
 
-test('gradeBlank honours an explicit alt list, and a bad one fails validation', () => {
+test('matchAnswer honours an explicit alt list, and a bad one fails validation', () => {
   const blank = { a: 'in die', c: 'akk', alt: ['in die Tür'] };
-  assert.equal(gradeBlank('in die Tür', blank).ok, true);
-  assert.equal(gradeBlank('ins', blank).ok, false, 'an alt list must not license a wrong case');
-  assert.deepEqual(gradeBlank('in die', blank).accepted, ['in die', 'in die tür']);
+  assert.equal(matchAnswer('in die Tür', blank).ok, true);
+  assert.equal(matchAnswer('ins', blank).ok, false, 'an alt list must not license a wrong case');
+  assert.deepEqual(matchAnswer('in die', blank).accepted, ['in die', 'in die tür']);
 
   // The alt list itself is held to the same rules as the main answer.
   assert.doesNotThrow(() => validatePrepositionDataset([{ ...goodPreposition, b: [{ a: 'in die', c: 'akk', alt: ['in die Tür'] }] }]));

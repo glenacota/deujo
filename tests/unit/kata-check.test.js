@@ -22,14 +22,30 @@ const graderFor = (createKata, item) => {
   const container = document.createElement('div');
   const kata = createKata(container);
   kata.render(item);
-  return (values) => {
+  const answer = (values) => {
     container.querySelectorAll('input').forEach((input, i) => { input.value = values[i]; });
     return kata.check(item);
   };
+  answer.container = container;
+  return answer;
 };
 
 /** Builds, renders, and grades in one step, for a single-shot check. */
 const grade = (createKata, item, values) => graderFor(createKata, item)(values);
+
+/**
+ * The correction note beside the nth input, which is where the expected
+ * answers actually reach the learner. `.answer-note` is what `markControl`
+ * writes, so this asserts the rendered text rather than the check() payload.
+ * Notes are looked up per input rather than by index, because a right-hand
+ * blank has no note at all and would shift every later one.
+ */
+const noteFor = (grader, index) => {
+  const input = grader.container.querySelectorAll('input')[index];
+  const wrapper = input?.parentElement;
+  const note = wrapper?.querySelectorAll?.('.answer-note')[0];
+  return note?.textContent ?? null;
+};
 
 test('the preposition kata accepts the fused form for a written-out answer', () => {
   const item = {
@@ -42,20 +58,23 @@ test('the preposition kata accepts the fused form for a written-out answer', () 
   // "auf" + Akkusativ cannot contract, so exactly one spelling is right.
   assert.equal(answer(['auf den']).correct, true);
   assert.equal(answer(['auf dem']).correct, false);
-  assert.deepEqual(answer(['auf den']).fields[0].accepted, ['auf den']);
 });
 
-test('the preposition kata reports every accepted spelling on a wrong blank', () => {
+test('a wrong blank names every accepted spelling beside the input', () => {
   const item = {
     id: 'p_test2', w: 'Ich gehe zum Arzt.', m: 'I am going to the doctor.',
     s: 'Ich gehe {0} Arzt.', b: [{ a: 'zum', c: 'dat' }],
   };
 
-  const wrong = grade(createPrepositionKata, item, ['zu der']);
-  assert.equal(wrong.correct, false);
-  // The correction names both spellings, so the learner sees the alternative.
-  assert.deepEqual(wrong.fields[0].accepted, ['zum', 'zu dem']);
-  assert.equal(wrong.fields[0].expected, 'zum');
+  const grade = graderFor(createPrepositionKata, item);
+
+  assert.equal(grade(['zu der']).correct, false);
+  // The correction lives in the note, not in the field object, so this reads
+  // what the learner actually sees: both spellings side by side.
+  assert.equal(noteFor(grade, 0), 'zum / zu dem');
+
+  // The same blank answered right carries the badge only, no repeated text.
+  assert.equal(noteFor(graderFor(createPrepositionKata, item), 0), null);
 });
 
 test('the preposition kata honours a dataset alt list', () => {
@@ -71,6 +90,23 @@ test('the preposition kata honours a dataset alt list', () => {
   assert.equal(answer(['ins Büro']).correct, true, 'an explicit alternative');
   assert.equal(answer(['im']).correct, false, 'a wrong case is still wrong');
   assert.equal(answer(['in der']).correct, false);
+  // The correction reaches the learner beside the input: the dataset spelling,
+  // the fused form the matcher derives, and the explicit alt.
+  assert.equal(noteFor(answer, 0), 'in das / ins / ins büro');
+});
+
+test('the case kata names its correction beside the wrong blank only', () => {
+  const item = {
+    id: 'c_test3', w: 'Der Mann liest den Roman.', m: 'The man reads the novel.',
+    s: '{0} Mann liest {1} Roman.', b: [{ a: 'der', c: 'nom' }, { a: 'den', c: 'akk' }],
+  };
+
+  const answer = graderFor(createCaseKata, item);
+
+  assert.equal(answer(['der', 'das']).correct, false);
+  // Blank 1 is right and carries no note; only the miss explains itself.
+  assert.equal(noteFor(answer, 0), null);
+  assert.equal(noteFor(answer, 1), 'den');
 });
 
 test('the case kata accepts the noun typed with its article', () => {

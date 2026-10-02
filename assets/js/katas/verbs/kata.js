@@ -111,7 +111,7 @@ export function createVerbKata(tenseKey, container) {
             });
         },
 
-        /** @returns {{correct:boolean,fields:object[]}|{warning:string}|null} */
+        /** @returns {{correct:boolean,fields:{ok:boolean}[]}|{warning:string}|null} */
         check(verb) {
             const targetForms = verb[tenseKey];
             if (!targetForms) return null;
@@ -124,9 +124,11 @@ export function createVerbKata(tenseKey, container) {
                 const given = input.value.trim();
                 // A form may carry `alt` for the second accepted spelling, e.g. a
                 // Perfekt participle written with or without the "ge-" infix.
-                const { ok, accepted } = matchAnswer(given, targetForms[i]);
+                const { ok } = matchAnswer(given, targetForms[i]);
+                // No note: six verdicts in a row would bury the sentence, and the
+                // help modal already lists the full conjugation chart.
                 markControl(input, { ok, note: false });
-                return { label: PERSONS[i].label, expected: accepted[0] ?? '', accepted, given, ok };
+                return { ok };
             });
 
             return { correct: fields.every((f) => f.ok), fields };

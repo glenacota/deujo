@@ -14,8 +14,8 @@ const ICONS = {
 };
 
 /**
- * Turns a kata's `check()` result into everything the verdict panel needs
- * @param {{correct?: boolean, fields?: {label: string, given: string, expected: string, ok: boolean}[]}|null} result
+ * Turns a kata's `check()` result into everything the verdict panel needs.
+ * @param {{correct?: boolean, fields?: {ok: boolean}[]}|null} result
  */
 export function summarizeAnswer(result) {
     const fields = Array.isArray(result?.fields) ? result.fields : [];
