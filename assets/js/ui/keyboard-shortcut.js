@@ -52,7 +52,7 @@ export function bindKeyboardShortcuts({
 
     const shortcuts = [
         {
-            matches: (event) => event.key === 'Enter' && isFocusModeActive() && !modals.isOpen(),
+            matches: (event) => event.key === 'Enter' && isFocusModeActive(),
             run: (event) => {
                 event.preventDefault();
                 const target = event.target;
@@ -82,7 +82,7 @@ export function bindKeyboardShortcuts({
             matches: (event, typing) => {
                 if (!event.shiftKey || !event.code?.startsWith('Digit')) return false;
                 const slot = Number(event.code.slice(5));
-                return !modals.isOpen() && !typing && slot >= 1 && slot <= kataCount();
+                return !typing && slot >= 1 && slot <= kataCount();
             },
             run: (event) => {
                 event.preventDefault();
@@ -90,7 +90,7 @@ export function bindKeyboardShortcuts({
             },
         },
         {
-            matches: (event, typing) => event.key === '/' && isFocusModeActive() && !typing && !modals.isOpen(),
+            matches: (event, typing) => event.key === '/' && isFocusModeActive() && !typing,
             run: (event) => {
                 event.preventDefault();
                 loadNext();
@@ -105,7 +105,7 @@ export function bindKeyboardShortcuts({
         },
         {
             // Settings is reachable from both views, like the ⇧+N kata jump.
-            matches: (event, typing) => event.key === ',' && !typing && !modals.isOpen(),
+            matches: (event, typing) => event.key === ',' && !typing,
             run: (event) => {
                 event.preventDefault();
                 openSettings();
@@ -118,10 +118,11 @@ export function bindKeyboardShortcuts({
         // the keypress be a no-op.
         try {
             if (modals.handleKeydown(event)) return;
+            if (!areHotkeysEnabled()) return;
+            // One gate for every shortcut, so a new binding cannot forget it.
+            if (modals.isOpen()) return;
 
             const typing = isTypingTarget(event.target);
-            if (!areHotkeysEnabled()) return;
-
             const shortcut = shortcuts.find(({ matches }) => matches(event, typing));
             shortcut?.run(event);
         } catch (error) {

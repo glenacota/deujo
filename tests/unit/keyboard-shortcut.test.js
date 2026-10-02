@@ -130,17 +130,30 @@ test('Shift+Digit ignores slots past the last kata', async () => {
     assert.deepEqual(errors, []);
 });
 
-test('an open modal suppresses the shortcuts that gate on it', async () => {
-    // Enter, / and ⇧+N check `modals.isOpen()` directly. `?` and Backspace do
-    // not, so they stay out of scope here rather than papering over the gap.
+test('an open modal suppresses every shortcut', async () => {
+    // The modal owns the keyboard. Backspace used to slip through and exit the
+    // kata underneath, leaving the learner on the dashboard with the modal still
+    // open; `?` used to re-open help on top of help.
     const { press } = await loadModule({ focusMode: true, modalOpen: true });
 
-    for (const key of ['Enter', '/']) {
-        assert.deepEqual(press({ key }).calls, [], `${key} must not fire behind a modal`);
+    for (const { name, key } of FOCUS_SHORTCUTS) {
+        assert.deepEqual(press({ key }).calls, [], `${name} must not fire behind a modal`);
     }
+
     const { calls, errors } = press({ key: '!', code: 'Digit1', shiftKey: true });
     assert.deepEqual(calls, [], 'nor may ⇧+N jump katas behind a modal');
+    assert.deepEqual(press({ key: ',' }).calls, [], 'nor may , stack settings on settings');
     assert.deepEqual(errors, []);
+});
+
+test('the modal gate holds in both views', async () => {
+    // ⇧+N and , are the two bindings reachable from the dashboard, so the gate
+    // has to hold there too, not only inside a kata.
+    const { press } = await loadModule({ focusMode: false, modalOpen: true });
+
+    assert.deepEqual(press({ key: '!', code: 'Digit1', shiftKey: true }).calls, []);
+    assert.deepEqual(press({ key: ',' }).calls, []);
+    assert.deepEqual(press({ key: 'Backspace' }).calls, []);
 });
 
 test('a shortcut that throws is logged, and the next keypress still works', async () => {
