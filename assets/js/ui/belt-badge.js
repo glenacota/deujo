@@ -37,11 +37,10 @@ export function renderBeltBadge(el, state, kataId, options = {}) {
     // placeholder for the first paint.
     el.title = progressText;
 
-    // Upper bar: the belt you already hold, so it is always 100% and needs no
-    // value semantics of its own.
+    // Upper bar: the belt you already hold, so it is always 100% and carries no
+    // progress value of its own.
     const held = document.createElement('span');
     held.className = 'belt-tick-held';
-    held.setAttribute('aria-hidden', 'true');
 
     const track = document.createElement('span');
     track.className = 'belt-tick-track';
@@ -65,18 +64,19 @@ export function renderBeltBadge(el, state, kataId, options = {}) {
     bar.className = 'belt-tick-bar';
     bar.append(track);
 
+    // Focus header has no room for a label, so the bar stays purely decorative.
     if (compact) {
+        held.setAttribute('aria-hidden', 'true');
         el.replaceChildren(held, bar);
         return;
     }
 
-    const label = document.createElement('span');
-    label.className = 'belt-ticks-label';
-
+    // The rank name is printed on the held belt itself, so the label and the
+    // colour it describes cannot drift apart.
     const name = document.createElement('span');
     name.className = 'belt-rank';
     name.textContent = `${rank} belt`;
+    held.append(name);
 
-    label.append(name);
-    el.replaceChildren(held, bar, label);
+    el.replaceChildren(held, bar);
 }

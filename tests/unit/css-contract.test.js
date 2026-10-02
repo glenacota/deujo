@@ -49,9 +49,14 @@ test('the belt tick bar paints with the current belt gradient', () => {
     /\.belt-tick\[data-filled='true'\]\s*\{[^}]*background-color:\s*var\(--belt-next-to\)/
   );
   assert.match(appCss, /\.belt-tick\s*\{[^}]*background-color:\s*transparent/);
-  // The lower bar is slim: the upper bar carries the belt's visual mass.
-  assert.match(appCss, /\.belt-tick\s*\{[^}]*height:\s*6px/);
-  assert.match(appCss, /\.belt-tick-held\s*\{[^}]*height:\s*4px/);
+  // The rank name lives inside the held bar, not in a sibling label row, so it
+  // cannot drift away from the colour it names.
+  assert.match(appCss, /\.belt-tick-held \.belt-rank\s*\{[^}]*color:\s*var\(--belt-ink\)/);
+  assert.doesNotMatch(appCss, /\.belt-ticks-label/);
+  // Brown and Black need light ink on their dark fills, so every rank must
+  // declare one.
+  const inkRules = [...appCss.matchAll(/^\.belt-ticks\.belt-label-(\d)\s*\{([^}]*)\}/gm)];
+  assert.equal(inkRules.length, 7, 'one --belt-ink rule per rank');
   // The flanking colour dots are gone.
   assert.doesNotMatch(appCss, /\.belt-side/);
   // Every rank needs a next-colour class, or an earned tick would fall back to
