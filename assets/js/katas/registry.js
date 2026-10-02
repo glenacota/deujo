@@ -22,7 +22,7 @@ import { createVerbKata } from './verbs/kata.js';
  * @property {string} helpTitle
  * @property {{section: HTMLElement}} el Populated at construction; read-only afterwards.
  * @property {function(Object): void} render
- * @property {function(Object): Object|null} check
+ * @property {function(Object): ({correct: boolean, fields: {ok: boolean}[]}|{warning: string})} check
  * @property {function(Object|null): string} getHelpContent
  * @property {function(Array): void} validateDataset
  */

@@ -9,7 +9,7 @@ export function getActiveInputs(root) {
     ? root
     : root?.querySelector?.(ACTIVE_SECTION_SELECTOR);
   if (!section) return [];
-  return Array.from(section.querySelectorAll('input')).filter((input) => !input.disabled && !input.readOnly);
+  return Array.from(section.querySelectorAll('input')).filter((input) => !input.disabled);
 }
 
 export const dom = {

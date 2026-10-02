@@ -162,8 +162,9 @@ export function createPrepositionKata(container) {
             });
         },
 
+        /** @returns {{correct:boolean,fields:{ok:boolean}[]}|{warning:string}} */
         check(item) {
-            if (!inputs.length) return null;
+            if (!inputs.length) return { warning: 'Please fill in all blanks before checking.' };
 
             if (inputs.some((input) => !input.value.trim())) {
                 return { warning: 'Please fill in all blanks before checking.' };

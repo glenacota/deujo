@@ -28,7 +28,7 @@ export function bindKeyboardShortcuts({
         if (event.inputType !== 'insertText' || event.data !== ':' || event.isComposing) return;
 
         const input = event.target;
-        if (!(input instanceof HTMLInputElement) || input.type !== 'text' || input.readOnly || input.disabled) return;
+        if (!(input instanceof HTMLInputElement) || input.type !== 'text' || input.disabled) return;
 
         const start = input.selectionStart;
         const end = input.selectionEnd;

@@ -111,10 +111,10 @@ export function createVerbKata(tenseKey, container) {
             });
         },
 
-        /** @returns {{correct:boolean,fields:{ok:boolean}[]}|{warning:string}|null} */
+        /** @returns {{correct:boolean,fields:{ok:boolean}[]}|{warning:string}} */
         check(verb) {
             const targetForms = verb[tenseKey];
-            if (!targetForms) return null;
+            if (!targetForms) return { warning: 'This exercise has no conjugations to fill in.' };
 
             if (el.inputs.some((input) => !input.value.trim())) {
                 return { warning: 'Please fill in all six conjugations before checking.' };

@@ -139,6 +139,22 @@ test('the case kata accepts an explicit alt list', () => {
   assert.equal(answer(['das']).correct, false);
 });
 
+test('a kata checked before it has rendered reports instead of returning null', () => {
+  // check() has two result shapes: a verdict or a complaint. app.js reads
+  // result.warning with no null guard, so this must not be null.
+  for (const createKata of [createPrepositionKata, createCaseKata]) {
+    const kata = createKata(document.createElement('div'));
+    const item = {
+      id: 'x', w: 'Der Mann.', m: 'the man', s: '{0} Mann.', b: [{ a: 'der', c: 'nom' }],
+    };
+
+    const result = kata.check(item);
+    assert.notEqual(result, null, 'a pre-render check must still return something');
+    assert.equal(typeof result.warning, 'string');
+    assert.equal(result.correct, undefined, 'and it must not grade');
+  }
+});
+
 test('an unfilled blank still blocks the check with a warning', () => {
   const item = {
     id: 'p_test4', w: 'Ich warte auf dich.', m: 'I am waiting for you.',

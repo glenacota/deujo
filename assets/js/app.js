@@ -226,10 +226,6 @@ class App {
         if (!item) return;
 
         const result = kata.check(item);
-        if (!result) return;
-
-        // A complaint about an unfinished answer is not a verdict: it grades
-        // nothing, leaves the section editable, and stays put until dismissed.
         if (result.warning) {
             this.#ui.showVerdict(summarizeWarning(result.warning));
             return;
