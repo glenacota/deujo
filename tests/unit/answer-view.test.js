@@ -206,16 +206,24 @@ test('clearAnswerMarks survives being called on a fresh, unmarked section', asyn
 
 test('locking preserves controls that the kata itself had disabled', async () => {
   const { setSectionLocked } = await loadModule();
-  const parent = new FakeElement();
-  const open = mountInput(parent);
-  const closed = mountInput(parent);
+  // The argument is the kata's own section, not a container of sections: every
+  // kata is mounted from boot, so locking a container would freeze them all.
+  const section = new FakeElement();
+  const open = mountInput(section);
+  const closed = mountInput(section);
   closed.disabled = true; // a noun with no plural
 
-  setSectionLocked(parent, true);
+  setSectionLocked(section, true);
   assert.equal(open.disabled, true);
   assert.equal(closed.disabled, true);
 
-  setSectionLocked(parent, false);
+  setSectionLocked(section, false);
   assert.equal(open.disabled, false, 'the usable field comes back');
   assert.equal(closed.disabled, true, 'the kata own rule still applies');
+});
+
+test('locking is a no-op when there is no section', async () => {
+  const { setSectionLocked } = await loadModule();
+  assert.doesNotThrow(() => setSectionLocked(null, true));
+  assert.doesNotThrow(() => setSectionLocked(undefined, false));
 });

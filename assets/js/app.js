@@ -58,7 +58,7 @@ class App {
 
     async bootstrap() {
         try {
-            this.#katas = loadKatas();
+            this.#katas = loadKatas(dom.focus.sections);
             this.#katas.forEach((kata) => this.#entries.set(kata.id, { kata, dataset: null, loading: null }));
             this.#state = new GameState(this.#katas.map((p) => p.id));
             this.#init();
@@ -192,7 +192,9 @@ class App {
         const section = this.#entries.get(id)?.kata.el.section;
         const locked = phase !== 'answering';
         if (locked) this.#focus.releaseFocus(section);
-        setSectionLocked(dom.focus.sections, locked);
+        // Only the active kata's section: every kata is mounted from boot, so
+        // locking the whole container would freeze all of them.
+        setSectionLocked(section, locked);
         dom.actions.checkLabel.textContent = locked ? 'Next' : 'Check';
         // Skipping a graded answer would let the learner dodge the streak reset.
         dom.actions.skipBtn.classList.toggle('hidden', locked);
@@ -276,7 +278,6 @@ class App {
 
     async #enterKata(id) {
         const { kata } = this.#entries.get(id);
-        kata.mount(dom.focus.sections);
         clearAnswerMarks(kata.el.section);
         this.#focus.blurActive();
         this.#setKata(id);

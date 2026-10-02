@@ -133,13 +133,22 @@ export function gradeBlank(given, blank) {
     return { preposition, determiner, accepted, ok };
 }
 
-export function createPrepositionKata() {
-    const el = {
-        section: null,
-        sentence: null,
-        translation: null,
-    };
+/**
+ * Builds the preposition kata and mounts its section into `container` straight
+ * away, so `el` is fully populated for the caller and never null.
+ * @param {HTMLElement} container
+ */
+export function createPrepositionKata(container) {
     let inputs = [];
+
+    const section = createSectionFromTemplate(prepositionsTemplate);
+    container.appendChild(section);
+
+    const el = {
+        section,
+        sentence: section.querySelector('[data-role="sentence"]'),
+        translation: section.querySelector('[data-role="translation"]'),
+    };
 
     return {
         ...prepositionsManifest,
@@ -148,17 +157,6 @@ export function createPrepositionKata() {
 
         getHelpContent() {
             return renderHelpMatrix();
-        },
-
-        mount(container) {
-            if (el.section) return;
-
-            const section = createSectionFromTemplate(prepositionsTemplate);
-            container.appendChild(section);
-
-            el.section = section;
-            el.sentence = section.querySelector('[data-role="sentence"]');
-            el.translation = section.querySelector('[data-role="translation"]');
         },
 
         render(item) {

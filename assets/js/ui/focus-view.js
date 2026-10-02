@@ -33,9 +33,9 @@ export class FocusView {
         dom.focus.status.classList.add('hidden');
     }
 
+    /** Every kata is mounted from boot, so this only shows one and hides the rest. */
     switchKata(katas, activeId) {
         const activeSection = katas.find(({ id }) => id === activeId)?.el.section;
-        const sections = new Set(katas.map(({ el }) => el.section).filter(Boolean));
-        sections.forEach((section) => section.classList.toggle('hidden', section !== activeSection));
+        katas.forEach(({ el }) => el.section.classList.toggle('hidden', el.section !== activeSection));
     }
 }

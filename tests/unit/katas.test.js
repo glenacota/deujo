@@ -7,7 +7,11 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 import { installBrowserStub } from '../helpers/browser-stub.js';
+import { installDomStub } from '../helpers/dom-stub.js';
 installBrowserStub();
+// Every factory mounts its section, so the DOM stub has to exist before the
+// `loadKatas()` call below, which runs at module scope.
+installDomStub();
 
 const { loadKatas, validateKata } = await import('../../assets/js/katas/registry.js');
 const { validateNounDataset } = await import('../../assets/js/katas/nouns/kata.js');
@@ -17,7 +21,8 @@ const { validateVerbDataset } = await import('../../assets/js/katas/verbs/kata.j
 const { PREPOSITION_CONTRACTIONS } = await import('../../assets/js/services/grammar.js');
 const { escapeHtml } = await import('../../assets/js/services/utility.js');
 
-const katas = loadKatas();
+// One container for all six, exactly as app.js does at boot.
+const katas = loadKatas(document.createElement('div'));
 
 const loadDataset = (url) =>
   readFile(new URL(`../../${url.replace('./', '')}`, import.meta.url), 'utf8').then(JSON.parse);
@@ -47,7 +52,30 @@ test('validateKata rejects a kata with a missing field', () => {
   assert.throws(() => validateKata({ ...base, id: '' }), /requires non-empty id/);
   assert.throws(() => validateKata({ ...base, render: undefined }), /requires render\(\)/);
   assert.throws(() => validateKata({ ...base, check: undefined }), /requires check\(\)/);
-  assert.throws(() => validateKata({ ...base, el: {} }), /requires el\.section/);
+});
+
+test('validateKata rejects a kata whose section was never mounted', () => {
+  const base = katas[0];
+  // The factory mounts the section, so a null one is a real defect rather than
+  // an acceptable shape waiting for a mount() call that no longer exists.
+  assert.throws(() => validateKata({ ...base, el: { section: null } }), /requires a mounted el\.section/);
+  assert.throws(() => validateKata({ ...base, el: {} }), /requires a mounted el\.section/);
+});
+
+test('every kata is mounted into the container from the factory', () => {
+  const container = document.createElement('div');
+  const mounted = loadKatas(container);
+
+  for (const kata of mounted) {
+    assert.ok(kata.el.section, `kata ${kata.id} has no section`);
+    assert.ok(container.children.includes(kata.el.section), `kata ${kata.id} was not appended`);
+  }
+  // Six katas, six live sections: the two verbs-only sections must not collide.
+  assert.equal(container.children.length, mounted.length);
+});
+
+test('loadKatas refuses to build without a container', () => {
+  assert.throws(() => loadKatas(null), /requires the element/);
 });
 
 test('validateKata accepts supported accents and rejects unknown accents', () => {

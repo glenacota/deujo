@@ -11,8 +11,6 @@
 //                    reserves room for an absolutely positioned badge. Used for
 //                    text inputs, which must keep their exact layout.
 
-import { getActiveInputs } from './dom.js';
-
 const WRAPPER_CLASS = 'answer-field';
 const BADGE_CLASS = 'answer-badge';
 const NOTE_CLASS = 'answer-note';
@@ -101,16 +99,16 @@ export function clearAnswerMarks(root) {
 }
 
 /**
- * Freezes a kata section while the verdict is on screen. Controls that were
+ * Freezes one kata section while the verdict is on screen. Controls that were
  * already disabled (a noun with no plural) stay disabled, so a kata's own
  * per-item rules survive the lock.
+ *
+ * Takes the section itself, not a container: every kata is mounted from boot,
+ * so locking a container would freeze the katas the learner is not looking at.
+ * @param {HTMLElement|null} section the kata's `[data-role="section"]`
+ * @param {boolean} locked
  */
-export function setSectionLocked(root, locked) {
-  const inputs = getActiveInputs(root);
-  const section = inputs[0]?.closest?.('[data-role="section"]')
-    ?? (root?.dataset?.role === 'section' ? root : null)
-    ?? Array.from(root?.children ?? []).find((child) => child.dataset?.role === 'section' && !child.classList.contains('hidden'))
-    ?? (Array.from(root?.children ?? []).some((child) => child.dataset?.role === 'section') ? null : root);
+export function setSectionLocked(section, locked) {
   if (!section) return;
 
   section.classList.toggle('pointer-events-none', locked);

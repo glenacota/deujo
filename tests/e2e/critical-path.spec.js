@@ -5,6 +5,7 @@
 
 import { expect, test } from '@playwright/test';
 import {
+    ACTIVE_SECTION,
     BELT_INTERVAL,
     canvasHasInk,
     checkAnswer,
@@ -62,11 +63,13 @@ test('hotkeys dispatch: kata jump, help, skip, umlaut typing, back to menu', asy
 
     const before = await currentWord(page);
     await page.keyboard.press('/');
-    await expect(page.locator('#kataSections [data-role="word"]')).not.toHaveText(before);
+    // Scoped to the visible section: every kata is mounted from boot, so an
+    // unscoped selector would also match the hidden verb sections.
+    await expect(page.locator(`${ACTIVE_SECTION} [data-role="word"]`)).not.toHaveText(before);
 
     // "a:" is a beforeinput shortcut, not a key binding: it only proves out when
     // the keystrokes really reach the input.
-    const plural = page.locator('#kataSections [data-role="section"]:not(.hidden) [data-role="plural"]');
+    const plural = page.locator(`${ACTIVE_SECTION} [data-role="plural"]`);
     if (await plural.isEnabled()) {
         await plural.click();
         await plural.fill('');

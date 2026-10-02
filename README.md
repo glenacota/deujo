@@ -63,12 +63,14 @@ A blank can have more than one right answer, so a correct variant is never score
 
 To add a kata:
 1. Add `assets/js/katas/<id>/manifest.js`, `template.js`, and `kata.js`, plus `assets/datasets/<id>.json`.
-2. Give the manifest a unique `id`, `name`, `subtitle`, `datasetUrl`, and `accent`. Dashboard accents must be `indigo`, `teal`, `purple`, or `amber`.
-3. Export a `create...Kata()` factory from `kata.js`. Return the manifest fields, `el.section`, and these methods: `mount(container)`, `render(item)`, `check(item)`, `getHelpContent(item)`, and `validateDataset(dataset)`.
-4. In `mount`, create and append one `[data-role="section"]` from your template. Set `el.section` to the created section.
-5. Make `validateDataset()` reject anything except a non-empty array of entries matching your kata's schema. `check()` returns `{ correct, message }`, `{ warning }`, or `null`; `getHelpContent()` returns an HTML string.
-6. Import the factory in `assets/js/katas/registry.js` and add its call to `loadKatas()`.
+2. Give the manifest a unique `id`, `name`, `subtitle`, `datasetUrl`, `helpTitle`, and `accent`. Dashboard accents must be `indigo`, `teal`, `purple`, or `amber`.
+3. Export a `create...Kata(container)` factory from `kata.js`. It takes the element that holds the kata sections and **mounts the kata itself**: parse your template, append the `[data-role="section"]` it produces, and assign it to `el.section`. There is no separate `mount()` step — every kata is mounted when `loadKatas()` runs at boot, so `el.section` is never null. Any event listeners your controls need are wired in the factory too.
+4. Return the manifest fields, `el`, and these methods: `render(item)`, `check(item)`, `getHelpContent(item)`, and `validateDataset(dataset)`.
+5. Make `validateDataset()` reject anything except a non-empty array of entries matching your kata's schema. `check()` returns `{ correct, fields }`, `{ warning }`, or `null`; `getHelpContent()` returns an HTML string.
+6. Import the factory in `assets/js/katas/registry.js` and add its call to `loadKatas()`, passing `container` through.
 7. Grade typed text through `matchAnswer(given, answer, options)` from `assets/js/services/answer-matcher.js`, not with a direct string compare, so the learner gets every accepted answer the blank allows. Use `acceptedAnswers(answer)` to show the primary spelling, and `formatAccepted(accepted)` to render the list in a note.
+
+`el` is populated at construction and read-only afterwards; only per-item selection state (like the selected gender) changes. `validateKata` asserts `el.section` is a real element, so a factory that forgets to mount fails at boot rather than on a keypress.
 
 Use unique IDs and keep dataset paths relative to the site root. Escape dataset text inserted into HTML; prefer `textContent` for plain text. Tailwind scans `index.html` and `assets/js/**/*.js`, so use literal class names and a supported accent. `npm test` checks every registered kata contract and validates all shipped datasets.
 
@@ -86,7 +88,7 @@ npx playwright test --headed           # watch the browser run
 Rules of the harness:
 - Unit tests live in `tests/unit/*.test.js` and are picked up by `npm test`.
 - `tests/helpers/browser-stub.js` installs minimal `localStorage`, `window`, and `document` globals so DOM-adjacent modules import in Node. Call it before the dynamic `import()` of any module that touches those globals.
-- It is import-only: it has no `createElement`, so a test that mounts a kata needs its own element stub. `tests/unit/kata-check.test.js` has one that covers mounting, rendering, and grading a kata end to end.
+- `tests/helpers/browser-stub.js` is import-only: it has no `createElement`. Tests that need elements use `installDomStub()` from `tests/helpers/dom-stub.js`, which adds `createElement` / `createDocumentFragment` / `createTextNode` immediately rather than in a `beforeEach` — kata factories run at module scope in `tests/unit/katas.test.js`. It is enough to mount, render, and grade a kata end to end.
 - Browser tests live in `tests/e2e/*.spec.js`, run from `playwright.config.js`, and start `tests/e2e/server.mjs` automatically. One-time setup: `npm install && npx playwright install chromium`.
 - The browser layer is deliberately a smoke test, not a second coverage suite. Keep it to the critical path; anything expressible as a pure function belongs in a unit test.
 - `Math.random` is seeded before the app boots, so a kata and its answers are reproducible. Never mock a module there: drive the real UI.

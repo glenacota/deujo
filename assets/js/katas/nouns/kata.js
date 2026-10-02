@@ -45,16 +45,30 @@ function setGenderActive(btn, active) {
     btn.classList.toggle('dark:bg-indigo-950/60', active);
 }
 
-export function createNounKata() {
+/**
+ * Builds the noun kata and mounts its section into `container` straight away,
+ * so `el` is fully populated for the caller and never null. `el` is read-only
+ * from here on: only `gender` changes between items.
+ * @param {HTMLElement} container
+ */
+export function createNounKata(container) {
+    let gender = null;
+
+    const section = createSectionFromTemplate(nounsTemplate);
+    container.appendChild(section);
+
     const el = {
-        section: null,
-        word: null,
-        meaning: null,
-        plural: null,
-        genderButtons: [],
+        section,
+        word: section.querySelector('[data-role="word"]'),
+        meaning: section.querySelector('[data-role="meaning"]'),
+        plural: section.querySelector('[data-role="plural"]'),
+        genderButtons: Array.from(section.querySelectorAll('[data-role="gender"]')),
     };
 
-    let gender = null;
+    el.genderButtons.forEach((btn) => btn.addEventListener('click', () => {
+        gender = btn.dataset.gender;
+        el.genderButtons.forEach((b) => setGenderActive(b, b.dataset.gender === gender));
+    }));
 
     return {
         ...nounsManifest,
@@ -75,27 +89,6 @@ export function createNounKata() {
                     <li class="px-4 py-2">Nouns ending in <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">-e</code>, <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">-ant</code>, <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">-ent</code>, <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">-ist</code>, <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">-or</code> for people/occupations almost always add <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">-n</code> or <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">-en</code> <span class="italic text-slate-500">(e.g., der Student → die Studenten)</span>.</li>
                 </ul>
             `;
-        },
-
-        /** One-time wiring of controls owned by this kata only. */
-        mount(container) {
-            if (el.section) return;
-
-            const section = createSectionFromTemplate(nounsTemplate);
-            container.appendChild(section);
-
-            el.section = section;
-            el.word = section.querySelector('[data-role="word"]');
-            el.meaning = section.querySelector('[data-role="meaning"]');
-            el.plural = section.querySelector('[data-role="plural"]');
-            el.genderButtons = Array.from(section.querySelectorAll('[data-role="gender"]'));
-
-            el.genderButtons.forEach((btn) =>
-                btn.addEventListener('click', () => {
-                    gender = btn.dataset.gender;
-                    el.genderButtons.forEach((b) => setGenderActive(b, b.dataset.gender === gender));
-                })
-            );
         },
 
         render(noun) {
