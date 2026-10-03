@@ -1,5 +1,12 @@
-.*
-AGENTS.md
 node_modules/
 test-results/
 playwright-report/
+
+# macOS cruft, listed rather than hidden behind a blanket `.*`, so real dotfiles
+# (AGENTS.md, .github/) stay trackable.
+.DS_Store
+*.patch
+
+# Local scratch: design explorations and editor state.
+.code_reviews/
+.vscode/
