@@ -5,9 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-
-import { installBrowserStub } from '../helpers/browser-stub.js';
-installBrowserStub();
+import '../helpers/bootstrap.js';
 
 const { dom } = await import('../../assets/js/ui/dom.js');
 const { DashboardView } = await import('../../assets/js/ui/dashboard-view.js');

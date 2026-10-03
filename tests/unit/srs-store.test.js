@@ -4,12 +4,8 @@
 
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
+import { browser, CONFIG } from '../helpers/bootstrap.js';
 
-import { installBrowserStub } from '../helpers/browser-stub.js';
-
-const browser = installBrowserStub();
-
-const { CONFIG } = await import('../../assets/js/config.js');
 const { SrsStore } = await import('../../assets/js/services/srs-store.js');
 
 const SRS_KEY = CONFIG.storage.srs;
@@ -78,7 +74,6 @@ test('a malformed or non-object storage blob yields an empty store', () => {
     assert.deepEqual(Object.keys(SrsStore.getKata(KATA)), [], `raw: ${raw}`);
   }
 });
-
 
 test('a debounced save flushes when the page is hidden', () => {
   SrsStore.set(KATA, 'item_a', valid());

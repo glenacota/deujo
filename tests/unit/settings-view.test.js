@@ -6,11 +6,9 @@
 
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
+import { browser, CONFIG } from '../helpers/bootstrap.js';
 import { readFile } from 'node:fs/promises';
 
-import { installBrowserStub } from '../helpers/browser-stub.js';
-
-const browser = installBrowserStub();
 globalThis.window.matchMedia = () => ({ matches: false, addEventListener() {} });
 
 class FakeClassList {
@@ -28,7 +26,6 @@ class FakeClassList {
 
 globalThis.document.documentElement = { classList: new FakeClassList() };
 
-const { CONFIG } = await import('../../assets/js/config.js');
 const { Storage } = await import('../../assets/js/services/storage.js');
 const { get, set } = await import('../../assets/js/services/preferences.js');
 const { dom } = await import('../../assets/js/ui/dom.js');

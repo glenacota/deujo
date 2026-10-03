@@ -3,12 +3,8 @@
 
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
+import { browser, CONFIG } from '../helpers/bootstrap.js';
 
-import { installBrowserStub } from '../helpers/browser-stub.js';
-
-const browser = installBrowserStub();
-
-const { CONFIG } = await import('../../assets/js/config.js');
 const { GameState } = await import('../../assets/js/state.js');
 const { SrsStore } = await import('../../assets/js/services/srs-store.js');
 const { BOX_COUNT, DAY_MS } = await import('../../assets/js/services/srs-scheduler.js');

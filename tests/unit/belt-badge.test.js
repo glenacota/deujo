@@ -5,10 +5,7 @@
 
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-
-import { installBrowserStub } from '../helpers/browser-stub.js';
-
-const browser = installBrowserStub();
+import { browser, CONFIG } from '../helpers/bootstrap.js';
 
 class FakeElement {
   constructor(tag = 'span') {
@@ -30,7 +27,6 @@ class FakeElement {
 
 globalThis.document.createElement = (tag) => new FakeElement(tag);
 
-const { CONFIG } = await import('../../assets/js/config.js');
 const { GameState } = await import('../../assets/js/state.js');
 const { renderBeltBadge } = await import('../../assets/js/ui/belt-badge.js');
 

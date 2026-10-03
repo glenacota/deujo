@@ -3,13 +3,10 @@
 
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-
-import { installBrowserStub, installThrowingStorage } from '../helpers/browser-stub.js';
-
-const browser = installBrowserStub();
+import { browser, CONFIG } from '../helpers/bootstrap.js';
+import { installThrowingStorage } from '../helpers/browser-stub.js';
 
 // Storage must be imported after the stub exists.
-const { CONFIG } = await import('../../assets/js/config.js');
 const { Storage } = await import('../../assets/js/services/storage.js');
 
 beforeEach(() => browser.reset());

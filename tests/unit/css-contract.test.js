@@ -1,14 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { CONFIG } from '../helpers/bootstrap.js';
 
-import { installBrowserStub } from '../helpers/browser-stub.js';
-import { installDomStub } from '../helpers/dom-stub.js';
-import { CONFIG } from '../../assets/js/config.js';
-
-// loadKatas() mounts every kata, so it needs elements at module scope.
-installBrowserStub();
-installDomStub();
 const { loadKatas } = await import('../../assets/js/katas/registry.js');
 
 const toneSource = readFileSync(new URL('../../assets/js/ui/ui-controller.js', import.meta.url), 'utf8');

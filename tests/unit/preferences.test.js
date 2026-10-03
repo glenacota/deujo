@@ -4,13 +4,10 @@
 
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-
-import { installBrowserStub } from '../helpers/browser-stub.js';
+import { browser, CONFIG } from '../helpers/bootstrap.js';
 
 /** Stands in for the OS setting, so the 'animations' default can be flipped. */
 const REDUCED_MOTION = { matches: false };
-
-const browser = installBrowserStub();
 
 // Node has no matchMedia, and preferences reads it to default 'animations'.
 globalThis.window.matchMedia = (query) => ({
@@ -33,7 +30,6 @@ class FakeClassList {
 
 globalThis.document.documentElement = { classList: new FakeClassList() };
 
-const { CONFIG } = await import('../../assets/js/config.js');
 const { Storage } = await import('../../assets/js/services/storage.js');
 const { applyDocumentPreferences, defaults, get, resetAll, set } = await import('../../assets/js/services/preferences.js');
 

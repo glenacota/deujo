@@ -5,16 +5,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-
-import { installBrowserStub } from '../helpers/browser-stub.js';
-import { installDomStub } from '../helpers/dom-stub.js';
-installBrowserStub();
-// Every factory mounts its section, so the DOM stub has to exist before the
-// `loadKatas()` call below, which runs at module scope.
-installDomStub();
+import { CONFIG } from '../helpers/bootstrap.js';
 
 const { loadKatas, validateKata } = await import('../../assets/js/katas/registry.js');
-const { CONFIG } = await import('../../assets/js/config.js');
 const { validateNounDataset } = await import('../../assets/js/katas/nouns/kata.js');
 const { validateCaseDataset } = await import('../../assets/js/katas/cases/kata.js');
 const { validatePrepositionDataset } = await import('../../assets/js/katas/prepositions/kata.js');

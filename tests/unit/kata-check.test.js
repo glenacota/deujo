@@ -4,11 +4,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-
-import { installBrowserStub } from '../helpers/browser-stub.js';
-import { installDomStub } from '../helpers/dom-stub.js';
-installBrowserStub();
-installDomStub();
+import '../helpers/bootstrap.js';
 
 const { createPrepositionKata } = await import('../../assets/js/katas/prepositions/kata.js');
 const { createCaseKata } = await import('../../assets/js/katas/cases/kata.js');

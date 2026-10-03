@@ -5,12 +5,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-
-import { installBrowserStub } from '../helpers/browser-stub.js';
-
-// Only needed so ui/dom.js can be imported (keyboard-shortcut.js pulls in
-// getActiveInputs); the test's own fakes below take over from here.
-installBrowserStub();
+import '../helpers/bootstrap.js';
 
 class FakeInputElement {}
 class FakeTextAreaElement {}
