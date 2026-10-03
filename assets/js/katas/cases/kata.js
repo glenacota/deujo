@@ -6,44 +6,21 @@ import { markControl } from '../../ui/answer-view.js';
 import { CASE_LABELS, DEFINITE, hasOrderedBlankPlaceholders, INDEFINITE, PLURAL_DEFINITE } from '../../services/grammar.js';
 import { formatAccepted, matchAnswer } from '../../services/answer-matcher.js';
 import { renderBlankSentence } from '../../services/blank-renderer.js';
+import { assertDataset, hasCoreFields, hasValidBlanks } from '../dataset-rules.js';
 import { casesManifest } from './manifest.js';
 import { casesTemplate } from './template.js';
 
 const VALID_CASE_NAMES = Object.keys(CASE_LABELS);
 
 export function validateCaseDataset(dataset) {
-    if (!Array.isArray(dataset) || dataset.length === 0) {
-        throw new Error('dataset must be a non-empty array');
-    }
+    assertDataset(dataset);
 
     dataset.forEach((item, index) => {
-        const validBlanks = Array.isArray(item?.b) && item.b.length > 0 && item.b.every((blank) => {
-            // `alt` is optional, but when present every entry must be a real
-            // answer string, or the learner can never satisfy the blank.
-            const validAlt = blank?.alt === undefined
-                || (Array.isArray(blank.alt) && blank.alt.every((alt) => typeof alt === 'string' && alt.trim()));
-            return (
-                typeof blank?.a === 'string' &&
-                blank.a.trim() &&
-                VALID_CASE_NAMES.includes(blank.c) &&
-                validAlt
-            );
-        });
-        const placeholdersMatch = hasOrderedBlankPlaceholders(item?.s, item?.b?.length);
+        const ok = hasCoreFields(item, { sentence: true })
+            && hasValidBlanks(item?.b, (blank) => VALID_CASE_NAMES.includes(blank?.c))
+            && hasOrderedBlankPlaceholders(item?.s, item?.b?.length);
 
-        if (
-            !item ||
-            typeof item.id !== 'string' ||
-            !item.id.trim() ||
-            typeof item.w !== 'string' ||
-            !item.w.trim() ||
-            typeof item.s !== 'string' ||
-            !item.s.trim() ||
-            typeof item.m !== 'string' ||
-            !item.m.trim() ||
-            !validBlanks ||
-            !placeholdersMatch
-        ) {
+        if (!ok) {
             throw new Error(`entry ${index} has invalid sentence, translation, or blank answers`);
         }
     });

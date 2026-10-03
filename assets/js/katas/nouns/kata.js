@@ -4,13 +4,12 @@
 import { createSectionFromTemplate } from '../../services/utility.js';
 import { acceptedAnswers, matchAnswer } from '../../services/answer-matcher.js';
 import { markControl } from '../../ui/answer-view.js';
+import { assertDataset, hasAltList, hasCoreFields } from '../dataset-rules.js';
 import { nounsManifest } from './manifest.js';
 import { nounsTemplate } from './template.js';
 
 export function validateNounDataset(dataset) {
-    if (!Array.isArray(dataset) || dataset.length === 0) {
-        throw new Error('dataset must be a non-empty array');
-    }
+    assertDataset(dataset);
 
     dataset.forEach((noun, index) => {
         const validGender = ['der', 'die', 'das'].includes(noun?.g);
@@ -19,19 +18,9 @@ export function validateNounDataset(dataset) {
         const validPlural = typeof noun?.p === 'string'
             || (noun?.p && typeof noun.p === 'object'
                 && typeof noun.p.a === 'string'
-                && (noun.p.alt === undefined
-                    || (Array.isArray(noun.p.alt) && noun.p.alt.every((alt) => typeof alt === 'string' && alt.trim()))));
-        if (
-            !noun ||
-            typeof noun.id !== 'string' ||
-            !noun.id.trim() ||
-            typeof noun.w !== 'string' ||
-            !noun.w.trim() ||
-            typeof noun.m !== 'string' ||
-            !noun.m.trim() ||
-            !validGender ||
-            !validPlural
-        ) {
+                && hasAltList(noun.p.alt));
+
+        if (!hasCoreFields(noun) || !validGender || !validPlural) {
             throw new Error(`entry ${index} must contain non-empty w and m strings, string or {a, alt} p, and valid g`);
         }
     });

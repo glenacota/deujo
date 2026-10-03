@@ -5,6 +5,7 @@ import { escapeHtml, createSectionFromTemplate } from '../../services/utility.js
 import { acceptedAnswers, matchAnswer } from '../../services/answer-matcher.js';
 import { markControl } from '../../ui/answer-view.js';
 import { PERSONS, TENSES } from '../../services/grammar.js';
+import { assertDataset, hasAltList, hasCoreFields } from '../dataset-rules.js';
 import { getVerbManifest } from './manifest.js';
 import { verbsTemplate } from './template.js';
 
@@ -19,14 +20,11 @@ const TENSE_PLACEHOLDERS = {
 function isUsableForm(form) {
     if (typeof form === 'string') return Boolean(form.trim());
     if (!form || typeof form !== 'object' || typeof form.a !== 'string' || !form.a.trim()) return false;
-    return form.alt === undefined
-        || (Array.isArray(form.alt) && form.alt.every((alt) => typeof alt === 'string' && alt.trim()));
+    return hasAltList(form.alt);
 }
 
 export function validateVerbDataset(dataset) {
-    if (!Array.isArray(dataset) || dataset.length === 0) {
-        throw new Error('dataset must be a non-empty array');
-    }
+    assertDataset(dataset);
 
     dataset.forEach((verb, index) => {
         const validTenses = Object.keys(TENSES).every((tense) =>
@@ -34,16 +32,8 @@ export function validateVerbDataset(dataset) {
             verb[tense].length === PERSONS.length &&
             verb[tense].every(isUsableForm)
         );
-        if (
-            !verb ||
-            typeof verb.id !== 'string' ||
-            !verb.id.trim() ||
-            typeof verb.w !== 'string' ||
-            !verb.w.trim() ||
-            typeof verb.m !== 'string' ||
-            !verb.m.trim() ||
-            !validTenses
-        ) {
+
+        if (!hasCoreFields(verb) || !validTenses) {
             throw new Error(`entry ${index} must contain non-empty w, m, and six forms for each tense`);
         }
     });

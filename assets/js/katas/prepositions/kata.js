@@ -15,6 +15,7 @@ import {
 } from '../../services/grammar.js';
 import { matchAnswer, formatAccepted } from '../../services/answer-matcher.js';
 import { renderBlankSentence } from '../../services/blank-renderer.js';
+import { assertDataset, hasCoreFields, hasValidBlanks } from '../dataset-rules.js';
 import { prepositionsManifest } from './manifest.js';
 import { prepositionsTemplate } from './template.js';
 
@@ -26,45 +27,18 @@ const VALID_CASE_NAMES = Object.keys(CASE_LABELS).filter((c) => c !== 'nom');
  * determiner belongs to the case the entry claims. Whether that phrase is
  * correct German is the grammar service's judgement, not this kata's.
  */
-const isUsableAnswer = (answer, caseKey) =>
-    isPrepositionPhraseInCase(normalizePhrase(answer), caseKey);
+const isUsableAnswer = ({ a, c } = {}) =>
+    VALID_CASE_NAMES.includes(c) && isPrepositionPhraseInCase(normalizePhrase(a), c);
 
 export function validatePrepositionDataset(dataset) {
-    if (!Array.isArray(dataset) || dataset.length === 0) {
-        throw new Error('dataset must be a non-empty array');
-    }
+    assertDataset(dataset);
 
     dataset.forEach((item, index) => {
-        const validBlanks = Array.isArray(item?.b) && item.b.length > 0 && item.b.every((blank) => {
-            const validAlt = blank?.alt === undefined
-                || (Array.isArray(blank.alt) && blank.alt.every((alt) => (
-                    typeof alt === 'string' && alt.trim() && isUsableAnswer(alt, blank.c)
-                )));
-            return (
-                typeof blank?.a === 'string' &&
-                blank.a.trim() &&
-                VALID_CASE_NAMES.includes(blank.c) &&
-                // The answer must really be a preposition plus a determiner...
-                isUsableAnswer(blank.a, blank.c) &&
-                // ...and so must every extra accepted answer.
-                validAlt
-            );
-        });
-        const placeholdersMatch = hasOrderedBlankPlaceholders(item?.s, item?.b?.length);
+        const ok = hasCoreFields(item, { sentence: true })
+            && hasValidBlanks(item?.b, isUsableAnswer)
+            && hasOrderedBlankPlaceholders(item?.s, item?.b?.length);
 
-        if (
-            !item ||
-            typeof item.id !== 'string' ||
-            !item.id.trim() ||
-            typeof item.w !== 'string' ||
-            !item.w.trim() ||
-            typeof item.s !== 'string' ||
-            !item.s.trim() ||
-            typeof item.m !== 'string' ||
-            !item.m.trim() ||
-            !validBlanks ||
-            !placeholdersMatch
-        ) {
+        if (!ok) {
             throw new Error(`entry ${index} has an invalid sentence, translation, or preposition answers`);
         }
     });
