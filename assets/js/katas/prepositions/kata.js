@@ -75,11 +75,7 @@ function renderHelpMatrix() {
 
 
 
-/**
- * Builds the preposition kata and mounts its section into `container` straight
- * away, so `el` is fully populated for the caller and never null.
- * @param {HTMLElement} container
- */
+/** Mounts the preposition kata's section, so `el` is populated for the caller. */
 export function createPrepositionKata(container) {
     let inputs = [];
 
@@ -119,7 +115,7 @@ export function createPrepositionKata(container) {
             });
         },
 
-        /** @returns {{correct:boolean,fields:{ok:boolean}[]}|{warning:string}} */
+        /** @returns a verdict `{ correct, fields }`, or `{ warning }` when the answer is not ready to grade. */
         check(item) {
             if (!inputs.length || inputs.some((input) => !input.value.trim())) {
                 return { warning: 'Please fill in all blanks before checking.' };

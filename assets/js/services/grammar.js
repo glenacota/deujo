@@ -39,15 +39,13 @@ export const TENSES = {
 export const BLANK_PLACEHOLDER = /\{(\d+)\}/g;
 
 /**
- * The sentence as alternating literal text and blank indices, ready for a
- * renderer: `'Ich gehe {0} Arzt.'` -> `['Ich gehe ', '0', ' Arzt.', '']`.
- * Odd positions are blank indices.
+ * The sentence as alternating literal text and blank indices, where odd
+ * positions are blank indices: `'Ich gehe {0} Arzt.'` -> `['Ich gehe ', '0', ' Arzt.', '']`.
  */
 export function splitBlanks(sentence) {
     return typeof sentence === 'string' ? sentence.split(BLANK_PLACEHOLDER) : [];
 }
 
-/** True when sentence placeholders map to every blank once, in order. */
 export function hasOrderedBlankPlaceholders(sentence, blankCount) {
     if (typeof sentence !== 'string' || !Number.isInteger(blankCount) || blankCount < 1) return false;
 
@@ -144,9 +142,6 @@ const NEGATIVE = {
 /** Pulls one case out of the gender-keyed article tables. */
 const formsInCase = (table, caseKey) => Object.values(table).map((forms) => forms[caseKey]);
 
-/** PLURAL_DEFINITE is already keyed by case, so it is read directly. */
-const pluralFormInCase = (caseKey) => PLURAL_DEFINITE[caseKey];
-
 /**
  * Every determiner form that can legitimately appear after a preposition in the
  * given case, and no other case. Used to check a dataset's answers, so a wrong
@@ -156,7 +151,7 @@ const pluralFormInCase = (caseKey) => PLURAL_DEFINITE[caseKey];
 const determinersFor = (caseKey) => new Set([
     ...formsInCase(DEFINITE, caseKey),
     ...formsInCase(INDEFINITE, caseKey),
-    pluralFormInCase(caseKey),
+    PLURAL_DEFINITE[caseKey],
     ...POSSESSIVE[caseKey],
     ...(PERSONAL[caseKey] ?? []),
     ...NUMERALS[caseKey],
@@ -176,12 +171,8 @@ export function normalizePhrase(value) {
 }
 
 /**
- * Splits "zum" / "in den" into its preposition and determiner, but only when the
- * preposition is the expected one. Returns the determiner, or null when the
- * answer does not belong to that preposition.
- * @param {string} answer
- * @param {string} preposition
- * @returns {string|null}
+ * Splits "zum" / "in den" into its determiner, but only when the preposition is
+ * the expected one. Returns null when the answer does not belong to it.
  */
 export function decomposePrepositionPhrase(answer, preposition) {
     const contracted = PREPOSITION_CONTRACTIONS[answer];
@@ -195,15 +186,14 @@ export function decomposePrepositionPhrase(answer, preposition) {
  * fused contraction and the written-out form, in whichever order the dataset
  * stored them. "zum" also answers a blank whose answer is "zu dem", and the
  * other way round; a phrase that cannot contract keeps its single spelling.
- * @param {string} answer
- * @returns {string[]} normalised, duplicate-free, dataset spelling first
+ * @returns normalised, duplicate-free, dataset spelling first
  */
 export function prepositionSpellings(answer) {
     const phrase = normalizePhrase(answer);
     if (!phrase) return [];
 
+    // The dataset's own spelling first, then the one standard alternative.
     const variants = [phrase];
-    // Fused first: the dataset spelling, then the one standard alternative.
     const fused = PREPOSITION_CONTRACTIONS[phrase];
     if (fused) variants.push(`${fused.preposition} ${fused.article}`);
     const contraction = CONTRACTED_FORMS[phrase];
@@ -212,7 +202,6 @@ export function prepositionSpellings(answer) {
     return [...new Set(variants)];
 }
 
-/** The preposition a phrase belongs to, or null when the phrase is not one. */
 function prepositionOf(answer) {
     const contracted = PREPOSITION_CONTRACTIONS[answer];
     if (contracted) return contracted.preposition;
@@ -229,8 +218,8 @@ function prepositionOf(answer) {
  * serve two cases: "mit den" is the correct Dativ answer even though "den" is
  * also the Akkusativ singular. Checking the claimed case keeps that legitimate
  * ambiguity from failing a correct entry.
- * @param {string} answer a phrase, already normalised
- * @param {string} caseKey one of the `CASE_LABELS` keys
+ * @param answer a phrase, already normalised
+ * @param caseKey one of the `CASE_LABELS` keys
  */
 export function isPrepositionPhraseInCase(answer, caseKey) {
     const preposition = prepositionOf(answer);

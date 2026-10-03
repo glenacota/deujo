@@ -1,11 +1,7 @@
 // ui/belt-badge.js
-// Two bars per kata. The upper bar is always full and wears the current belt's
-// colour: it says which belt you hold. The lower bar tracks the points earned
-// toward the next belt, each earned tick wearing the next belt's colour and
-// each unearned one the neutral empty trough. Points are fractional (a skip
-// costs half, a fresh belt starts a fifth in), so the tick being earned can be
-// part-filled. The rank is a real text node, so the value never rides on colour
-// alone.
+// Two bars per kata: the one you hold, and the points toward the next one.
+// app.css documents the geometry and the colour tokens; the rank is a real text
+// node so the value never rides on colour alone.
 
 import { CONFIG } from '../config.js';
 
@@ -15,10 +11,8 @@ const TICKS = CONFIG.rules.milestoneInterval;
 const formatPoints = (points) => String(Math.round(points * 100) / 100);
 
 /**
- * @param {HTMLElement} el container, rebuilt on every call
- * @param {import('../state.js').default} state
- * @param {string} kataId
- * @param {{compact?: boolean}} [options] compact: header variant, no rank label
+ * @param el container, rebuilt on every call
+ * @param options `compact` is the header variant, which has no rank label
  */
 export function renderBeltBadge(el, state, kataId, options = {}) {
     if (!el) return;
@@ -39,8 +33,7 @@ export function renderBeltBadge(el, state, kataId, options = {}) {
     // placeholder for the first paint.
     el.title = progressText;
 
-    // Upper bar: the belt you already hold, so it is always 100% and carries no
-    // progress value of its own.
+    // Upper bar: the belt already held, always 100% and carrying no progress.
     const held = document.createElement('span');
     held.className = 'belt-tick-held';
 
@@ -64,8 +57,7 @@ export function renderBeltBadge(el, state, kataId, options = {}) {
         track.append(tick);
     }
 
-    // Lower bar: the tick track on its own. The belt colours now come from the
-    // upper bar and from the earned ticks, so no flanking dots are needed.
+    // Lower bar: the tick track on its own.
     const bar = document.createElement('span');
     bar.className = 'belt-tick-bar';
     bar.append(track);

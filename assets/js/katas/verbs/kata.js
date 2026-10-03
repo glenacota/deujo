@@ -40,13 +40,9 @@ export function validateVerbDataset(dataset) {
 }
 
 /**
- * Builds the kata for one verb tense and mounts its section into `container`
- * straight away, so `el` is fully populated for the caller and never null.
- *
- * Each tense gets its own parsed section, so three verb katas coexist without
- * clashing.
- * @param {string} tenseKey one of the keys of `TENSES`
- * @param {HTMLElement} container
+ * Mounts one verb tense's section, so `el` is populated for the caller. Each
+ * tense gets its own parsed section, so the three verb katas coexist.
+ * @param tenseKey one of the keys of `TENSES`
  */
 export function createVerbKata(tenseKey, container) {
     const tense = TENSES[tenseKey];
@@ -101,7 +97,7 @@ export function createVerbKata(tenseKey, container) {
             });
         },
 
-        /** @returns {{correct:boolean,fields:{ok:boolean}[]}|{warning:string}} */
+        /** @returns a verdict `{ correct, fields }`, or `{ warning }` when the answer is not ready to grade. */
         check(verb) {
             const targetForms = verb[tenseKey];
             if (!targetForms) return { warning: 'This exercise has no conjugations to fill in.' };

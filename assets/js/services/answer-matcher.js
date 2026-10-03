@@ -12,33 +12,24 @@
 
 import { normalizePhrase, prepositionSpellings } from './grammar.js';
 
-/** Derives the grammar-based alternatives for one answer. */
-const deriveSpellings = (answer) => prepositionSpellings(answer);
-
 /** A dataset answer is either a plain string or `{ a, alt }`; both are read here. */
 const toBlank = (answer) => (typeof answer === 'string' ? { a: answer } : answer ?? {});
 
 /**
  * Every answer that counts as correct for one blank, normalised and without
  * duplicates. The dataset's own answer comes first so it stays the one shown.
- * @param {string|{a?: string, alt?: string[]}} answer
- * @returns {string[]}
  */
 export function acceptedAnswers(answer) {
     const blank = toBlank(answer);
     const primary = normalizePhrase(blank.a);
     const listed = Array.isArray(blank.alt) ? blank.alt.map(normalizePhrase) : [];
-    const all = [primary, ...deriveSpellings(blank.a), ...listed].filter(Boolean);
+    const all = [primary, ...prepositionSpellings(blank.a), ...listed].filter(Boolean);
     return [...new Set(all)];
 }
 
 /**
- * Grades one blank.
- * @param {string} given raw input from the learner
- * @param {string|{a?: string, alt?: string[]}} answer the dataset answer
- * @param {{allowExtraWords?: boolean}} [options] when true, "der Mann" answers a
- *   blank whose answer is "der", so a whole-phrase answer is still right
- * @returns {{ok: boolean, accepted: string[]}}
+ * Grades one blank. `allowExtraWords` lets "der Mann" answer a blank holding
+ * only "der", so a whole-phrase answer is still right.
  */
 export function matchAnswer(given, answer, { allowExtraWords = false } = {}) {
     const accepted = acceptedAnswers(answer);
@@ -71,8 +62,6 @@ function isAnswerPlusOneWord(typed, answer) {
  * The accepted answers as one short string, for the note shown next to a wrong
  * control. Capped, because the note sits in a nowrap badge beside the input and
  * must not push the sentence apart on a phone.
- * @param {string[]} accepted
- * @param {number} [max]
  */
 export function formatAccepted(accepted, max = 3) {
     const list = Array.isArray(accepted) ? accepted.filter(Boolean) : [];

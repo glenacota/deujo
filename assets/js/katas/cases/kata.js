@@ -63,11 +63,7 @@ function renderHelpMatrix() {
     `;
 }
 
-/**
- * Builds the case kata and mounts its section into `container` straight away,
- * so `el` is fully populated for the caller and never null.
- * @param {HTMLElement} container
- */
+/** Mounts the case kata's section, so `el` is populated for the caller. */
 export function createCaseKata(container) {
     let inputs = [];
 
@@ -105,9 +101,6 @@ export function createCaseKata(container) {
             });
         },
 
-        /**
-         * @returns {{correct:boolean,fields:{ok:boolean}[]}|{warning:string}}
-         */
         check(item) {
             if (!inputs.length || inputs.some((input) => !input.value.trim())) {
                 return { warning: 'Please fill in all blanks before checking.' };

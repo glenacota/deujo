@@ -82,14 +82,12 @@ export class GameState {
     this.beltProgress[kataId] = Math.min(Math.max(Math.round(next * 100) / 100, 0), maxProgress);
   }
 
-  /** Rewrites progress as "belt N, credit points in", clamped inside the belt. */
   #creditBelt(kataId, credit) {
     const belt = this.getCurrentBelt(kataId);
     const interval = CONFIG.rules.milestoneInterval;
     this.beltProgress[kataId] = belt * interval + Math.min(credit, interval);
   }
 
-  /** @returns {boolean} true if this answer completed a milestone (belt promotion) */
   incrementStreak(kataId) {
     const previousBelt = this.getCurrentBelt(kataId);
     this.streak++;
@@ -101,7 +99,6 @@ export class GameState {
     return promoted;
   }
 
-  /** @returns {boolean} true if this mistake dropped the player into a lower belt */
   resetStreak(kataId) {
     const previousBelt = this.getCurrentBelt(kataId);
     this.streak = 0;
@@ -116,7 +113,6 @@ export class GameState {
    * A skipped exercise costs half a point, and the SRS schedule is left alone:
    * the item was never graded. The streak survives, because the streak counts
    * answers and a skipped item is not a wrong one.
-   * @returns {boolean} true if the skip dropped the player into a lower belt
    */
   applySkip(kataId) {
     const previousBelt = this.getCurrentBelt(kataId);
@@ -138,7 +134,6 @@ export class GameState {
    * Points earned inside the current belt, so the tick bar can show an exact
    * count instead of a rounded percentage. Fractional: a skip leaves half a
    * point and a fresh belt starts with a fifth.
-   * @returns {number} 0..milestoneInterval
    */
   getBeltPointsEarned(kataId) {
     const interval = CONFIG.rules.milestoneInterval;
@@ -175,7 +170,6 @@ export class GameState {
     return chosen;
   }
 
-  /** Moves the item up a box on a correct answer, back to the first box on a mistake. */
   recordAnswer(kataId, itemId, correct) {
     const previous = SrsStore.get(kataId, itemId) ?? newRecord();
     SrsStore.set(kataId, itemId, schedule(correct, previous));

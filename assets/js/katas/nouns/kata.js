@@ -34,12 +34,7 @@ function setGenderActive(btn, active) {
     btn.classList.toggle('dark:bg-indigo-950/60', active);
 }
 
-/**
- * Builds the noun kata and mounts its section into `container` straight away,
- * so `el` is fully populated for the caller and never null. `el` is read-only
- * from here on: only `gender` changes between items.
- * @param {HTMLElement} container
- */
+/** Mounts the noun kata's section, so `el` is populated for the caller. `el` is read-only afterwards: only `gender` changes between items. */
 export function createNounKata(container) {
     let gender = null;
 
@@ -93,7 +88,7 @@ export function createNounKata(container) {
             el.genderButtons.forEach((btn) => setGenderActive(btn, false));
         },
 
-        /** @returns {{correct:boolean,fields:{ok:boolean}[]}|{warning:string}} */
+        /** @returns a verdict `{ correct, fields }`, or `{ warning }` when the answer is not ready to grade. */
         check(noun) {
             if (!gender) return { warning: 'Please select a gender (der, die, or das).' };
 

@@ -66,8 +66,7 @@ function setBadge(parent, ok) {
  * correction is readable in place. A correct one gets the badge only: six green
  * ticks with repeated text is noise, and the panel already lists the answers.
  *
- * @param {HTMLElement|null} control the input or button to mark
- * @param {{ok: boolean, expected?: string, inside?: boolean, note?: string|null|false}} options
+ * @param options `note: false` suppresses the note entirely
  */
 export function markControl(control, { ok, expected = '', inside = false, note } = {}) {
   if (!control) return;
@@ -110,8 +109,6 @@ export function clearAnswerMarks(root) {
  *
  * Takes the section itself, not a container: every kata is mounted from boot,
  * so locking a container would freeze the katas the learner is not looking at.
- * @param {HTMLElement|null} section the kata's `[data-role="section"]`
- * @param {boolean} locked
  */
 export function setSectionLocked(section, locked) {
   if (!section) return;
