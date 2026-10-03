@@ -12,7 +12,7 @@ const { validateNounDataset } = await import('../../assets/js/katas/nouns/kata.j
 const { validateCaseDataset } = await import('../../assets/js/katas/cases/kata.js');
 const { validatePrepositionDataset } = await import('../../assets/js/katas/prepositions/kata.js');
 const { validateVerbDataset } = await import('../../assets/js/katas/verbs/kata.js');
-const { PREPOSITION_CONTRACTIONS } = await import('../../assets/js/services/grammar.js');
+const { PREPOSITION_CONTRACTIONS, PERSONS } = await import('../../assets/js/services/grammar.js');
 // The preposition kata grades straight through the shared matcher: both
 // spellings of a contractable phrase pass whichever one the dataset stored.
 const { matchAnswer } = await import('../../assets/js/services/answer-matcher.js');
@@ -300,4 +300,62 @@ test('validateVerbDataset accepts a form with a second correct spelling', () => 
 
 test('escapeHtml neutralises markup in dataset strings', () => {
   assert.equal(escapeHtml('<img src=x onerror="a">&\''), '&lt;img src=x onerror=&quot;a&quot;&gt;&amp;&#39;');
+});
+
+const verbKatas = katas.filter((k) => k.id.startsWith('verbs-'));
+
+// The verb help teaches the tense and works a fixed example verb. Printing the
+// item's own conjugation would make the modal the answer, so the rendered body
+// must not depend on the item at all.
+test('the verb help is answer-blind: its body ignores the item', async () => {
+  const dataset = await loadDataset(katas.find((k) => k.id === 'verbs-pres').datasetUrl);
+  const [first, second] = dataset;
+
+  for (const kata of verbKatas) {
+    const fromFirst = kata.getHelpContent(first);
+    const fromSecond = kata.getHelpContent(second);
+
+    assert.equal(fromFirst, fromSecond, `${kata.id} help changes with the item`);
+    assert.equal(fromFirst, kata.getHelpContent(null), `${kata.id} help changes with a missing item`);
+    assert.ok(fromFirst.length > 0, `${kata.id} help is empty`);
+  }
+});
+
+// The graded work per tense: the endings, or the auxiliary and the participle.
+// What the modal says has to cover those, or the kata is unanswerable.
+test('each verb help covers its own tense and nothing else', () => {
+  const [pres, praet, perf] = verbKatas.map((kata) => kata.getHelpContent());
+
+  assert.match(pres, /Endings/, 'the Präsens help shows the endings');
+  assert.doesNotMatch(pres, /Participle/, 'the Präsens help must not borrow the Perfekt sections');
+
+  assert.match(praet, /Strong verbs/, 'the Präteritum help names the strong verbs');
+  assert.doesNotMatch(praet, /sein or haben/, 'the auxiliary only matters in the Perfekt');
+
+  // C: the auxiliary chooser lives in the Perfekt modal alone.
+  assert.match(perf, /sein or haben/, 'the Perfekt help includes the auxiliary chooser');
+  assert.match(perf, /Movement/, 'the chooser leads with movement');
+  assert.match(perf, /haben<\/code> is the default/, 'the chooser gives a default for the rest');
+});
+
+// Six blanks, six rows: a help table that drops one teaches an incomplete set.
+// The Perfekt kata asks for one auxiliary and one participle, so it has no six
+// person table to be missing.
+test('the six-blank verb help lists all six persons', () => {
+  for (const kata of verbKatas.filter((k) => k.id !== 'verbs-perf')) {
+    const html = kata.getHelpContent();
+    for (const { label } of PERSONS) {
+      assert.ok(html.includes(label), `${kata.id} help omits ${label}`);
+    }
+  }
+});
+
+// Collapsed on a phone, so the modal opens as a short list rather than a wall.
+test('the verb help is built from collapsible blocks', () => {
+  for (const kata of verbKatas) {
+    const html = kata.getHelpContent();
+    assert.ok(html.includes('<details'), `${kata.id} help has no collapsible block`);
+    assert.equal(html.match(/<details/g).length >= 4, true, `${kata.id} help needs several blocks`);
+    assert.equal(html.includes('<details class="group rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60" open>'), true, `${kata.id} opens its first block`);
+  }
 });

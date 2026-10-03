@@ -1,12 +1,13 @@
 // katas/verbs/kata.js
 // Self-contained verb-conjugation kata.
 
-import { escapeHtml, createSectionFromTemplate } from '../../services/utility.js';
+import { createSectionFromTemplate } from '../../services/utility.js';
 import { acceptedAnswers, matchAnswer } from '../../services/answer-matcher.js';
 import { markControl } from '../../ui/answer-view.js';
 import { PERSONS, TENSES, normalizePhrase } from '../../services/grammar.js';
 import { assertDataset, hasAltList, hasCoreFields } from '../dataset-rules.js';
 import { getVerbManifest } from './manifest.js';
+import { renderVerbHelp } from './help.js';
 import { verbsTemplate } from './template.js';
 
 // Tense-neutral placeholders (from "gehen"), one per person, so the hint never leaks the current verb's answer.
@@ -66,7 +67,6 @@ export function validateVerbDataset(dataset) {
  * @param tenseKey one of the keys of `TENSES`
  */
 export function createVerbKata(tenseKey, container) {
-    const tense = TENSES[tenseKey];
     const manifest = getVerbManifest(tenseKey);
     // Perfekt asks for one auxiliary choice and one participle, not six forms.
     const isPerf = tenseKey === 'perf';
@@ -124,29 +124,12 @@ export function createVerbKata(tenseKey, container) {
         validateDataset: validateVerbDataset,
         el,
 
-    getHelpContent(verb) {
-            if (!verb) return '';
-
-            return `
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs lg:text-sm border-collapse">
-                        <thead>
-                            <tr class="border-b border-slate-200 dark:border-slate-800 text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
-                                <th class="py-3 px-3">Person</th>
-                                <th class="py-3 px-3">${escapeHtml(tense.label)}</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 font-mono">
-                            ${PERSONS.map((person, index) => `
-                                <tr>
-                                    <td class="py-2 px-3 font-bold">${escapeHtml(person.label)}</td>
-                                    <td class="py-2 px-3">${escapeHtml(acceptedAnswers(verb[tenseKey][index]).join(' / ') || '—')}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `;
+    /**
+         * Answer-blind: the modal teaches the tense's rule and works a fixed
+         * example verb, so it takes no item and cannot print the answer.
+         */
+        getHelpContent() {
+            return renderVerbHelp(tenseKey);
         },
 
         render(verb) {
@@ -182,8 +165,6 @@ export function createVerbKata(tenseKey, container) {
                 // A form may carry `alt` for the second accepted spelling, e.g. a
                 // Perfekt participle written with or without the "ge-" infix.
                 const { ok } = matchAnswer(given, targetForms[i]);
-                // No note: six verdicts in a row would bury the sentence, and the
-                // help modal already lists the full conjugation chart.
                 markControl(input, { ok, note: false });
                 return { ok };
             });
