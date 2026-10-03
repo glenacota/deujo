@@ -12,7 +12,7 @@ const { validateNounDataset } = await import('../../assets/js/katas/nouns/kata.j
 const { validateCaseDataset } = await import('../../assets/js/katas/cases/kata.js');
 const { validatePrepositionDataset } = await import('../../assets/js/katas/prepositions/kata.js');
 const { validateVerbDataset } = await import('../../assets/js/katas/verbs/kata.js');
-const { PREPOSITION_CONTRACTIONS, PERSONS, POSSESSIVE_ENDINGS, DEFINITE, PLURAL_DEFINITE } = await import('../../assets/js/services/grammar.js');
+const { PREPOSITION_CONTRACTIONS, PREPOSITION_GROUPS, PERSONS, POSSESSIVE_ENDINGS, DEFINITE, PLURAL_DEFINITE } = await import('../../assets/js/services/grammar.js');
 // The preposition kata grades straight through the shared matcher: both
 // spellings of a contractable phrase pass whichever one the dataset stored.
 const { matchAnswer } = await import('../../assets/js/services/answer-matcher.js');
@@ -378,6 +378,71 @@ test('the case help is built from collapsible blocks', () => {
   assert.ok(
     html.includes('<details class="group rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60" open>'),
     'the case help opens no first block',
+  );
+});
+
+// The preposition answer is the preposition plus the article it governs, so the
+// help must teach the rection rather than print a phrase. It may also not quote
+// a shipped sentence: if it did, opening help on that item would give the answer.
+test('the preposition help is answer-blind and quotes no shipped sentence', async () => {
+  const kata = katas.find((k) => k.id === 'prepositions');
+  const dataset = await loadDataset(kata.datasetUrl);
+  const html = kata.getHelpContent();
+
+  assert.equal(html, kata.getHelpContent(dataset[0]), 'the preposition help changes with the item');
+  assert.equal(html, kata.getHelpContent(null), 'the preposition help changes with a missing item');
+
+  // Every complete sentence in the help has to be one the dataset does not ship.
+  const shipped = new Set(dataset.map((item) => item.w.replace(/[.,;:?]/g, '').toLowerCase()));
+  const sentences = [...html.matchAll(/>([^<>]*[a-zäöüß]{3}[^<>]*\.)</g)]
+    .map((match) => match[1].replace(/<[^>]*>/g, '').replace(/<[^>]*$/, '').trim());
+
+  assert.ok(sentences.length >= 5, `expected worked sentences, found ${sentences.length}`);
+  for (const sentence of sentences) {
+    const bare = sentence.replace(/[.,;:?]/g, '').toLowerCase();
+    assert.ok(!shipped.has(bare), `the help quotes a shipped sentence: "${sentence}"`);
+  }
+});
+
+// The two-way prepositions are the only part of this kata that cannot be looked
+// up, so the help owes them the Lage/Ziel contrast.
+test('the preposition help teaches the two-way prepositions', () => {
+  const html = katas.find((k) => k.id === 'prepositions').getHelpContent();
+
+  assert.match(html, /Dativ = where/, 'no Lage/Ziel table');
+  assert.match(html, /Akkusativ = to where/, 'no Lage/Ziel table');
+
+  // Every one of the nine must appear in the contrast table, not just in the
+  // generated group list, or the help is claiming coverage it does not have.
+  const table = html.slice(html.indexOf('Dativ = where'), html.indexOf('Short forms'));
+  for (const preposition of PREPOSITION_GROUPS.two) {
+    assert.ok(table.includes(`${preposition} `), `${preposition} has no Lage/Ziel row`);
+  }
+});
+
+// The three one-way groups and the contractions were already generated from
+// grammar.js; they must survive the rewrite.
+test('the preposition help still lists every group and contraction', () => {
+  const html = katas.find((k) => k.id === 'prepositions').getHelpContent();
+
+  for (const list of Object.values(PREPOSITION_GROUPS)) {
+    for (const preposition of list) {
+      assert.ok(html.includes(preposition), `the help omits ${preposition}`);
+    }
+  }
+  for (const [fused, { preposition, article }] of Object.entries(PREPOSITION_CONTRACTIONS)) {
+    assert.ok(html.includes(`${fused} = ${preposition} ${article}`), `the help omits ${fused}`);
+  }
+});
+
+test('the preposition help is built from collapsible blocks', () => {
+  const html = katas.find((k) => k.id === 'prepositions').getHelpContent();
+
+  assert.ok(html.includes('<details'), 'the preposition help has no collapsible block');
+  assert.equal(html.match(/<details/g).length >= 5, true, 'the preposition help needs several blocks');
+  assert.ok(
+    html.includes('<details class="group rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60" open>'),
+    'the preposition help opens no first block',
   );
 });
 

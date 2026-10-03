@@ -2,13 +2,10 @@
 // Self-contained preposition kata: fill in the preposition together with the
 // article it governs, so the case is part of the answer.
 
-import { escapeHtml, createSectionFromTemplate } from '../../services/utility.js';
+import { createSectionFromTemplate } from '../../services/utility.js';
 import { markControl } from '../../ui/answer-view.js';
 import {
     CASE_LABELS,
-    PREPOSITION_CONTRACTIONS,
-    PREPOSITION_GROUP_LABELS,
-    PREPOSITION_GROUPS,
     hasOrderedBlankPlaceholders,
     isPrepositionPhraseInCase,
     normalizePhrase,
@@ -17,6 +14,7 @@ import { matchAnswer, formatAccepted } from '../../services/answer-matcher.js';
 import { renderBlankSentence } from '../../services/blank-renderer.js';
 import { assertDataset, hasCoreFields, hasValidBlanks } from '../dataset-rules.js';
 import { prepositionsManifest } from './manifest.js';
+import { renderPrepositionHelp } from './help.js';
 import { prepositionsTemplate } from './template.js';
 
 // A preposition governs no Nominativ, so an answer may never claim it.
@@ -44,37 +42,6 @@ export function validatePrepositionDataset(dataset) {
     });
 }
 
-function renderHelpMatrix() {
-    return `
-        <div class="p-4 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900/60 font-medium text-indigo-900 dark:text-indigo-200">
-            ☠️ <strong class="text-indigo-600 dark:text-indigo-400">Most prepositions decide the case for you</strong>. Learn each group by heart and only the nine two-way prepositions need real thought: Dativ for a place, Akkusativ for a movement towards it.
-        </div>
-        <div class="mt-4 space-y-4">
-            ${Object.entries(PREPOSITION_GROUPS).map(([group, list]) => `
-                <div>
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 px-1">
-                        ${escapeHtml(PREPOSITION_GROUP_LABELS[group])}
-                    </h3>
-                    <p class="mt-1.5 font-mono text-sm text-slate-700 dark:text-slate-300 px-1">
-                        ${list.map(escapeHtml).join(' · ')}
-                    </p>
-                </div>
-            `).join('')}
-        </div>
-        <div class="mt-5">
-            <h3 class="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 px-1">Short forms</h3>
-            <div class="mt-1.5 font-mono text-sm text-slate-700 dark:text-slate-300 px-1 grid grid-cols-2 gap-x-4 gap-y-1">
-                ${Object.entries(PREPOSITION_CONTRACTIONS).map(([form, { preposition, article }]) => `
-                    <span>${escapeHtml(form)} = ${escapeHtml(`${preposition} ${article}`)}</span>
-                `).join('')}
-            </div>
-        </div>
-        <p class="mt-4 text-xs text-slate-500 dark:text-slate-400">Both spellings count as correct, so "zum" and "zu dem" are equally right.</p>
-    `;
-}
-
-
-
 /** Mounts the preposition kata's section, so `el` is populated for the caller. */
 export function createPrepositionKata(container) {
     let inputs = [];
@@ -94,7 +61,7 @@ export function createPrepositionKata(container) {
         el,
 
         getHelpContent() {
-            return renderHelpMatrix();
+            return renderPrepositionHelp();
         },
 
         render(item) {
