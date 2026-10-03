@@ -119,6 +119,39 @@ test('resetAll restores every setting to its default', () => {
   assert.equal(document.documentElement.classList.contains('reduce-motion'), false, 'animations default back on');
 });
 
+test('resetAll leaves stored progress alone', () => {
+  // The settings reset and the "clear progress" action are separate: one drops
+  // preferences, the other drops dm_ progress keys. Only the settings go.
+  const progress = [
+    CONFIG.storage.belt + '_nouns',
+    CONFIG.storage.streak,
+    CONFIG.storage.maxStreak,
+    CONFIG.storage.srs,
+    CONFIG.storage.kata,
+    CONFIG.storage.focusMode,
+  ];
+  for (const key of progress) localStorage.setItem(key, 'keep-me');
+
+  set('sound', false);
+  set('theme', 'dark');
+  resetAll();
+
+  assert.equal(get('sound'), true, 'the setting was reset');
+  for (const key of progress) {
+    assert.equal(localStorage.getItem(key), 'keep-me', `resetAll must not touch ${key}`);
+  }
+});
+
+test('every setting has a dm_ storage key behind it', () => {
+  // DEFAULTS is the list of settings, so each one needs a CONFIG.storage entry
+  // or it would read and write `undefined` as a key.
+  for (const key of Object.keys(defaults())) {
+    assert.equal(typeof CONFIG.storage[key], 'string', `setting "${key}" has no CONFIG.storage key`);
+    assert.ok(CONFIG.storage[key].startsWith(CONFIG.storage.prefix),
+      `setting "${key}" is stored as "${CONFIG.storage[key]}", outside the ${CONFIG.storage.prefix} prefix`);
+  }
+});
+
 test('removeByPrefix clears the prefixed belt keys, not just the prefix', () => {
   // Belt progress only exists as dm_belt_progress_<kataId>; there is no bare key.
   Storage.setNumber(`${CONFIG.storage.belt}_nouns`, 12);

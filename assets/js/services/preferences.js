@@ -5,14 +5,6 @@
 import { CONFIG } from '../config.js';
 import { Storage } from './storage.js';
 
-const KEYS = {
-  theme: CONFIG.storage.theme,
-  sound: CONFIG.storage.sound,
-  animations: CONFIG.storage.animations,
-  confetti: CONFIG.storage.confetti,
-  hotkeys: CONFIG.storage.hotkeys,
-};
-
 export const THEME_MODES = CONFIG.themeModes;
 
 // Every setting is stored in its positive form, so "on" always means the
@@ -37,21 +29,21 @@ export function get(key) {
     const stored = Storage.getTheme();
     return THEME_MODES.includes(stored) ? stored : fallback;
   }
-  return Storage.getBoolean(KEYS[key], fallback);
+  return Storage.getBoolean(CONFIG.storage[key], fallback);
 }
 
 export function set(key, value) {
   if (key === 'theme') {
     Storage.setTheme(value);
   } else {
-    Storage.setBoolean(KEYS[key], value);
+    Storage.setBoolean(CONFIG.storage[key], value);
   }
   applyDocumentPreferences();
 }
 
 /** Puts every setting back to its default, leaving stored progress untouched. */
 export function resetAll() {
-  Object.values(KEYS).forEach((storageKey) => Storage.remove(storageKey));
+  Object.keys(DEFAULTS).forEach((key) => Storage.remove(CONFIG.storage[key]));
   applyDocumentPreferences();
 }
 
