@@ -9,52 +9,14 @@
 // learner the part that has to be thought about: which person, which ending,
 // which auxiliary.
 //
-// Every dynamic string is escaped here. `UiController#showHelpContent` is the one
-// trusted-HTML sink and does not escape for its caller.
+// Every dynamic string is escaped before it reaches `UiController#showHelpContent`,
+// which is the one trusted-HTML sink and does not escape for its caller.
 
 import { escapeHtml } from '../../services/utility.js';
 import { PERSONS } from '../../services/grammar.js';
+import { banner, code, disclosure, rule, ruleList } from '../help-kit.js';
 
-// ---- markup helpers -------------------------------------------------------
-
-const CODE_CLASS = 'bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono';
-
-/** A German word or ending. All input to it is escaped. */
-const code = (value) => `<code class="${CODE_CLASS}">${escapeHtml(value)}</code>`;
-
-/** The warning that opens every kata's help: what a learner would get wrong. */
-function banner(headline, body) {
-    return `
-        <div class="p-4 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900/60 font-medium text-indigo-900 dark:text-indigo-200">
-            <strong class="text-indigo-600 dark:text-indigo-400">${escapeHtml(headline)}</strong>. ${escapeHtml(body)}
-        </div>`;
-}
-
-/**
- * A collapsible block, so a phone opens one idea at a time instead of a long
- * scroll. Native `<details>`: no JS, no focus juggling, keyboard reachable.
- */
-function disclosure(title, bodyHtml, { open = false } = {}) {
-    return `
-        <details class="group rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60"${open ? ' open' : ''}>
-            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-200 [&::-webkit-details-marker]:hidden">
-                <span>${escapeHtml(title)}</span>
-                <span class="shrink-0 text-slate-400 transition-transform group-open:rotate-90" aria-hidden="true">›</span>
-            </summary>
-            <div class="px-4 pb-4 space-y-2 text-sm">${bodyHtml}</div>
-        </details>`;
-}
-
-/** One rule: the pattern in prose, the forms it produces underneath. */
-function rule(patternHtml, forms) {
-    return `
-        <li class="px-1 py-1.5">
-            <span class="block text-slate-700 dark:text-slate-300">${patternHtml}</span>
-            <span class="block font-mono text-xs text-slate-500 dark:text-slate-400">${escapeHtml(forms)}</span>
-        </li>`;
-}
-
-const ruleList = (rules) => `<ul class="space-y-1">${rules.join('')}</ul>`;
+// ---- tables ---------------------------------------------------------------
 
 /** The six persons against one ending each, built from `PERSONS` so it cannot drift. */
 function endingsTable(endings) {
@@ -135,7 +97,7 @@ function praetHelp() {
     return [
         banner(
             'Most verbs are weak',
-            'A weak verb takes the stem + -te + the ending, and nothing in the stem moves. Only strong verbs change the vowel, and they follow no rule.',
+            'A weak verb takes the stem, then -te, then the ending, and nothing in the stem moves. Only strong verbs change the vowel, and they follow no rule.',
         ),
         disclosure('Weak verbs', `
             ${ruleList([
@@ -165,8 +127,8 @@ function praetHelp() {
 function perfHelp() {
     return [
         banner(
-            'Auxiliary first, then participle at the end',
-            'The auxiliary carries the person and the tense; the participle carries the meaning.',
+            'Auxiliary first, then participle',
+            'Almost every Perfekt form is a conjugated auxiliary plus a participle at the end. The auxiliary carries the person and the tense; the participle carries the meaning.',
         ),
         disclosure('Word order', ruleList([
             rule('The auxiliary is the second thing in the sentence, the participle the last word of the clause.', 'Ich <b>habe</b> das Buch <b>gelesen</b>.'),
@@ -178,26 +140,12 @@ function perfHelp() {
             rule('A separable verb keeps its <code>ge-</code>.', 'einkaufen → eingekauft'),
             rule('No <code>ge-</code> after an inseparable prefix or after <code>-ieren</code>, <code>-eln</code>, <code>-ern</code>.', 'verstehen → verstanden · studieren → studiert · sammeln → gesammelt'),
         ])),
-        disclosure('sein or haben', `
-            <ol class="space-y-1 list-decimal pl-4">
-                <li class="px-1 py-1.5">
-                    <span class="block text-slate-700 dark:text-slate-300">Movement from here to there: <code>sein</code>.</span>
-                    <span class="block font-mono text-xs text-slate-500 dark:text-slate-400">gehen · kommen · fahren · laufen · fliegen · aufstehen · einschlafen</span>
-                </li>
-                <li class="px-1 py-1.5">
-                    <span class="block text-slate-700 dark:text-slate-300">A new state begins, or something stays: <code>sein</code>.</span>
-                    <span class="block font-mono text-xs text-slate-500 dark:text-slate-400">aufwachen · bleiben · werden · wachsen · sterben</span>
-                </li>
-                <li class="px-1 py-1.5">
-                    <span class="block text-slate-700 dark:text-slate-300">The verb takes an object: <code>haben</code>.</span>
-                    <span class="block font-mono text-xs text-slate-500 dark:text-slate-400">kaufen · lesen · essen · schreiben · sehen · nehmen</span>
-                </li>
-                <li class="px-1 py-1.5">
-                    <span class="block text-slate-700 dark:text-slate-300">Neither of those? <code>haben</code> is the default, so guess <code>haben</code>.</span>
-                    <span class="block font-mono text-xs text-slate-500 dark:text-slate-400">arbeiten · lernen · warten · tanzen · regnen</span>
-                </li>
-            </ol>
-        `),
+        disclosure('sein or haben', ruleList([
+            rule('Movement from here to there: <code>sein</code>.', 'gehen · kommen · fahren · laufen · fliegen · aufstehen · einschlafen'),
+            rule('A new state begins, or something stays: <code>sein</code>.', 'aufwachen · bleiben · werden · wachsen · sterben'),
+            rule('The verb takes an object: <code>haben</code>.', 'kaufen · lesen · essen · schreiben · sehen · nehmen'),
+            rule('Neither of those? <code>haben</code> is the default, so guess <code>haben</code>.', 'arbeiten · lernen · warten · tanzen · regnen'),
+        ], { ordered: true })),
         disclosure('Where the two verbs mix', ruleList([
             rule('Modal verbs and <code>lassen</code> form one word and take no participle of their own.', 'ich habe gemusst · ich habe gekonnt · ich habe das Auto gelassen'),
             rule('A verb plus <code>zu</code> forms no participle.', 'ich habe vorzulesen'),

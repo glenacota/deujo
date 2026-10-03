@@ -304,6 +304,66 @@ test('escapeHtml neutralises markup in dataset strings', () => {
 
 const verbKatas = katas.filter((k) => k.id.startsWith('verbs-'));
 
+// The noun help teaches gender and plural together, since every plural rule in it
+// hangs off the gender. It must not print the noun on screen or its plural.
+test('the noun help is answer-blind and covers both graded fields', async () => {
+  const kata = katas.find((k) => k.id === 'nouns');
+  const dataset = await loadDataset(kata.datasetUrl);
+  const [first, second] = dataset;
+  const html = kata.getHelpContent();
+
+  assert.equal(html, kata.getHelpContent(first), 'the noun help changes with the item');
+  assert.equal(html, kata.getHelpContent(null), 'the noun help changes with a missing item');
+  assert.equal(html, kata.getHelpContent(second), 'the noun help changes with a different item');
+
+  // Gender is half the graded fields, so it needs its own guidance.
+  assert.match(html, /Gender by ending/, 'no gender guidance');
+  for (const gender of ['der', 'die', 'das']) {
+    assert.ok(html.includes(`<strong>${gender}</strong>`), `no rule about ${gender}`);
+  }
+
+  // 34 shipped nouns have no plural, and their input is disabled. That path has
+  // to be explained or the learner reads the field as "nothing to answer".
+  const pluralLess = dataset.filter((n) => !n.p);
+  assert.ok(pluralLess.length > 0, 'dataset has no plural-less nouns');
+  assert.match(html, /No plural at all/, 'the plural-less path is not covered');
+
+  // The banner has to name the dependency, or the order of the two blocks reads
+  // as arbitrary.
+  assert.match(html, /gender decides the plural/, 'the banner does not say gender comes first');
+});
+
+test('the noun help lists the examples it promises, and they agree with the data', async () => {
+  const kata = katas.find((k) => k.id === 'nouns');
+  const dataset = await loadDataset(kata.datasetUrl);
+  const byWord = new Map(dataset.map((n) => [n.w, n]));
+  const pluralOf = (noun) => (typeof noun.p === 'string' ? noun.p : noun.p?.a);
+  const html = kata.getHelpContent();
+
+  // Every "der Wort → die Wörter" pair in the help must be one the dataset
+  // actually ships, with that exact gender and plural.
+  const pairs = [...html.matchAll(/(der|die|das)\s+([A-ZÄÖÜa-zäöüß-]+)\s*(?:→|->)\s*die\s+([A-ZÄÖÜa-zäöüß-]+)/g)];
+
+  assert.ok(pairs.length >= 8, `expected worked examples, found ${pairs.length}`);
+  for (const [, gender, singular, plural] of pairs) {
+    const noun = byWord.get(singular);
+    assert.ok(noun, `${singular} is not in the shipped dataset`);
+    assert.equal(noun.g, gender, `${singular} is ${noun.g} in the data, help says ${gender}`);
+    assert.equal(pluralOf(noun), plural, `${singular} has plural ${pluralOf(noun)}, help says ${plural}`);
+  }
+});
+
+test('the noun help is built from collapsible blocks', () => {
+  const html = katas.find((k) => k.id === 'nouns').getHelpContent();
+
+  assert.ok(html.includes('<details'), 'the noun help has no collapsible block');
+  assert.equal(html.match(/<details/g).length >= 4, true, 'the noun help needs several blocks');
+  assert.ok(
+    html.includes('<details class="group rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60" open>'),
+    'the noun help opens no first block',
+  );
+});
+
 // The verb help teaches the tense and works a fixed example verb. Printing the
 // item's own conjugation would make the modal the answer, so the rendered body
 // must not depend on the item at all.

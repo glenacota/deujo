@@ -35,6 +35,12 @@ no backend, no login.
 - Every kata ships a `validateDataset()`, and `npm test` must exercise it
   against that kata's shipped JSON (see `tests/unit/katas.test.js`). A new
   kata or dataset without this is incomplete.
+- A kata's help body lives in `<id>/help.js` as a pure function and is built from
+  the helpers in `katas/help-kit.js`. Help must be **answer-blind**: it takes no
+  item, or ignores it, so the modal cannot print the answer to the question on
+  screen. Worked examples are fixed nouns/verbs, never the current item, and a
+  `der X → die Y` example in the help has to be one the shipped dataset actually
+  contains.
 - The Playwright layer in `tests/e2e/` is a smoke test for the critical path,
   not a parallel coverage effort. It stays small: `critical-path.spec.js` for
   the main loop, `regression-path.spec.js` for the destructive and
