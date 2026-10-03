@@ -34,7 +34,7 @@ class App {
     #settings;
     #katas = [];
     #entries = new Map(); // kata id -> { kata, dataset }
-    #datasets = new Map(); // dataset URL -> Promise<dataset>
+    #datasets = new Map(); // dataset URL -> Promise<dataset>, shared by katas on one file
     #focusModeActive = false;
     #phase = 'answering';
 
@@ -60,7 +60,7 @@ class App {
     async bootstrap() {
         try {
             this.#katas = loadKatas(dom.focus.sections);
-            this.#katas.forEach((kata) => this.#entries.set(kata.id, { kata, dataset: null, loading: null }));
+            this.#katas.forEach((kata) => this.#entries.set(kata.id, { kata, dataset: null }));
             this.#state = new GameState(this.#katas.map((p) => p.id));
             this.#init();
         } catch (error) {
@@ -113,13 +113,16 @@ class App {
         const entry = this.#entries.get(id);
         if (!entry) return null;
         if (entry.dataset) return entry.dataset;
-        if (entry.loading) return entry.loading;
 
         this.#focus.showStatus('Loading exercises...');
-        const datasetUrl = entry.kata.datasetUrl;
-        let datasetPromise = this.#datasets.get(datasetUrl);
-        if (!datasetPromise) {
-            datasetPromise = fetch(datasetUrl)
+
+        // The three verb katas share one file, so the fetch and the schema check
+        // are cached by URL rather than per kata: entering all six katas costs
+        // four requests, not six. A failure evicts the entry so the next attempt
+        // really refetches instead of replaying the same rejection forever.
+        const { datasetUrl } = entry.kata;
+        if (!this.#datasets.has(datasetUrl)) {
+            this.#datasets.set(datasetUrl, fetch(datasetUrl)
                 .then((response) => {
                     if (!response.ok) throw new Error(`Failed to load dataset for "${id}".`);
                     return response.json();
@@ -133,33 +136,23 @@ class App {
                     return dataset;
                 })
                 .catch((error) => {
-                    if (this.#datasets.get(datasetUrl) === datasetPromise) {
-                        this.#datasets.delete(datasetUrl);
-                    }
+                    this.#datasets.delete(datasetUrl);
                     throw error;
-                });
-            this.#datasets.set(datasetUrl, datasetPromise);
+                }));
         }
 
-        const request = datasetPromise
-            .then((dataset) => {
-                entry.dataset = dataset;
-                if (this.#state.activeKata === id) this.#focus.clearStatus();
-                return dataset;
-            })
-            .catch((error) => {
-                console.error(`Error loading dataset for "${id}":`, error);
-                if (this.#state.activeKata === id) {
-                    this.#focus.showStatus(`Could not load ${entry.kata.name} exercises.`, 'error');
-                }
-                return null;
-            })
-            .finally(() => {
-                if (entry.loading === request) entry.loading = null;
-            });
-
-        entry.loading = request;
-        return request;
+        try {
+            const dataset = await this.#datasets.get(datasetUrl);
+            entry.dataset = dataset;
+            if (this.#state.activeKata === id) this.#focus.clearStatus();
+            return dataset;
+        } catch (error) {
+            console.error(`Error loading dataset for "${id}":`, error);
+            if (this.#state.activeKata === id) {
+                this.#focus.showStatus(`Could not load ${entry.kata.name} exercises.`, 'error');
+            }
+            return null;
+        }
     }
 
     #renderProgress(id) {
