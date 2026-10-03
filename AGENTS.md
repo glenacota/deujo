@@ -30,8 +30,8 @@ no backend, no login.
 - Prefer small, localized edits that match the existing ES module style.
 - Any dynamic string reaching `innerHTML` must be pre-escaped with
   `escapeHtml()` first. The one trusted-HTML sink is
-  `UiController#setTrustedHtml` — its contract is "input is already escaped,"
-  not "this function escapes for you."
+  `UiController#showHelpContent` — its `html` argument must already be escaped,
+  so it does not escape for you.
 - Every kata ships a `validateDataset()`, and `npm test` must exercise it
   against that kata's shipped JSON (see `tests/unit/katas.test.js`). A new
   kata or dataset without this is incomplete.

@@ -12,16 +12,14 @@ Just pure, disciplined practice.
 
 
 ## ⛩️ Features
-- **Noun & Plural** sparring ring: Practice genders and plural forms side-by-side.
-- **Verb Conjugation** katas: Train Präsens, Präteritum, and Perfekt tenses.
-- **Verb Charts**: Strike the `?` key to instantly view the complete conjugation chart.
-- **Cases**: Train Dativ, Genitiv, Akkusativ, and Nominativ cases.
-- **Prepositions**: Fill in the preposition *and* the case its article takes, including the contracted forms (`zum`, `im`, `aufs`). A contraction and its written-out form are both correct: `zum` and `zu dem`, `ins` and `in das`.
-- **Just a spoon of gamification**: Unlock higher belt levels, hold your streak stance, and celebrate milestones.
-- **Leitner spaced repetition**: Three boxes space reviews over time. New items and due items are eligible; due items are selected uniformly, with the 10 most recently shown items skipped when possible. Correct answers move items up one box: box 0 waits 2 days, while boxes 1 and 2 wait 9 days. Box 2 is the maximum. Wrong answers reset items to box 0 and make them due immediately. If no item is due, selection falls back to the available pool. Progress is saved locally.
+- **Noun & Plural** sparring ring: practice genders and plural forms side-by-side.
+- **Verb Conjugation** katas: train Präsens, Präteritum, and Perfekt, with a full conjugation chart on `?`.
+- **Cases**: train Dativ, Genitiv, Akkusativ and Nominativ.
+- **Prepositions**: fill in the preposition *and* the case its article takes, including the contracted forms (`zum`, `im`, `aufs`).
+- **Just a spoon of gamification**: unlock higher belt levels, hold your streak stance, and celebrate milestones.
+- **Leitner spaced repetition**: three boxes space reviews over time, so due items come back and new ones wait. Progress is saved locally.
 - **Kiai! Sound FX**.
-- **Settings**: press `,` or use the gear button in the footer. Theme (System / Light / Dark), sound effects with a test tone, confetti, animations, and hotkeys. Clearing the progress stored in this browser is behind a confirmation in a danger zone.
-
+- **Settings**: press `,` or use the gear button in the footer. Theme, sound effects, confetti, animations and hotkeys. Clearing stored progress sits behind a confirmation in a danger zone.
 
 ## ⚔️ Tech Stack
 * HTML5 & Tailwind CSS (Night-vision Dark Mode ready 🌙)
@@ -29,78 +27,63 @@ Just pure, disciplined practice.
 * Web Audio API & HTML5 Canvas (Synthesized sound & visual effects)
 
 ## 🥋 Enter the Dojo (Quick Start)
-Because the app fetches local JSON datasets (in `./assets/`), serve it via a local HTTP server instead of opening index.html directly.
+The app fetches its JSON datasets from `./assets/`, so serve it over HTTP — opening `index.html` from the filesystem will fail.
 
 ```console
-# 1. Enter the training ground
 git clone https://github.com/glenacota/deujo.git
 cd deujo
-
-# 2. Open the dojo doors (Node or Python)
-npx serve .
-# ...or
-python -m http.server 8000
+npx serve .            # or: python -m http.server 8000
 ```
 
-Point your browser to http://localhost:8000 and begin your first kata! 🚀
+Then open http://localhost:8000 and begin your first kata! 🚀
 
 ## 📜 Add a Kata or Dataset
-To add exercises to an existing kata, append entries to its JSON file in `assets/datasets/`. Keep each entry in that kata's existing schema; its `validateDataset()` function defines required fields and constraints.
+
+To add exercises to an existing kata, append entries to its JSON file in `assets/datasets/`. Each entry must match that kata's existing schema, which its `validateDataset()` defines and enforces.
 
 ### Several correct answers for one blank
+
 A blank can have more than one right answer, so a correct variant is never scored wrong. Two mechanisms cover it:
 
-- **Grammar-derived, no data needed.** A contractable preposition phrase accepts both spellings, whichever one the dataset stored: `zum` and `zu dem` are each correct for the other. Same for `im`/`in dem`, `ins`/`in das`, `am`/`an dem`, `ans`/`an das`, `beim`/`bei dem`, `vom`/`von dem`, `aufs`/`auf das`, and `zur`/`zu der`. A phrase that cannot contract (`auf den`, `durch die`) keeps one spelling.
+- **Grammar-derived, no data needed.** A contractable preposition phrase accepts both spellings, whichever one the dataset stored: `zum` and `zu dem` are each correct for the other, as are all nine standard contractions in `PREPOSITION_CONTRACTIONS` (`grammar.js`). A phrase that cannot contract (`auf den`, `durch die`) keeps one spelling.
 - **`alt` in the data**, for alternatives the grammar service cannot derive. Replace the answer string with `{ "a": "<primary>", "alt": ["<also correct>", ...] }`:
 
 ```json
 {"w":"Name","g":"der","m":"name","p":{"a":"Namen","alt":["Names"]},"id":"n_5b2a8e1a"}
 ```
 
-`alt` works on a case or preposition blank (`{"a":"in das","c":"akk","alt":["ins Büro"]}`), on a noun plural (`p`), and on a verb form inside `pres` / `praet` / `perf`. `validateDataset()` checks every entry, so a malformed `alt` fails at load instead of leaving a blank the learner can never fill. When an answer is wrong, the correction next to the blank lists every accepted spelling.
+`alt` works on a case or preposition blank, on a noun plural (`p`), and on a verb form inside `pres` / `praet` / `perf`. A malformed `alt` fails at load rather than leaving a blank the learner can never fill, and when an answer is wrong the correction beside the blank lists every accepted spelling.
 
-`cases` and `nouns` also accept the article typed with the noun that follows it (`der Mann` for a blank holding `der`), and the noun kata accepts the plural with or without its article (`die Bäume` or `Bäume`).
+To add a whole new kata:
 
-To add a kata:
-1. Add `assets/js/katas/<id>/manifest.js`, `template.js`, and `kata.js`, plus `assets/datasets/<id>.json`.
-2. Give the manifest a unique `id`, `name`, `subtitle`, `datasetUrl`, `helpTitle`, and `accent`. `accent` must be one of the keys in `CONFIG.accents` (`assets/js/config.js`). To add a colour, add it there and run `npm run build:css` — `tests/unit/css-contract.test.js` fails until the class is in the generated stylesheet.
-3. Export a `create...Kata(container)` factory from `kata.js`. It takes the element that holds the kata sections and **mounts the kata itself**: parse your template, append the `[data-role="section"]` it produces, and assign it to `el.section`. There is no separate `mount()` step — every kata is mounted when `loadKatas()` runs at boot, so `el.section` is never null. Any event listeners your controls need are wired in the factory too.
-4. Return the manifest fields, `el`, and these methods: `render(item)`, `check(item)`, `getHelpContent(item)`, and `validateDataset(dataset)`.
-5. Make `validateDataset()` reject anything except a non-empty array of entries matching your kata's schema. `check()` returns one of two shapes: `{ correct, fields }` for a verdict, or `{ warning }` when the answer is not ready to grade. It never returns `null` and never sets `correct` on a warning, so the caller has exactly one branch. Each field is `{ ok }` and nothing else — the expected answers and the learner's input reach the learner through the `markControl` note beside each control, which is where they are legible on a phone. `getHelpContent()` returns an HTML string.
-6. Import the factory in `assets/js/katas/registry.js` and add its call to `loadKatas()`, passing `container` through.
-7. Grade typed text through `matchAnswer(given, answer, options)` from `assets/js/services/answer-matcher.js`, not with a direct string compare, so the learner gets every accepted answer the blank allows. Use `acceptedAnswers(answer)` to show the primary spelling, and `formatAccepted(accepted)` to render the list in a note.
+1. Add `assets/js/katas/<id>/manifest.js`, `template.js` and `kata.js`, plus `assets/datasets/<id>.json`.
+2. The manifest needs a unique `id`, `name`, `subtitle`, `datasetUrl`, `helpTitle` and an `accent` that exists in `CONFIG.accents`. Adding a colour means adding it there *and* running `npm run build:css`.
+3. Export a `create...Kata(container)` factory that parses the template, mounts its `[data-role="section"]` into the container and assigns it to `el.section`. There is no separate mount step: every kata is mounted when `loadKatas()` runs, so `el.section` is never null.
+4. Return the manifest fields, `el`, and `render(item)`, `check(item)`, `getHelpContent(item)` and `validateDataset(dataset)`. `check()` returns either `{ correct, fields }` or `{ warning }` — never null, and never `correct` alongside a warning.
+5. Grade typed text through `matchAnswer()` from `services/answer-matcher.js`, never a direct string compare, so the learner gets every accepted answer. Show the primary spelling with `acceptedAnswers()` and the full list with `formatAccepted()`.
+6. Register the factory in `assets/js/katas/registry.js`.
 
-`el` is populated at construction and read-only afterwards; only per-item selection state (like the selected gender) changes. `validateKata` asserts `el.section` is a real element, so a factory that forgets to mount fails at boot rather than on a keypress.
-
-Use unique IDs and keep dataset paths relative to the site root. Escape dataset text inserted into HTML; prefer `textContent` for plain text. Tailwind scans `index.html` and `assets/js/**/*.js`, so use literal class names and a supported accent. `npm test` checks every registered kata contract and validates all shipped datasets.
+Keep ids unique and dataset paths relative to the site root. Tailwind scans `index.html` and `assets/js/**/*.js`, so use literal class names. `npm test` validates every registered kata and every shipped dataset.
 
 ## 🧪 Tests
-Unit tests run on the Node.js built-in test runner. No test dependencies. A thin Playwright layer covers the few things Node cannot reach: real focus trapping, real key events, the confetti canvas, and the whole run at phone width.
 
 ```console
 npm test               # unit tests
 npm run test:e2e       # browser smoke tests (chromium, iPhone 13 mini viewport)
 npm run test:all       # both
-node --test tests/unit/state.test.js   # run one unit file
-npx playwright test --headed           # watch the browser run
+node --test tests/unit/state.test.js          # one unit file
+npx playwright install chromium               # first time only
 ```
 
-Rules of the harness:
-- Unit tests live in `tests/unit/*.test.js` and are picked up by `npm test`.
-- `tests/helpers/browser-stub.js` installs minimal `localStorage`, `window`, and `document` globals so DOM-adjacent modules import in Node. Call it before the dynamic `import()` of any module that touches those globals.
-- `tests/helpers/browser-stub.js` is import-only: it has no `createElement`. Tests that need elements use `installDomStub()` from `tests/helpers/dom-stub.js`, which adds `createElement` / `createDocumentFragment` / `createTextNode` immediately rather than in a `beforeEach` — kata factories run at module scope in `tests/unit/katas.test.js`. It is enough to mount, render, and grade a kata end to end.
-- Browser tests live in `tests/e2e/*.spec.js`, run from `playwright.config.js`, and start `tests/e2e/server.mjs` automatically. One-time setup: `npm install && npx playwright install chromium`.
-- The browser layer is deliberately a smoke test, not a second coverage suite. Keep it to the critical path; anything expressible as a pure function belongs in a unit test.
-- `Math.random` is seeded before the app boots, so a kata and its answers are reproducible. Never mock a module there: drive the real UI.
+`npm test` runs on Node's built-in test runner with no test dependencies. The Playwright layer is a deliberately small smoke test for what Node cannot reach: real focus trapping, real key events, the confetti canvas, and the whole run at phone width. See `AGENTS.md` for the conventions both layers follow.
 
 ## 🎨 Rebuilding the stylesheet
-The production Tailwind CSS is a committed, static file (`assets/css/tailwind.css`) generated at build time — no CDN compiler runs in the browser. Node is only needed if you change Tailwind classes or `tailwind.config.cjs`.
-Tailwind provides utility classes; `assets/css/app.css` owns answer-state colors through `data-answer-state` attributes.
+
+`assets/css/tailwind.css` is committed and generated at build time — no CDN compiler runs in the browser. Node is only needed if you change Tailwind classes or `tailwind.config.cjs`.
 
 ```console
-npm install
-npm run build:css     # one-shot production build (minified)
-npm run watch:css      # rebuild on file changes while developing
+npm run build:css     # one-shot minified build
+npm run watch:css     # rebuild on change while developing
 ```
 
 ## 🤗 OSS!
