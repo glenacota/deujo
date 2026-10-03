@@ -7,8 +7,12 @@
 // Extends whatever `installBrowserStub` left behind rather than replacing it,
 // so `localStorage` and the listener registry survive.
 
-/** A classList with the DOMList methods the app calls, not just Set's. */
-class StubClassList extends Set {
+/**
+ * A classList with the DOMList methods the app calls, not just Set's. Shared by
+ * every test fake: pass an array of names, never a string, since Set would
+ * iterate a string one character at a time.
+ */
+export class StubClassList extends Set {
   contains(name) { return this.has(name); }
   add(...names) { super.add(...names); }
   remove(...names) { names.forEach((name) => this.delete(name)); }
@@ -92,6 +96,10 @@ class StubElement {
     const [combinator, rest] = selector.trim().includes('>')
       ? selector.split('>').map((part) => part.trim())
       : [null, selector.trim()];
+    // An unsupported shape must fail loudly rather than quietly match nothing.
+    if (combinator && !combinator.startsWith('.')) {
+      throw new Error(`StubElement.querySelectorAll only handles a leading class before ">", got "${combinator}"`);
+    }
     const scope = combinator ? this.children : this.descendants();
     return scope.filter((el) => rest.split(',').map((part) => part.trim()).some((part) => {
       if (part.startsWith('.')) return el.classList.has(part.slice(1));

@@ -7,24 +7,12 @@
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { browser, CONFIG } from '../helpers/bootstrap.js';
+import { StubClassList } from '../helpers/dom-stub.js';
 import { readFile } from 'node:fs/promises';
 
 globalThis.window.matchMedia = () => ({ matches: false, addEventListener() {} });
 
-class FakeClassList {
-  #classes = new Set();
-  add(name) { this.#classes.add(name); }
-  remove(name) { this.#classes.delete(name); }
-  toggle(name, force) {
-    const shouldHave = force ?? !this.#classes.has(name);
-    if (shouldHave) this.#classes.add(name);
-    else this.#classes.delete(name);
-    return shouldHave;
-  }
-  contains(name) { return this.#classes.has(name); }
-}
-
-globalThis.document.documentElement = { classList: new FakeClassList() };
+globalThis.document.documentElement = { classList: new StubClassList() };
 
 const { Storage } = await import('../../assets/js/services/storage.js');
 const { get, set } = await import('../../assets/js/services/preferences.js');
@@ -67,7 +55,7 @@ function stubSettingsDom() {
 
   // The confirmation is a nested dialog: hidden means the `hidden` class is set.
   const confirmBox = {
-    classList: new FakeClassList(),
+    classList: new StubClassList(),
     listeners: new Map(),
     focused: false,
     focus() { this.focused = true; },

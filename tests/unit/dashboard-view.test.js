@@ -6,6 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import '../helpers/bootstrap.js';
+import { StubClassList } from '../helpers/dom-stub.js';
 
 const { dom } = await import('../../assets/js/ui/dom.js');
 const { DashboardView } = await import('../../assets/js/ui/dashboard-view.js');
@@ -17,25 +18,10 @@ test('kataCardTemplate contains a [data-role="belt"] label', async () => {
   assert.match(template[1], /data-role="belt"/);
 });
 
-class FakeClassList {
-  #classes = new Set(['hidden']);
-  add(name) {
-    this.#classes.add(name);
-  }
-  toggle(name, force) {
-    const shouldHave = force ?? !this.#classes.has(name);
-    if (shouldHave) this.#classes.add(name);
-    else this.#classes.delete(name);
-  }
-  contains(name) {
-    return this.#classes.has(name);
-  }
-}
-
 class FakeElement {
   constructor() {
     this.textContent = '';
-    this.classList = new FakeClassList();
+    this.classList = new StubClassList();
     this.dataset = {};
     this._roles = {};
   }
