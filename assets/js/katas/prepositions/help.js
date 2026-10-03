@@ -15,7 +15,7 @@
 
 import { escapeHtml } from '../../services/utility.js';
 import { PREPOSITION_CONTRACTIONS, PREPOSITION_GROUP_LABELS, PREPOSITION_GROUPS } from '../../services/grammar.js';
-import { banner, code, disclosure, rule, ruleList, wordGroup } from '../help-kit.js';
+import { banner, disclosure, rule, ruleList, wordGroup } from '../help-kit.js';
 
 /** The three one-way groups, generated so a table change cannot miss the modal. */
 function groupLists() {
@@ -38,9 +38,10 @@ function locationTable() {
     const pairs = [
         { preposition: 'an', place: 'Die Laterne hängt an der Decke.', move: 'Die Vase hängt an den Haken.' },
         { preposition: 'auf', place: 'Der Brief liegt auf dem Tisch.', move: 'Die Katze springt auf den Schrank.' },
-        { preposition: 'hinter', place: 'Der Hund wartet hinter dem Sofa.', move: 'Die Katze schläft hinter dem Vorhang.' },
+        { preposition: 'hinter', place: 'Der Hund wartet hinter dem Sofa.', move: 'Die Katze springt hinter den Vorhang.' },
         { preposition: 'in', place: 'Die Katze schläft in der Küche.', move: 'Der Hund läuft in den Garten.' },
-        { preposition: 'neben', place: 'Die Lampe steht neben dem Bett.', move: 'Der Hund wartet neben die Tür.' },
+        { preposition: 'neben', place: 'Die Lampe steht neben dem Bett.', move: 'Der Hund läuft neben die Straße.' },
+        { preposition: 'über', place: 'Der Vogel schwebt über dem Sportplatz.', move: 'Der Adler fliegt über das Tal.' },
         { preposition: 'unter', place: 'Der Hund schläft unter dem Tisch.', move: 'Das Kind kriecht unter die Bank.' },
         { preposition: 'vor', place: 'Die Katze wartet vor der Haustür.', move: 'Ein Hund läuft vor das Haus.' },
         { preposition: 'zwischen', place: 'Zwischen den Vorhängen steht ein Bild.', move: 'Er stellt die Karte zwischen die Bücher.' },
@@ -65,7 +66,7 @@ function locationTable() {
                 </tbody>
             </table>
         </div>
-        <p class="mt-3 text-xs text-slate-500 dark:text-slate-400">Every row is the same preposition. Only the case changes, and the case is in the answer.</p>`;
+        <p class="mt-3 text-xs text-slate-500 dark:text-slate-400">Every row is the same preposition twice. Only the case changes, and the case is in the answer.</p>`;
 }
 
 function contractionList() {
@@ -85,12 +86,11 @@ export function renderPrepositionHelp() {
             'Almost none of this is a choice. Learn each group and the article follows. Only the nine two-way prepositions need real thought: Dativ for a place, Akkusativ for a movement towards it.',
         ),
         disclosure('Where, or towards where', `
-            <p class="px-1 text-slate-700 dark:text-slate-300">Nine prepositions take both cases, and this is the only part of the kata that cannot be looked up. Read the verb, not the preposition.</p>
+            <p class="px-1 text-slate-700 dark:text-slate-300">These nine take both cases, and they are the only part of the kata you cannot look up. Read the verb, not the preposition.</p>
             ${ruleList([
                 rule('Something stays, lies, hangs or waits: <strong>Dativ</strong>.', 'liegen · hängen · schlafen · warten · stehen'),
                 rule('Something moves, goes, jumps or puts itself: <strong>Akkusativ</strong>.', 'gehen · laufen · springen · fahren · klettern · stellen · legen'),
-                rule('Two clauses about the same preposition are the fastest way to see it. Only the verb moves.', 'Der Brief liegt <strong>auf dem</strong> Tisch, aber die Kinder klettern <strong>auf den</strong> Tisch.'),
-                rule('The contrast is often spelled out in the sentence itself, with <em>nicht</em>, <em>aber</em> or <em>danach</em> between the two halves.', 'Die Katze schläft <strong>in der</strong> Küche, aber der Hund läuft <strong>in den</strong> Garten.'),
+                rule('Read the verb, then the article. Between the two halves of a contrast only the verb moves.', 'Der Brief liegt <strong>auf dem</strong> Tisch, aber die Kinder klettern <strong>auf den</strong> Tisch.'),
             ])}
             ${locationTable()}
         `, { open: true }),
@@ -100,11 +100,10 @@ export function renderPrepositionHelp() {
                 ${groupLists()}
             </div>
         `),
-        disclosure('When it looks Akkusativ but is Dativ', ruleList([
-            wordGroup('A few verbs take a Dativ even though they sound transitive. With these the thing is <em>auf</em>, not <em>an</em>, and the case stays Dativ.', 'warten auf · sich freuen auf · teilnehmen an · aufhören mit'),
-            wordGroup('<code>von</code> and <code>zu</code> are Dativ even when the sentence is about motion.', 'Der Brief ist von der Rezeption, nicht vom Chef.'),
-            wordGroup('After <code>bis</code> the missing article is supplied, which is why it behaves like a Dativ preposition.', 'bis zum Bahnhof · bis an die Tür'),
-            rule('The Genitiv prepositions <code>wegen</code> and <code>trotz</code> also accept Dativ in speech, but this kata stores the written form, so answer <code>des</code> or <code>der</code>.', 'Trotz <strong>dem</strong> Regen is heard; the kata wants <strong>des</strong> Regens.'),
+        disclosure('Where the group loses to the sentence', ruleList([
+            wordGroup('<code>von</code> and <code>zu</code> stay Dativ even when the sentence is about movement.', 'Der Brief ist von der Rezeption, nicht vom Chef.'),
+            wordGroup('After <code>mit</code> it is nearly always the Dativ, whatever the verb means.', 'mit <strong>dem</strong> Zug · mit meiner Schwester'),
+            rule('<code>wegen</code> and <code>trotz</code> also accept Dativ in speech, but this kata stores the written form, so answer <code>des</code> or <code>der</code>.', 'Trotz <strong>dem</strong> Regen is heard; the kata wants <strong>des</strong> Regens.'),
         ])),
         disclosure('A Genitiv is telegraphed too', ruleList([
             rule('The noun after a Genitiv preposition usually ends in <code>-s</code> or <code>-es</code>, and that is the signal to reach for <code>des</code> or <code>eines</code>.', 'Wegen <strong>des</strong> Regens · wegen <strong>eines</strong> Streiks'),

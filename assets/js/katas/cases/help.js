@@ -3,7 +3,8 @@
 // unit-testable and never touches the DOM.
 //
 // Answer-blind: the body takes no item, so it cannot print the sentence on screen
-// or the case the answer expects.
+// or the case the answer expects. For the same reason it quotes no sentence the
+// dataset ships: the determiner plus its noun is what the learner has to produce.
 //
 // What this kata actually asks: every blank is a determiner — an article, a
 // possessive or a numeral — and the noun it belongs to is always still visible in
@@ -11,8 +12,8 @@
 // this modal is about.
 
 import { escapeHtml } from '../../services/utility.js';
-import { CASE_LABELS, DEFINITE, INDEFINITE, PLURAL_DEFINITE, POSSESSIVE_ENDINGS } from '../../services/grammar.js';
-import { banner, code, disclosure, rule, ruleList, wordGroup } from '../help-kit.js';
+import { CASE_LABELS, DEFINITE, INDEFINITE, PLURAL_DEFINITE, POSSESSIVE_ENDINGS, PREPOSITION_GROUPS } from '../../services/grammar.js';
+import { banner, disclosure, rule, ruleList, wordGroup } from '../help-kit.js';
 
 // ---- tables ---------------------------------------------------------------
 
@@ -98,18 +99,20 @@ function possessiveMatrix() {
 // ---- blocks ---------------------------------------------------------------
 
 function roleHelp() {
+    const genPrepositions = PREPOSITION_GROUPS.gen.map(escapeHtml).join(', ');
+
     return [
         disclosure('Ask what the word does in the sentence', ruleList([
-            rule('It is the one doing the verb, or the one being described. That is the <strong>Nominativ</strong>, and it is the subject of the sentence.', 'Der · Die · Das · Ein · Eine · Mein · Sein'),
-            rule('It is the thing being handed over, moved or said. That is the <strong>Akkusativ</strong>, and most verbs take one object.', 'den Schlüssel · ein Buch · ihre Aufgaben'),
-            rule('It is the person receiving it. That is the <strong>Dativ</strong>, and it comes <em>before</em> the Akkusativ.', 'dem Gast · meiner Schwester · seinem Kollegen'),
-            rule('It belongs to someone, or it follows <code>wegen, trotz, während, statt</code>. That is the <strong>Genitiv</strong>.', 'des Kindes · wegen des Streiks · trotz des Regens'),
+            rule('It does the verb, or is the one being described. That is the <strong>Nominativ</strong>, the subject.', 'Der · Die · Das · Ein · Eine · Mein · Sein'),
+            rule('It is the thing handed over, moved or said. That is the <strong>Akkusativ</strong>, and most verbs take one object.', 'den Schlüssel · ein Buch · ihre Aufgaben'),
+            rule('It is the person who receives it. That is the <strong>Dativ</strong>, and it comes <em>before</em> the Akkusativ.', 'dem Gast · meiner Schwester · seinem Kollegen'),
+            rule('It belongs to someone, or it follows a Genitiv preposition. That is the <strong>Genitiv</strong>.', 'des Kindes · wegen des Streiks · trotz des Regens'),
             rule('A verb is what settles it. Look for one that takes a Dativ, because that case is the one you cannot guess from the meaning alone.', 'bringen · schenken · zeigen · geben · helfen · erklären'),
         ]), { open: true }),
         disclosure('Two objects, two cases', `
             <p class="px-1 text-slate-700 dark:text-slate-300">This is the commonest sentence in the kata, and the commonest mistake, because the two objects sit next to each other and get swapped.</p>
             ${ruleList([
-                rule('When a verb gives something <em>to</em> someone, the person is <strong>Dativ</strong> and the thing is <strong>Akkusativ</strong>. The person comes first.', 'Der Kellner bringt <strong>dem Gast</strong> seine kalten Getränke.'),
+                rule('When a verb gives something <em>to</em> someone, the person is <strong>Dativ</strong> and the thing is <strong>Akkusativ</strong>. The person comes first.', 'Die Ärztin gibt <strong>dem Patienten</strong> ein Rezept.'),
                 rule('Read the verb twice: the object after <em>an</em> is for the person, the object after <em>and</em> is the thing.', 'Der Busfahrer erklärt <strong>dem Touristen</strong> seinen Weg.'),
                 rule('If you know the verb takes a Dativ, the person is never the Akkusativ, however direct the action looks.', 'Eine Ärztin empfiehlt <strong>dem Patienten</strong> eine kurze Pause.'),
             ])}
@@ -117,7 +120,7 @@ function roleHelp() {
         disclosure('Verbs that force a Dativ', ruleList([
             wordGroup('Giving, showing, telling, recommending — the person is the Dativ object.', 'bringen · schenken · zeigen · erklären · empfehlen · geben · leihen · verkaufen'),
             wordGroup('Helping and serving — the person is the Dativ object.', 'helfen · dienen · folgen · schmecken · gefallen · passen · danken · antworten'),
-            rule('The same verb in German usually takes an Akkusativ, so a learner who only knows English picks the wrong article.', 'Ich sehe <strong>ihn</strong>, but I help <strong>ihm</strong>.'),
+            rule('The same verb usually takes an Akkusativ, so a learner who only knows English picks the wrong determiner.', 'Ich sehe <strong>ihn</strong>, but I help <strong>ihm</strong>.'),
             rule('After <code>mit</code> it is nearly always the Dativ, whatever the verb means.', 'mit <strong>dem</strong> Zug · mit meiner Schwester · mit den Schülern'),
         ])),
         disclosure('Possessive determiners', `
@@ -129,18 +132,17 @@ function roleHelp() {
             ])}
         `),
         disclosure('The Genitiv is rare and always telegraphed', ruleList([
-            rule('Genitive nouns are the ones with <code>-s</code> or <code>-es</code> on the end, and the determiner in front of them is <code>des</code>.', 'des Mannes · des Streiks · des Regens · des Busses'),
-            rule('The four Genitiv prepositions all take it: <code>wegen, trotz, während, statt</code>.', 'wegen des Streiks · trotz des Regens · während des Unterrichts · statt des Busses'),
-            rule('A plain possessive is a Genitiv with no preposition at all.', 'den Schlüssel einer Schülerin · die schwere Frage des Lehrers'),
-            rule('There is no other route to the Genitiv in this kata, so if the word ends in <code>-s</code> or <code>-es</code>, it is almost certainly the answer.', 'Sucht die Lehrerin den Schlüssel <strong>einer</strong> Schülerin?'),
+            rule('A masculine or neuter noun in the Genitiv ends in <code>-s</code> or <code>-es</code>, and the determiner in front of it is <strong>des</strong>.', 'des Mannes · des Streiks · des Regens · des Busses'),
+            rule('A feminine noun keeps its ending and takes <strong>einer</strong>, so look there too.', 'einer Schülerin · einer Leiter'),
+            rule(`Every Genitiv preposition takes it, and the list is short: <code>${genPrepositions}</code>.`, 'wegen des Streiks · während des Unterrichts · statt des Busses'),
+            rule('There is no other route to the Genitiv in this kata, so the noun itself gives it away and the determiner is only the last step.', 'Wegen <strong>des</strong> Regens · den Schlüssel <strong>einer</strong> Schülerin'),
         ])),
         disclosure('The articles, all four cases', articleMatrix()),
         disclosure('Where it lies to you', ruleList([
-            rule('<strong>der</strong> is not a safe guess for a man: the Akkusativ is <strong>den</strong> and the Dativ is <strong>dem</strong>.', 'der Schüler → <strong>den</strong> Schülern · <strong>dem</strong> Schüler'),
+            rule('<strong>der</strong> is not a safe guess for a man: the Akkusativ is <strong>den</strong> and the Dativ is <strong>dem</strong>.', 'der Hund → <strong>den</strong> Hund · <strong>dem</strong> Hund'),
             rule('<strong>die</strong> is not a safe guess for a woman: the Dativ is <strong>der</strong>, while Akkusativ and Nominativ both stay <strong>die</strong>.', 'die Mutter → <strong>der</strong> Mutter · die Katze → <strong>der</strong> Katze'),
             rule('The plural is the one row that changes shape across the four cases, so <strong>den</strong> always means Dativ plural here.', 'die Gäste · <strong>den</strong> Schülern'),
             rule('A noun after <code>ein</code> or <code>zwei</code> decides nothing about the case; the verb still does.', 'ein Buch · eine Woche · zwei Brötchen'),
-            rule('<code>sein</code> is the one verb that takes a Dativ subject, so a sentence with <em>ist</em> in it is a place to expect one.', 'Ich bin <strong>der</strong> Student. Er ist <strong>der</strong> Kellner.'),
         ])),
     ].join('');
 }
@@ -150,7 +152,7 @@ export function renderCaseHelp() {
     return [
         banner(
             'The noun is already in the sentence',
-            'Every blank here is an article, a possessive or a numeral, and the noun it belongs to is still there to read. So the gender is never the question. Only the case is.',
+            'Every blank here is an article, a possessive or a numeral, and the noun it belongs to is still there to read. The gender is never the question. Only the case is.',
         ),
         roleHelp(),
     ].join('');

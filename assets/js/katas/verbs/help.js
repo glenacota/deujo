@@ -50,7 +50,7 @@ function exampleTable(forms) {
                 </tbody>
             </table>
         </div>
-        <p class="px-1 text-xs text-slate-500 dark:text-slate-400">A fixed example verb, not the one on screen.</p>`;
+        <p class="px-1 text-xs text-slate-500 dark:text-slate-400">A fixed verb, never the one on screen.</p>`;
 }
 
 // ---- Präsens --------------------------------------------------------------
@@ -60,30 +60,31 @@ const PRES_ENDINGS = ['-e', '-st', '-t', '-en', '-t', '-en'];
 function presHelp() {
     return [
         banner(
-            'Only du and er/sie/es change',
-            'The wir, ihr and sie/Sie forms are the infinitive stem with an ending, so a stem change shows up in the singular alone.',
+            'Only wir, ihr and sie/Sie never change',
+            'Those three take the infinitive stem and an ending, so every stem change in this kata lands in ich, du or er/sie/es.',
         ),
         disclosure('Endings', `
             ${ruleList([
-                rule('Add the ending to the stem (infinitive minus <code>-en</code>).', 'machen → mach- · geh- · lern-'),
-                rule('No ending at all on wir, ihr and sie/Sie.', 'ich mache · wir machen · sie machen'),
+                rule('Add the ending to the stem, which is the infinitive minus <code>-en</code>.', 'machen → mach- · geh- · lern-'),
+                rule('wir, ihr and sie/Sie get an ending and nothing else.', 'ich mache · wir machen · sie machen'),
             ])}
             ${endingsTable(PRES_ENDINGS)}
         `, { open: true }),
         disclosure('Stem changes, in du and er/sie/es only', ruleList([
             rule('<code>a, o, u</code> take an umlaut.', 'du fährst · er löst · ich führe'),
-            rule('<code>au</code> takes <code>äu</code>.', 'du läufst · er läuft'),
+            rule('<code>au</code> becomes <code>äu</code>.', 'du läufst · er läuft'),
             rule('<code>e</code> becomes <code>i</code>.', 'du liest · er nimmt'),
             rule('<code>ei, ie</code> becomes <code>i</code>.', 'du bleibst · er schreibt'),
             rule('Stems in <code>-eln</code> and <code>-ern</code> never change.', 'du sammelst · er wandert'),
-            rule('An inseparable prefix stays unstressed.', 'du verstehst · er bearbeitet'),
-            rule('A stem ending in <code>-s</code>, <code>-ß</code> or <code>-x</code> drops the <code>-st</code>.', 'du heißt · er tut'),
-            rule('A stem ending in <code>-t</code>, <code>-d</code>, <code>-n</code> or <code>-m</code> inserts <code>-e</code>.', 'du rechnest · er findet'),
+            rule('An inseparable prefix stays unstressed, so the stem holds.', 'du verstehst · er bearbeitet'),
+            rule('A stem in <code>-s</code>, <code>-ß</code> or <code>-x</code> drops the <code>-st</code>.', 'du heißt · er heißt'),
+            rule('A stem in <code>-t</code>, <code>-d</code>, <code>-n</code> or <code>-m</code> inserts <code>e</code>.', 'du rechnest · er findet'),
+            rule('A short vowel before consonants takes no <code>e</code>.', 'du tust · er tut'),
         ])),
         disclosure('Read the sentence first', ruleList([
-            rule('The verb is the second thing in the sentence, so the subject gives the person.', 'Heute <b>kaufe ich</b> ein Brot.'),
+            rule('The verb comes second, so the subject gives the person.', 'Heute <b>kaufe ich</b> ein Brot.'),
             rule('A separable prefix jumps to the end of the clause.', 'ich kauf<b>en</b>… → ich kaufe ein Brot <b>ein</b>'),
-            rule('The last row is <code>sie</code> (they) when a plural follows, and <code>Sie</code> (you, polite) otherwise.', 'sie kaufen · Sie kaufen'),
+            rule('The last row is <code>sie</code> (they) with a plural noun, and <code>Sie</code> (polite you) otherwise.', 'sie kaufen · Sie kaufen'),
         ])),
         disclosure('Worked example: fahren', exampleTable(['fahre', 'fährst', 'fährt', 'fahren', 'fahrt', 'fahren'])),
     ].join('');
@@ -97,25 +98,26 @@ function praetHelp() {
     return [
         banner(
             'Most verbs are weak',
-            'A weak verb takes the stem, then -te, then the ending, and nothing in the stem moves. Only strong verbs change the vowel, and they follow no rule.',
+            'A weak verb adds -te and the ending, and nothing in the stem moves. Only strong verbs change the vowel, and they follow no rule.',
         ),
         disclosure('Weak verbs', `
             ${ruleList([
                 rule('Stem + <code>-te</code> + ending.', 'lernen → ich lerne · du lernst · wir lernen'),
-                rule('A stem ending in <code>-t</code> or <code>-d</code> keeps the <code>-te</code> audible instead.', 'ich lerne · du arbeitest · ihr arbeitet'),
+                rule('A stem in <code>-t</code> or <code>-d</code> keeps the <code>e</code> in front of the <code>-te</code>.', 'arbeiten → ich arbeitete · ihr arbeitet'),
             ])}
             ${endingsTable(PRAET_WEAK_ENDINGS)}
         `, { open: true }),
         disclosure('Strong verbs', ruleList([
             rule('The stem vowel changes and has to be learned per verb; there is no dependable pattern.', 'nehmen → ich nahm · trinken → ich trank · singen → ich sang'),
             rule('Verbs in <code>-ieren</code>, <code>-eln</code> and <code>-ern</code> are almost always weak.', 'studieren → ich studierte · sammeln → ich sammelte'),
-            rule('Three verbs do their own thing, so learn all six forms.', 'ich war · ich hatte · ich wurde'),
+            rule('Three verbs run their own course, so learn all six forms of each.', 'ich war · ich hatte · ich wurde'),
         ])),
-        disclosure('Spelling after h and t', ruleList([
-            rule('A stem ending in <code>-t</code> or <code>-h</code> after a vowel turns to <code>s</code> or <code>ch</code>.', 'gehen → ich ging · machen → ich machte · wissen → ich wusste'),
+        disclosure('Two spelling traps', ruleList([
+            rule('Weak verb with a short vowel: <code>ss</code> becomes <code>s</code>.', 'wissen → ich wusste'),
+            rule('Strong verb: <code>-h</code> becomes <code>ch</code>.', 'gehen → ich ging · sehen → ich sah'),
         ])),
         disclosure('Read the sentence first', ruleList([
-            rule('The verb is the second thing in the sentence, so the subject gives the person.', 'Letztes Jahr <b>besuchte ich</b> meine Oma.'),
+            rule('The verb comes second, so the subject gives the person.', 'Letztes Jahr <b>besuchte ich</b> meine Oma.'),
             rule('A separable prefix jumps to the end of the clause.', 'ich kam <b>an</b> · ich <b>kam</b> pünktlich <b>an</b>'),
         ])),
         disclosure('Worked example: nehmen', exampleTable(['nahm', 'nahmst', 'nahm', 'nahmen', 'nahmt', 'nahmen'])),
@@ -127,29 +129,29 @@ function praetHelp() {
 function perfHelp() {
     return [
         banner(
-            'Auxiliary first, then participle',
-            'Almost every Perfekt form is a conjugated auxiliary plus a participle at the end. The auxiliary carries the person and the tense; the participle carries the meaning.',
+            'Auxiliary first, participle last',
+            'Almost every Perfekt form is a conjugated auxiliary plus a participle at the end. The auxiliary carries the person, the participle the meaning.',
         ),
         disclosure('Word order', ruleList([
             rule('The auxiliary is the second thing in the sentence, the participle the last word of the clause.', 'Ich <b>habe</b> das Buch <b>gelesen</b>.'),
             rule('The auxiliary is conjugated exactly like the Präsens of sein or haben.', 'ich habe · du hast · er hat · wir haben · ihr habt · sie haben'),
         ]), { open: true }),
         disclosure('The participle', ruleList([
-            rule('Regular verb: <code>ge-</code> + stem + <code>-t</code>.', 'lernen → gelernt · machen → gemacht'),
-            rule('A verb whose stem vowel changes: <code>ge-</code> + changed stem + <code>-en</code>.', 'gehen → gegangen · lesen → gelesen · nehmen → genommen'),
+            rule('Stem vowel unchanged: <code>ge-</code> + stem + <code>-t</code>.', 'lernen → gelernt · machen → gemacht'),
+            rule('Stem vowel changed: <code>ge-</code> + changed stem + <code>-en</code>.', 'gehen → gegangen · nehmen → genommen'),
             rule('A separable verb keeps its <code>ge-</code>.', 'einkaufen → eingekauft'),
             rule('No <code>ge-</code> after an inseparable prefix or after <code>-ieren</code>, <code>-eln</code>, <code>-ern</code>.', 'verstehen → verstanden · studieren → studiert · sammeln → gesammelt'),
         ])),
         disclosure('sein or haben', ruleList([
-            rule('Movement from here to there: <code>sein</code>.', 'gehen · kommen · fahren · laufen · fliegen · aufstehen · einschlafen'),
-            rule('A new state begins, or something stays: <code>sein</code>.', 'aufwachen · bleiben · werden · wachsen · sterben'),
-            rule('The verb takes an object: <code>haben</code>.', 'kaufen · lesen · essen · schreiben · sehen · nehmen'),
+            rule('Movement from here to there: <strong>sein</strong>.', 'gehen · kommen · fahren · laufen · fliegen · aufstehen · einschlafen'),
+            rule('A new state begins, or something stays: <strong>sein</strong>.', 'aufwachen · bleiben · werden · wachsen · sterben'),
+            rule('The verb takes an object: <strong>haben</strong>.', 'kaufen · lesen · essen · schreiben · sehen · nehmen'),
             rule('Neither of those? <code>haben</code> is the default, so guess <code>haben</code>.', 'arbeiten · lernen · warten · tanzen · regnen'),
         ], { ordered: true })),
         disclosure('Where the two verbs mix', ruleList([
-            rule('Modal verbs and <code>lassen</code> form one word and take no participle of their own.', 'ich habe gemusst · ich habe gekonnt · ich habe das Auto gelassen'),
+            rule('Modal verbs and <code>lassen</code> form one word and take no participle of their own.', 'ich habe gemusst · ich habe das Auto gelassen'),
             rule('A verb plus <code>zu</code> forms no participle.', 'ich habe vorzulesen'),
-            rule('A few verbs accept either auxiliary.', 'schwimmen → geschwimmt or geschwommen'),
+            rule('One verb has two participles, but this kata wants only one of them.', 'schwimmen → ich bin geschwommen'),
             rule('An object can flip the verb over to <code>haben</code>.', 'ich bin gefahren · ich habe ein Auto gefahren'),
         ])),
         disclosure('Worked examples', ruleList([
