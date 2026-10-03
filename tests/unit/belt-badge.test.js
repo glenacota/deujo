@@ -81,7 +81,6 @@ test('a promotion renders its opening fifth as one filled tick', () => {
   const el = render();
 
   assert.equal(state.getBeltPointsEarned(KATA_ID), promotionCredit);
-  assert.equal(state.getBeltProgressPct(KATA_ID), 20, 'one fifth of the way in');
   assert.deepEqual(
     ticks(el).map((tick) => tick.dataset.filled),
     ['true', 'false', 'false', 'false', 'false']
@@ -99,7 +98,6 @@ test('a demotion renders the lower belt four fifths in', () => {
 
   const el = render();
   assert.equal(state.getBeltPointsEarned(KATA_ID), 4);
-  assert.equal(state.getBeltProgressPct(KATA_ID), 80);
   assert.deepEqual(
     ticks(el).map((tick) => tick.dataset.filled),
     ['true', 'true', 'true', 'true', 'false']

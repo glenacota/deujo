@@ -31,8 +31,6 @@ export class GameState {
   }
 
   #beltKey(kataId) { return `${CONFIG.storage.belt}_${kataId}`; }
-  #streakKey(kataId) { return `${CONFIG.storage.streak}_${kataId}`; }
-  #maxStreakKey(kataId) { return `${CONFIG.storage.maxStreak}_${kataId}`; }
 
   /**
    * The streak counts correct answers across every kata, so it no longer hangs
@@ -47,8 +45,9 @@ export class GameState {
       return;
     }
 
-    this.streak = Math.max(0, ...kataIds.map((id) => Storage.getNumber(this.#streakKey(id))));
-    this.maxStreak = Math.max(this.streak, ...kataIds.map((id) => Storage.getNumber(this.#maxStreakKey(id))));
+    const legacyStreak = (baseKey) => Math.max(0, ...kataIds.map((id) => Storage.getNumber(`${baseKey}_${id}`)));
+    this.streak = legacyStreak(CONFIG.storage.streak);
+    this.maxStreak = Math.max(this.streak, legacyStreak(CONFIG.storage.maxStreak));
     this.#persistStreak();
     Storage.setString(CONFIG.storage.streakMigration, '1');
   }
@@ -148,10 +147,6 @@ export class GameState {
     // Rounded: subtracting belt boundaries from a fifth- or half-point value
     // leaves float dust like 0.20000000000000018.
     return Math.round((this.beltProgress[kataId] - belt * interval) * 100) / 100;
-  }
-
-  getBeltProgressPct(kataId) {
-    return (this.getBeltPointsEarned(kataId) / CONFIG.rules.milestoneInterval) * 100;
   }
 
   /**

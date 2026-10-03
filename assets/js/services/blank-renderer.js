@@ -2,6 +2,8 @@
 // Shared fill-in-the-blank sentence renderer for katas whose dataset sentences
 // use `{n}` placeholders (cases, prepositions, and any future kata of this shape).
 
+import { splitBlanks } from './grammar.js';
+
 /**
  * Splits `item.s` on `{n}` placeholders, writes the translation, and appends
  * text nodes + one input per blank to `el.sentence`. Each input is built by
@@ -19,7 +21,7 @@ export function renderBlankSentence(el, item, createInput) {
 
     const fragment = document.createDocumentFragment();
     const inputs = [];
-    const parts = item.s.split(/\{(\d+)\}/g);
+    const parts = splitBlanks(item.s);
     parts.forEach((part, i) => {
         if (i % 2 === 0) {
             if (part) fragment.appendChild(document.createTextNode(part));

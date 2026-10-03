@@ -307,23 +307,23 @@ html.dark .modal-close:hover { color: white; background: rgb(30 41 59); }
 html.dark .modal-key { border-color: rgb(51 65 85); background: rgb(30 41 59); color: rgb(203 213 225); }
 
 :root {
-    --belt-0-from: #f1f5f9; --belt-0-to: #cbd5e1;
-    --belt-1-from: #fef08a; --belt-1-to: #eab308;
-    --belt-2-from: #fed7aa; --belt-2-to: #f97316;
-    --belt-3-from: #a7f3d0; --belt-3-to: #10b981;
-    --belt-4-from: #bae6fd; --belt-4-to: #0284c7;
-    --belt-5-from: #d7b49e; --belt-5-to: #78350f;
-    --belt-6-from: #334155; --belt-6-to: #0f172a;
+    --belt-0-to: #cbd5e1;
+    --belt-1-to: #eab308;
+    --belt-2-to: #f97316;
+    --belt-3-to: #10b981;
+    --belt-4-to: #0284c7;
+    --belt-5-to: #78350f;
+    --belt-6-to: #0f172a;
 }
 /* Belt colour tokens, one class per rank. .belt-label-N supplies the solid
    colour the tick bar paints with. */
-.belt-label-0 { --belt-fill-from: var(--belt-0-from); --belt-fill-to: var(--belt-0-to); }
-.belt-label-1 { --belt-fill-from: var(--belt-1-from); --belt-fill-to: var(--belt-1-to); }
-.belt-label-2 { --belt-fill-from: var(--belt-2-from); --belt-fill-to: var(--belt-2-to); }
-.belt-label-3 { --belt-fill-from: var(--belt-3-from); --belt-fill-to: var(--belt-3-to); }
-.belt-label-4 { --belt-fill-from: var(--belt-4-from); --belt-fill-to: var(--belt-4-to); }
-.belt-label-5 { --belt-fill-from: var(--belt-5-from); --belt-fill-to: var(--belt-5-to); }
-.belt-label-6 { --belt-fill-from: var(--belt-6-from); --belt-fill-to: var(--belt-6-to); }
+.belt-label-0 { --belt-fill-to: var(--belt-0-to); }
+.belt-label-1 { --belt-fill-to: var(--belt-1-to); }
+.belt-label-2 { --belt-fill-to: var(--belt-2-to); }
+.belt-label-3 { --belt-fill-to: var(--belt-3-to); }
+.belt-label-4 { --belt-fill-to: var(--belt-4-to); }
+.belt-label-5 { --belt-fill-to: var(--belt-5-to); }
+.belt-label-6 { --belt-fill-to: var(--belt-6-to); }
 
 /* Belt progress, two bars per kata. The upper bar (.belt-tick-held) is always
    full and wears the current belt's colour: the belt you hold. The lower bar

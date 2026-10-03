@@ -63,14 +63,13 @@ test('answer-state colors and reduced-motion selectors use emitted attributes an
 });
 
 test('the belt tick bar paints with the current belt gradient', () => {
-  // Every rank class must supply both gradient stops, or a filled tick falls
-  // back to no background-image and silently renders as an empty tick.
+  // Every rank class must supply its solid fill colour, or the held belt falls
+  // back to no background and silently renders empty.
   const rankClasses = [...appCss.matchAll(/^\.belt-label-(\d)\s*\{([^}]*)\}/gm)];
   assert.equal(rankClasses.length, 7, 'one .belt-label-N rule per rank');
 
   for (const [, rank, body] of rankClasses) {
-    assert.match(body, /--belt-fill-from:\s*var\(--belt-\d+-from\)/, `belt ${rank} is missing its from stop`);
-    assert.match(body, /--belt-fill-to:\s*var\(--belt-\d+-to\)/, `belt ${rank} is missing its to stop`);
+    assert.match(body, /--belt-fill-to:\s*var\(--belt-\d+-to\)/, `belt ${rank} is missing its colour`);
   }
 
   // Upper bar: the held belt, always full, in the current belt's colour.

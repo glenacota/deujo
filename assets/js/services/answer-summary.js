@@ -1,16 +1,12 @@
 // services/answer-summary.js
 // Pure grading-to-display logic. No DOM here, so it stays unit testable.
 
-export const VERDICT_TONE = Object.freeze({
-    correct: 'correct',
-    wrong: 'wrong',
-    warning: 'warning',
-});
-
+// A tone is one of these three strings, and `ui-controller.js` owns the class
+// list and the hover hint for each.
 const ICONS = {
-    [VERDICT_TONE.correct]: '✅',
-    [VERDICT_TONE.wrong]: '❌',
-    [VERDICT_TONE.warning]: '⚠️',
+    correct: '✅',
+    wrong: '❌',
+    warning: '⚠️',
 };
 
 /**
@@ -23,8 +19,8 @@ export function summarizeAnswer(result) {
     const correct = Boolean(result?.correct) && wrong.length === 0;
 
     return {
-        tone: correct ? VERDICT_TONE.correct : VERDICT_TONE.wrong,
-        icon: ICONS[correct ? VERDICT_TONE.correct : VERDICT_TONE.wrong],
+        tone: correct ? 'correct' : 'wrong',
+        icon: ICONS[correct ? 'correct' : 'wrong'],
         title: correct
             ? 'Correct!'
             : wrong.length > 1
@@ -44,8 +40,8 @@ export function summarizeAnswer(result) {
  */
 export function summarizeWarning(message) {
     return {
-        tone: VERDICT_TONE.warning,
-        icon: ICONS[VERDICT_TONE.warning],
+        tone: 'warning',
+        icon: ICONS.warning,
         title: String(message ?? '').trim() || '—',
         detail: '',
     };

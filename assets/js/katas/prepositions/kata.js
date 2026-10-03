@@ -6,12 +6,11 @@ import { escapeHtml, createSectionFromTemplate } from '../../services/utility.js
 import { markControl } from '../../ui/answer-view.js';
 import {
     CASE_LABELS,
-    DETERMINERS,
     PREPOSITION_CONTRACTIONS,
     PREPOSITION_GROUP_LABELS,
     PREPOSITION_GROUPS,
-    decomposePrepositionPhrase,
     hasOrderedBlankPlaceholders,
+    isPrepositionPhraseInCase,
     normalizePhrase,
 } from '../../services/grammar.js';
 import { matchAnswer, formatAccepted } from '../../services/answer-matcher.js';
@@ -19,37 +18,21 @@ import { renderBlankSentence } from '../../services/blank-renderer.js';
 import { prepositionsManifest } from './manifest.js';
 import { prepositionsTemplate } from './template.js';
 
+// A preposition governs no Nominativ, so an answer may never claim it.
 const VALID_CASE_NAMES = Object.keys(CASE_LABELS).filter((c) => c !== 'nom');
 
-const GROUP_OF = new Map();
-for (const [group, list] of Object.entries(PREPOSITION_GROUPS)) {
-    for (const preposition of list) GROUP_OF.set(preposition, group);
-}
-
-/** "zum" / "in den" -> the preposition it belongs to, or null when unrecognised. */
-function prepositionOf(answer) {
-    const contracted = PREPOSITION_CONTRACTIONS[answer];
-    if (contracted) return contracted.preposition;
-    const head = answer.split(' ')[0];
-    return GROUP_OF.has(head) ? head : null;
-}
+/**
+ * A phrase is a usable answer only if it starts with a real preposition whose
+ * determiner belongs to the case the entry claims. Whether that phrase is
+ * correct German is the grammar service's judgement, not this kata's.
+ */
+const isUsableAnswer = (answer, caseKey) =>
+    isPrepositionPhraseInCase(normalizePhrase(answer), caseKey);
 
 export function validatePrepositionDataset(dataset) {
     if (!Array.isArray(dataset) || dataset.length === 0) {
         throw new Error('dataset must be a non-empty array');
     }
-
-    /**
-     * A phrase is a usable answer only if it starts with a real preposition whose
-     * determiner exists in the claimed case. The determiner is the first word, so
-     * a longer phrase like "in die Tür" is still accepted as an answer.
-     */
-    const isUsableAnswer = (answer, caseKey) => {
-        const phrase = normalizePhrase(answer);
-        const preposition = prepositionOf(phrase);
-        const determiner = preposition ? decomposePrepositionPhrase(phrase, preposition)?.split(' ')[0] : null;
-        return preposition !== null && determiner !== null && Boolean(DETERMINERS[caseKey]?.has(determiner));
-    };
 
     dataset.forEach((item, index) => {
         const validBlanks = Array.isArray(item?.b) && item.b.length > 0 && item.b.every((blank) => {
@@ -157,7 +140,7 @@ export function createPrepositionKata(container) {
                 input.lang = 'de';
                 input.size = '12';
                 input.placeholder = 'e.g. zum';
-                input.className = 'inline-xl inline-block text-center bg-white dark:bg-slate-950 border placeholder-slate-400 dark:placeholder-slate-600 border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1 lg:px-3 lg:py-1.5 text-base lg:text-xl text-indigo-700 dark:text-indigo-300 focus:outline-none focus:border-purple-500 leading-[1.5rem] lg:leading-[2rem]';
+                input.className = 'inline-block text-center bg-white dark:bg-slate-950 border placeholder-slate-400 dark:placeholder-slate-600 border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1 lg:px-3 lg:py-1.5 text-base lg:text-xl text-indigo-700 dark:text-indigo-300 focus:outline-none focus:border-purple-500 leading-[1.5rem] lg:leading-[2rem]';
                 return input;
             });
         },

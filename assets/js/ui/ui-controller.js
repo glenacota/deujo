@@ -1,14 +1,12 @@
 // ui/ui-controller.js
 // Rendering layer: takes state/data in, updates the DOM
 
-import { VERDICT_TONE } from '../services/answer-summary.js';
-import { renderBeltBadge } from './belt-badge.js';
 import { dom } from './dom.js';
 
 const HINTS = {
-    [VERDICT_TONE.correct]: 'Enter for the next word',
-    [VERDICT_TONE.wrong]: 'Enter or Skip for the next word',
-    [VERDICT_TONE.warning]: 'Fill in the missing answer, then check again',
+    correct: 'Enter for the next word',
+    wrong: 'Enter or Skip for the next word',
+    warning: 'Fill in the missing answer, then check again',
 };
 const VERDICT_TONE_CLASSES = {
     correct: 'border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-[rgb(6_78_59/0.3)] dark:text-emerald-300',
@@ -24,20 +22,10 @@ export class UiController {
         dom.modals.error.reloadBtn.addEventListener('click', () => window.location.reload());
     }
 
-    /** Sole sink for dynamic HTML: callers must pre-escape any interpolated values via escapeHtml(). */
-    #setTrustedHtml(el, html) {
-        el.innerHTML = html;
-    }
-
     /** The streak is global, so one pair of numbers serves every kata and both views. */
     renderStreak(state) {
         dom.header.streak.textContent = state.streak;
         dom.header.max.textContent = state.maxStreak;
-    }
-
-    /** Belt tick bar + "n hits to next belt" readout for one kata's dashboard card. */
-    renderKataProgress(beltEl, kataId, state) {
-        renderBeltBadge(beltEl, state, kataId);
     }
 
     /** Shows the on-brand error modal, replacing the bootstrap failure alert(). */
@@ -63,9 +51,13 @@ export class UiController {
         dom.verdict.root.hidden = true;
     }
 
+    /**
+     * Sole sink for dynamic HTML: `html` must already be escaped, so callers
+     * pre-escape every interpolated value via escapeHtml() first.
+     */
     showHelpContent(title, html) {
         dom.modals.help.title.textContent = title;
-        this.#setTrustedHtml(dom.modals.help.content, html);
+        dom.modals.help.content.innerHTML = html;
     }
 
 }

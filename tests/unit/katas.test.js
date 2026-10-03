@@ -162,6 +162,39 @@ test('validateCaseDataset accepts an alt list and rejects a malformed one', () =
 
 const goodPreposition = { id: 'p_1', w: 'Ich warte beim Arzt.', m: 'I am waiting at the doctor.', s: 'Ich warte {0} Arzt.', b: [{ a: 'beim', c: 'dat' }] };
 
+/** Puts the answers back into a blanked sentence, so it can be compared to `w`. */
+const refill = (item) => {
+  let sentence = item.s;
+  item.b.forEach((blank, index) => {
+    sentence = sentence.replace(`{${index}}`, blank.a);
+  });
+  return sentence;
+};
+
+// `w` is the finished sentence and `s` the blanked one, so filling the blanks
+// has to reproduce `w` exactly. A sentence-initial answer is the easy thing to
+// get wrong: German capitalises it, and a lowercase preposition there is
+// rejected as the correction shown to the learner.
+for (const id of ['cases', 'prepositions']) {
+  test(`the shipped ${id} dataset keeps its sentences and answers consistent`, async () => {
+    const dataset = await loadDataset(katas.find((k) => k.id === id).datasetUrl);
+
+    for (const item of dataset) {
+      assert.equal(refill(item), item.w, `entry ${item.id} does not rebuild its own sentence`);
+    }
+
+    // A blank in first position carries the capital of the sentence it opens.
+    for (const item of dataset.filter((i) => /^\{0\}/.test(i.s))) {
+      const answer = item.b[0].a;
+      assert.equal(
+        answer,
+        answer.charAt(0).toUpperCase() + answer.slice(1),
+        `entry ${item.id} opens a sentence with a lowercase answer`,
+      );
+    }
+  });
+}
+
 test('validatePrepositionDataset requires a real preposition plus a case-correct determiner', () => {
   assert.doesNotThrow(() => validatePrepositionDataset([goodPreposition]));
   assert.throws(() => validatePrepositionDataset([]), /non-empty array/);
@@ -189,6 +222,10 @@ test('validatePrepositionDataset requires a real preposition plus a case-correct
   );
 });
 
+// Grading a preposition blank goes straight through the shared matcher; the
+// grammar half (which case a phrase really produces) is tested in
+// grammar.test.js. These stay here because they run through the kata's data
+// shape, `{a, c}`, as the shipped dataset supplies it.
 test('matchAnswer accepts the contraction and its written-out form, in any case or spacing', () => {
   const blank = { a: 'zum', c: 'dat' };
   for (const given of ['zum', 'Zu dem', 'ZU  DEM', ' zu dem ']) {

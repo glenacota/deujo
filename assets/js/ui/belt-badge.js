@@ -26,16 +26,13 @@ export function renderBeltBadge(el, state, kataId, options = {}) {
 
     const belt = state.getCurrentBelt(kataId);
     const earned = state.getBeltPointsEarned(kataId);
-    const isMaxBelt = belt >= CONFIG.rules.maxBelt;
     const rank = CONFIG.belts.labels[belt];
-    // Black belt has no next rank, so its earned ticks stay on the current colour.
-    const nextBelt = Math.min(belt + 1, CONFIG.rules.maxBelt);
-    const nextRank = CONFIG.belts.labels[belt + 1] ?? null;
-    const progressText = isMaxBelt
+    const progressText = belt >= CONFIG.rules.maxBelt
         ? `${rank} belt, top rank`
-        : `${rank} belt, ${formatPoints(earned)} of ${TICKS} points to ${nextRank} belt`;
+        : `${rank} belt, ${formatPoints(earned)} of ${TICKS} points to ${CONFIG.belts.labels[belt + 1]} belt`;
 
-    el.className = `belt-ticks belt-label-${belt} belt-next-${nextBelt}`
+    // Black belt has no next rank, so its earned ticks stay on the current colour.
+    el.className = `belt-ticks belt-label-${belt} belt-next-${Math.min(belt + 1, CONFIG.rules.maxBelt)}`
         + (compact ? ' belt-ticks-compact' : '');
     el.dataset.label = `${rank} belt`;
     // Hover text follows the render; index.html's static value is only a

@@ -15,10 +15,9 @@ export class AudioEngine {
   }
 
   setSoundOn(isOn) {
-    if (this.#soundOn === isOn) return this.#soundOn;
+    if (this.#soundOn === isOn) return;
     this.#soundOn = isOn;
     set('sound', isOn);
-    return this.#soundOn;
   }
 
   #ensureContext() {

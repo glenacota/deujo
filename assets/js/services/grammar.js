@@ -31,11 +31,27 @@ export const TENSES = {
     perf: { id: 'verbs-perf', label: 'Perfekt' },
 };
 
+/**
+ * The `{n}` blank placeholder, captured. One definition, shared by the dataset
+ * validators that count placeholders and by the renderer that splits on them:
+ * if the two ever disagreed, a dataset could validate and then render wrongly.
+ */
+export const BLANK_PLACEHOLDER = /\{(\d+)\}/g;
+
+/**
+ * The sentence as alternating literal text and blank indices, ready for a
+ * renderer: `'Ich gehe {0} Arzt.'` -> `['Ich gehe ', '0', ' Arzt.', '']`.
+ * Odd positions are blank indices.
+ */
+export function splitBlanks(sentence) {
+    return typeof sentence === 'string' ? sentence.split(BLANK_PLACEHOLDER) : [];
+}
+
 /** True when sentence placeholders map to every blank once, in order. */
 export function hasOrderedBlankPlaceholders(sentence, blankCount) {
     if (typeof sentence !== 'string' || !Number.isInteger(blankCount) || blankCount < 1) return false;
 
-    const placeholders = [...sentence.matchAll(/\{(\d+)\}/g)].map((match) => Number(match[1]));
+    const placeholders = [...sentence.matchAll(BLANK_PLACEHOLDER)].map((match) => Number(match[1]));
     return placeholders.length === blankCount && placeholders.every((index, position) => index === position);
 }
 
@@ -54,6 +70,11 @@ export const PREPOSITION_GROUPS = {
     gen: ['anlässlich', 'angesichts', 'bezüglich', 'hinsichtlich', 'infolge', 'mittels', 'statt', 'trotz', 'während', 'wegen'],
     two: ['an', 'auf', 'hinter', 'in', 'neben', 'über', 'unter', 'vor', 'zwischen'],
 };
+
+/** Every preposition mapped back to its rection group, so a phrase can be traced to the table above. */
+const PREPOSITION_GROUP_OF = new Map(
+    Object.entries(PREPOSITION_GROUPS).flatMap(([group, list]) => list.map((preposition) => [preposition, group]))
+);
 
 export const PREPOSITION_GROUP_LABELS = {
     akk: 'Akkusativ',
@@ -189,4 +210,36 @@ export function prepositionSpellings(answer) {
     if (contraction) variants.push(contraction);
 
     return [...new Set(variants)];
+}
+
+/** The preposition a phrase belongs to, or null when the phrase is not one. */
+function prepositionOf(answer) {
+    const contracted = PREPOSITION_CONTRACTIONS[answer];
+    if (contracted) return contracted.preposition;
+    const head = answer.split(' ')[0];
+    return PREPOSITION_GROUP_OF.has(head) ? head : null;
+}
+
+/**
+ * True when a phrase is a real preposition plus a determiner, and that
+ * determiner belongs to `caseKey`. "zum" with `dat` and "in die" with `akk`
+ * pass; "beim" with `akk` and a bare "dem" do not.
+ *
+ * Membership rather than a derived single case, because a determiner form can
+ * serve two cases: "mit den" is the correct Dativ answer even though "den" is
+ * also the Akkusativ singular. Checking the claimed case keeps that legitimate
+ * ambiguity from failing a correct entry.
+ * @param {string} answer a phrase, already normalised
+ * @param {string} caseKey one of the `CASE_LABELS` keys
+ */
+export function isPrepositionPhraseInCase(answer, caseKey) {
+    const preposition = prepositionOf(answer);
+    if (!preposition) return false;
+
+    const rest = decomposePrepositionPhrase(answer, preposition);
+    if (!rest) return false;
+
+    // The determiner is the first word, so a longer phrase like "in die Tür"
+    // is still usable as an answer.
+    return DETERMINERS[caseKey]?.has(rest.split(' ')[0]) ?? false;
 }

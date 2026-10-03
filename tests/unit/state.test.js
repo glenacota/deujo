@@ -58,7 +58,7 @@ test('a correct answer promotes exactly once per milestone', () => {
 
   assert.deepEqual(flags, [false, false, false, false, true]);
   assert.equal(state.getCurrentBelt(kataId), 1);
-  assert.equal(state.getBeltProgressPct(kataId), (promotionCredit / milestoneInterval) * 100);
+  assert.equal(state.getBeltPointsEarned(kataId), promotionCredit);
   assert.equal(state.maxStreak, milestoneInterval);
 });
 
@@ -101,7 +101,6 @@ test('a skip costs half a point and leaves the streak alone', () => {
 
   assert.equal(state.applySkip(kataId), false);
   assert.equal(state.beltProgress[kataId], 1.5);
-  assert.equal(state.getBeltProgressPct(kataId), 30);
   assert.equal(state.streak, 2, 'a skipped item is not a wrong answer');
 });
 
@@ -159,16 +158,12 @@ test('a skip does not touch the SRS schedule of the skipped item', () => {
   assert.deepEqual(SrsStore.get(kataId, 'item-1'), record, 'skipping grades nothing');
 });
 
-test('getBeltPointsEarned fills the final belt and matches the percentage', () => {
+test('getBeltPointsEarned fills the final belt', () => {
   const { kataId, state } = stateFor();
   for (let i = 0; i < maxBelt * (milestoneInterval + 1); i++) state.incrementStreak(kataId);
 
   assert.equal(state.getCurrentBelt(kataId), maxBelt);
   assert.equal(state.getBeltPointsEarned(kataId), milestoneInterval, 'top rank reads as full, not 0');
-  assert.equal(
-    state.getBeltProgressPct(kataId),
-    (state.getBeltPointsEarned(kataId) / milestoneInterval) * 100
-  );
 });
 
 test('belt progress is capped and the final belt is always full', () => {
@@ -179,7 +174,7 @@ test('belt progress is capped and the final belt is always full', () => {
   // incrementStreak() is unobservable.
   assert.equal(state.beltProgress[kataId], maxBelt * (milestoneInterval + 1));
   assert.equal(state.getCurrentBelt(kataId), maxBelt);
-  assert.equal(state.getBeltProgressPct(kataId), 100, 'the final belt is always full');
+  assert.equal(state.getBeltPointsEarned(kataId), milestoneInterval, 'the final belt is always full');
 });
 
 test('a mistake steps belt progress back and reports the belt drop', () => {

@@ -8,6 +8,7 @@ import { GameState } from './state.js';
 import { loadKatas } from './katas/registry.js';
 import { applyDocumentPreferences, get } from './services/preferences.js';
 import { clearAnswerMarks, setSectionLocked } from './ui/answer-view.js';
+import { renderBeltBadge } from './ui/belt-badge.js';
 import { DashboardView } from './ui/dashboard-view.js';
 import { dom } from './ui/dom.js';
 import { FocusView } from './ui/focus-view.js';
@@ -73,7 +74,7 @@ class App {
         this.#theme.initTheme();
         this.#dashboard.render(this.#katas);
         this.#ui.renderStreak(this.#state);
-        this.#katas.forEach((kata) => this.#renderBeltProgress(kata.id));
+        this.#katas.forEach(({ id }) => renderBeltBadge(this.#dashboard.getBelt(id), this.#state, id));
         this.#bindEvents();
 
         if (this.#state.wasFocusModeActive() && this.#state.activeKata) {
@@ -163,19 +164,12 @@ class App {
 
     #renderProgress(id) {
         this.#ui.renderStreak(this.#state);
-        this.#renderBeltProgress(id);
+        // Belt badges live on the dashboard card, independent of the kata's own
+        // (lazy) focus-section mount.
+        renderBeltBadge(this.#dashboard.getBelt(id), this.#state, id);
         if (this.#state.activeKata === id) {
             this.#focus.renderHeader(this.#entries.get(id).kata, this.#state);
         }
-    }
-
-    /** Belt badges live on the dashboard card, independent of the kata's own (lazy) focus-section mount. */
-    #renderBeltProgress(id) {
-        this.#ui.renderKataProgress(
-            this.#dashboard.getBelt(id),
-            id,
-            this.#state
-        );
     }
 
     #loadNext(id) {
