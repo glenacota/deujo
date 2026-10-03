@@ -102,6 +102,21 @@ html.dark .blank-input::placeholder { color: rgb(71 85 105); }
 .verdict[hidden] { display: none; }
 .verdict-head { display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap; }
 .verdict-icon { font-size: 1.1rem; line-height: 1; }
+/* The rule behind a wrong answer. Geometry only: the text inherits the tone
+   colour from the panel, so a new tone needs no lesson rules of its own. */
+.verdict-lesson {
+    display: grid;
+    gap: 0.15rem;
+    margin-top: 0.4rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgb(15 23 42 / 0.12);
+    font-size: 0.8rem;
+    line-height: 1.4;
+}
+.verdict-lesson[hidden] { display: none; }
+.verdict-form { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 700; overflow-wrap: anywhere; }
+.verdict-note { opacity: 0.85; overflow-wrap: anywhere; }
+html.dark .verdict-lesson { border-top-color: rgb(226 232 240 / 0.18); }
 
 @keyframes verdict-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) {

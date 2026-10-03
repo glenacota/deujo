@@ -184,6 +184,17 @@ export const DETERMINERS = Object.freeze({
     gen: determinersFor('gen'),
 });
 
+/**
+ * Every object case a determiner form can belong to, so a correction can name
+ * the case the learner slipped into. Empty for a word that is no determiner, and
+ * two entries for the shared ones: "den" is the Akkusativ of `der` and the
+ * Dativ of the plural, so no single case can be claimed for it.
+ */
+export function determinerCases(form) {
+    const word = normalizePhrase(form);
+    return word ? Object.keys(DETERMINERS).filter((caseKey) => DETERMINERS[caseKey].has(word)) : [];
+}
+
 /** Normalises typed input so `Im` / `im ` / `in  dem` all compare cleanly. */
 export function normalizePhrase(value) {
     return String(value ?? '').trim().toLowerCase().replace(/\s+/g, ' ');
@@ -226,6 +237,17 @@ function prepositionOf(answer) {
     if (contracted) return contracted.preposition;
     const head = answer.split(' ')[0];
     return PREPOSITION_GROUP_OF.has(head) ? head : null;
+}
+
+/**
+ * The rection group of a phrase, so a correction can name the rule that decides
+ * the case. Reads the fused form too: "zum" is `zu`, not a word of its own.
+ * @returns a `PREPOSITION_GROUPS` key, or null when the phrase has no real preposition
+ */
+export function prepositionGroup(phrase) {
+    const answer = normalizePhrase(phrase);
+    if (!answer) return null;
+    return PREPOSITION_GROUP_OF.get(prepositionOf(answer)) ?? null;
 }
 
 /**

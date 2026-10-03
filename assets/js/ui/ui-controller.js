@@ -34,9 +34,9 @@ export class UiController {
         this.#modals.open(dom.modals.error.root);
     }
 
-    /** @param {{tone: string, icon: string, title: string, detail: string}} summary */
+    /** @param {{tone: string, icon: string, title: string, detail: string, lesson: ?{form: string, note: string}}} summary */
     showVerdict(summary) {
-        const { root, icon, title, detail } = dom.verdict;
+        const { root, icon, title, detail, lesson: lessonBox, form, note } = dom.verdict;
 
         // Geometry, animation and the transparent base border all live on
         // `.verdict` in app.css; only the tone palette is a Tailwind concern.
@@ -44,6 +44,12 @@ export class UiController {
         icon.textContent = summary.icon;
         title.textContent = summary.title;
         detail.textContent = summary.detail;
+
+        // The rule behind a wrong answer, as two plain strings: `textContent`
+        // both, so no dataset word can reach the panel as markup.
+        form.textContent = summary.lesson?.form ?? '';
+        note.textContent = summary.lesson?.note ?? '';
+        lessonBox.hidden = !summary.lesson;
 
         root.title = HINTS[summary.tone] ?? '';
         root.hidden = false;

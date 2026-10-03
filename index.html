@@ -109,12 +109,18 @@
         <!-- Each kata owns its own markup (see katas/<kata>/template.js) and mounts itself here. -->
         <div id="kataSections"></div>
 
-        <!-- Right answers read as ✅ green, wrong ones as ❌ red with the correct value always shown. -->
+        <!-- Right answers read as ✅ green, wrong ones as ❌ red with the correct value always shown.
+             A wrong answer also grows the rule that produces that value, so the correction
+             travels to the next sentence instead of dying with this one. -->
         <div id="answerVerdict" class="verdict" hidden role="status" aria-live="polite">
             <div class="verdict-head">
                 <span id="answerVerdictIcon" class="verdict-icon" aria-hidden="true"></span>
                 <span id="answerVerdictTitle" class="text-base font-extrabold uppercase"></span>
                 <span id="answerVerdictDetail" class="text-sm"></span>
+            </div>
+            <div id="answerVerdictLesson" class="verdict-lesson" hidden>
+                <span id="answerVerdictForm" class="verdict-form"></span>
+                <span id="answerVerdictNote" class="verdict-note"></span>
             </div>
         </div>
 

@@ -7,6 +7,7 @@ import { markControl } from '../../ui/answer-view.js';
 import { assertDataset, hasAltList, hasCoreFields } from '../dataset-rules.js';
 import { nounsManifest } from './manifest.js';
 import { renderNounHelp } from './help.js';
+import { renderNounLesson } from './lesson.js';
 import { nounsTemplate } from './template.js';
 
 export function validateNounDataset(dataset) {
@@ -100,9 +101,18 @@ export function createNounKata(container) {
             const pluralAnswer = hasNoPlural ? 'no plural' : `die ${acceptedAnswers(noun.p)[0]}`;
             markControl(el.plural, { ok: pluralOk, expected: pluralAnswer });
 
+            // Gender first, because every plural rule hangs off it: a learner who
+            // has the gender wrong cannot use the plural rule yet.
+            const lesson = !genderOk
+                ? renderNounLesson({ noun, field: 'gender', expected: noun.g })
+                : !pluralOk
+                    ? renderNounLesson({ noun, field: 'plural', expected: pluralAnswer })
+                    : null;
+
             return {
                 correct: genderOk && pluralOk,
                 fields: [{ ok: genderOk }, { ok: pluralOk }],
+                lesson,
             };
         },
     };

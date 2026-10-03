@@ -8,6 +8,7 @@ import { PERSONS, TENSES, normalizePhrase } from '../../services/grammar.js';
 import { assertDataset, hasAltList, hasCoreFields } from '../dataset-rules.js';
 import { getVerbManifest } from './manifest.js';
 import { renderVerbHelp } from './help.js';
+import { renderVerbLesson } from './lesson.js';
 import { verbsTemplate } from './template.js';
 
 // Tense-neutral placeholders (from "gehen"), one per person, so the hint never leaks the current verb's answer.
@@ -116,6 +117,13 @@ export function createVerbKata(tenseKey, container) {
         return {
             correct: auxOk && partOk,
             fields: [{ ok: auxOk }, { ok: partOk }],
+            // The auxiliary is the choice that carries the rule, so a wrong one
+            // outranks a wrong participle.
+            lesson: !auxOk
+                ? renderVerbLesson({ verb, tenseKey, index: null, expected: targets[0].aux })
+                : !partOk
+                    ? renderVerbLesson({ verb, tenseKey, index: 0, expected: targets[0].participle })
+                    : null,
         };
     }
 
@@ -160,16 +168,24 @@ export function createVerbKata(tenseKey, container) {
                 return { warning: 'Please fill in all six conjugations before checking.' };
             }
 
+            const misses = [];
             const fields = el.inputs.map((input, i) => {
                 const given = input.value.trim();
                 // A form may carry `alt` for the second accepted spelling, e.g. a
                 // Perfekt participle written with or without the "ge-" infix.
-                const { ok } = matchAnswer(given, targetForms[i]);
+                const { ok, accepted } = matchAnswer(given, targetForms[i]);
                 markControl(input, { ok, note: false });
+                if (!ok) misses.push({ index: i, expected: accepted[0] });
                 return { ok };
             });
 
-            return { correct: fields.every((f) => f.ok), fields };
+            return {
+                correct: fields.every((f) => f.ok),
+                fields,
+                // The first miss teaches: six wrong endings need six panels, and
+                // one is already on screen.
+                lesson: renderVerbLesson({ verb, tenseKey, ...misses[0] }),
+            };
         },
     };
 }

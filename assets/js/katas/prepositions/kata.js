@@ -15,6 +15,7 @@ import { renderBlankSentence } from '../../services/blank-renderer.js';
 import { assertDataset, hasCoreFields, hasValidBlanks } from '../dataset-rules.js';
 import { prepositionsManifest } from './manifest.js';
 import { renderPrepositionHelp } from './help.js';
+import { renderPrepositionLesson } from './lesson.js';
 import { prepositionsTemplate } from './template.js';
 
 // A preposition governs no Nominativ, so an answer may never claim it.
@@ -88,6 +89,7 @@ export function createPrepositionKata(container) {
                 return { warning: 'Please fill in all blanks before checking.' };
             }
 
+            const misses = [];
             const fields = inputs.map((input, i) => {
                 const given = input.value.trim();
                 const { ok, accepted } = matchAnswer(given, item.b[i]);
@@ -96,12 +98,15 @@ export function createPrepositionKata(container) {
                 // accepted spelling, so "zum" and "zu dem" are both visible
                 // before the learner retypes one.
                 markControl(input, { ok, expected: accepted[0], note: ok ? null : formatAccepted(accepted) });
+                if (!ok) misses.push(accepted[0]);
                 return { ok };
             });
 
             return {
                 correct: fields.every((f) => f.ok),
                 fields,
+                // The rection group of the first miss, named from grammar.js.
+                lesson: renderPrepositionLesson({ expected: misses[0] }),
             };
         },
     };

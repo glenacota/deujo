@@ -9,6 +9,7 @@ import { renderBlankSentence } from '../../services/blank-renderer.js';
 import { assertDataset, hasCoreFields, hasValidBlanks } from '../dataset-rules.js';
 import { casesManifest } from './manifest.js';
 import { renderCaseHelp } from './help.js';
+import { renderCaseLesson } from './lesson.js';
 import { casesTemplate } from './template.js';
 
 const VALID_CASE_NAMES = Object.keys(CASE_LABELS);
@@ -74,6 +75,7 @@ export function createCaseKata(container) {
                 return { warning: 'Please fill in all blanks before checking.' };
             }
 
+            const misses = [];
             const fields = inputs.map((input, i) => {
                 const given = input.value.trim();
                 // The learner may type the article with the noun that follows it
@@ -82,12 +84,16 @@ export function createCaseKata(container) {
                 // The dataset spelling, not the whole answer object, goes on show.
                 const expected = accepted[0] ?? item.b[i].a;
                 markControl(input, { ok, expected, note: ok ? null : formatAccepted(accepted) });
+                if (!ok) misses.push({ blank: item.b[i], given, expected });
                 return { ok };
             });
 
             return {
                 correct: fields.every((f) => f.ok),
                 fields,
+                // The first miss teaches: a two-blank sentence has two rules, and
+                // the panel has room for one.
+                lesson: renderCaseLesson(misses[0]),
             };
         },
     };

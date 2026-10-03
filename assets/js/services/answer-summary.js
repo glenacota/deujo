@@ -29,6 +29,10 @@ export function summarizeAnswer(result) {
         detail: correct
             ? 'Well done.'
             : 'Review, learn, and continue.',
+        // The kata's own `{form, note}` for a miss, passed straight through: the
+        // summary decides tone and wording, the kata owns the grammar. A correct
+        // answer teaches nothing, so it never carries one.
+        lesson: correct ? null : (result?.lesson ?? null),
     };
 }
 
@@ -44,5 +48,7 @@ export function summarizeWarning(message) {
         icon: ICONS.warning,
         title: String(message ?? '').trim() || '—',
         detail: '',
+        // Nothing was graded, so there is nothing to correct.
+        lesson: null,
     };
 }
