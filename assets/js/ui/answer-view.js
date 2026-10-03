@@ -39,16 +39,21 @@ function setNote(parent, text, state) {
   }
 
   const note = existing ?? parent.appendChild(document.createElement('span'));
-  note.className = `${NOTE_CLASS} text-xs font-semibold leading-[1.2] whitespace-nowrap`;
+  note.className = NOTE_CLASS;
   note.dataset.answerState = state;
   note.textContent = text;
 }
 
-/** A wrapper hangs the badge to the right of the control; a button gets it appended after its label. */
-function setBadge(parent, ok, inside) {
+/**
+ * A wrapper hangs the badge to the right of the control; a button gets it
+ * appended after its label. The badge carries no Tailwind classes: app.css
+ * owns `.answer-badge`, and the tighter `button > .answer-badge` variant, so
+ * an `inside` badge must land in a <button> to pick up its offset.
+ */
+function setBadge(parent, ok) {
   const existing = childOf(parent, BADGE_CLASS);
   const badge = existing ?? document.createElement('span');
-  badge.className = `${BADGE_CLASS} pointer-events-none shrink-0 text-[0.95rem] leading-none ${inside ? 'ml-[0.45rem] text-[0.85rem]' : ''}`;
+  badge.className = BADGE_CLASS;
   badge.textContent = ok ? '✅' : '❌';
   // Always last, so a re-mark never lands between a label and its badge.
   parent.appendChild(badge);
@@ -71,7 +76,7 @@ export function markControl(control, { ok, expected = '', inside = false, note }
   const host = inside ? control : wrapControl(control);
   control.dataset.answerState = ok ? 'correct' : 'wrong';
   control.setAttribute('aria-invalid', String(!ok));
-  setBadge(inside ? control : host, ok, inside);
+  setBadge(inside ? control : host, ok);
 
   if (note === false) {
     setNote(host, null, ok);

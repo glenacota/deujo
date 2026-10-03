@@ -38,7 +38,9 @@ export class UiController {
     showVerdict(summary) {
         const { root, icon, title, detail } = dom.verdict;
 
-        root.className = `verdict grid max-w-xl gap-2 mx-auto mt-4 rounded-2xl border border-transparent px-[1.1rem] py-[0.9rem] text-left animate-[verdict-in_220ms_cubic-bezier(0.2,0.9,0.3,1)] motion-reduce:animate-none ${VERDICT_TONE_CLASSES[summary.tone] ?? VERDICT_TONE_CLASSES.warning}`;
+        // Geometry, animation and the transparent base border all live on
+        // `.verdict` in app.css; only the tone palette is a Tailwind concern.
+        root.className = `verdict ${VERDICT_TONE_CLASSES[summary.tone] ?? VERDICT_TONE_CLASSES.warning}`;
         icon.textContent = summary.icon;
         title.textContent = summary.title;
         detail.textContent = summary.detail;
