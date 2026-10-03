@@ -109,9 +109,7 @@ export function createCaseKata(container) {
          * @returns {{correct:boolean,fields:{ok:boolean}[]}|{warning:string}}
          */
         check(item) {
-            if (!inputs.length) return { warning: 'Please fill in all blanks before checking.' };
-
-            if (inputs.some((input) => !input.value.trim())) {
+            if (!inputs.length || inputs.some((input) => !input.value.trim())) {
                 return { warning: 'Please fill in all blanks before checking.' };
             }
 
