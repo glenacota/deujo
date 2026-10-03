@@ -105,12 +105,31 @@ const CONTRACTED_FORMS = Object.fromEntries(
     ])
 );
 
-/** Possessive determiners per case; only the forms that can actually occur. */
-const POSSESSIVE = {
-    akk: ['meinen', 'meine', 'mein', 'seinen', 'seine', 'sein', 'ihren', 'ihre', 'ihr', 'unseren', 'unsere', 'unser', 'deinen', 'deine', 'dein'],
-    dat: ['meinem', 'meiner', 'meinen', 'seinem', 'seiner', 'seinen', 'ihrem', 'ihrer', 'ihren', 'unserem', 'unserer', 'unseren', 'deinem', 'deiner', 'deinen'],
-    gen: ['meines', 'meiner', 'seines', 'seiner', 'ihres', 'ihrer', 'unseres', 'unserer', 'deines', 'deiner'],
+/** The six possessive stems; each one takes the endings below. */
+const POSSESSIVE_STEMS = ['mein', 'dein', 'sein', 'ihr', 'unser', 'euer'];
+
+/**
+ * What a possessive stem takes, per case. Gendered, because that is where the
+ * endings split: the Akkusativ of `die` and `das` is the bare stem while `der`
+ * grows `-en`, and the Dativ plural is `-en` for every gender.
+ */
+export const POSSESSIVE_ENDINGS = {
+    der: { nom: '', akk: 'en', dat: 'em', gen: 'es' },
+    die: { nom: 'e', akk: 'e', dat: 'er', gen: 'er' },
+    das: { nom: '', akk: '', dat: 'em', gen: 'es' },
+    plural: { nom: 'e', akk: 'e', dat: 'en', gen: 'er' },
 };
+
+/** Every possessive form a case allows, deduplicated: "meine" serves three genders. */
+export const POSSESSIVE = Object.fromEntries(
+    Object.keys(CASE_LABELS)
+        .filter((caseKey) => caseKey !== 'nom')
+        .map((caseKey) => [
+            caseKey,
+            [...new Set(POSSESSIVE_STEMS.flatMap((stem) =>
+                Object.values(POSSESSIVE_ENDINGS).map((byCase) => stem + byCase[caseKey])))],
+        ]),
+);
 
 /** Personal pronouns in the object cases ("ohne mich", "mit mir"). */
 const PERSONAL = {

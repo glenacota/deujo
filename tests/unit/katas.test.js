@@ -12,7 +12,7 @@ const { validateNounDataset } = await import('../../assets/js/katas/nouns/kata.j
 const { validateCaseDataset } = await import('../../assets/js/katas/cases/kata.js');
 const { validatePrepositionDataset } = await import('../../assets/js/katas/prepositions/kata.js');
 const { validateVerbDataset } = await import('../../assets/js/katas/verbs/kata.js');
-const { PREPOSITION_CONTRACTIONS, PERSONS } = await import('../../assets/js/services/grammar.js');
+const { PREPOSITION_CONTRACTIONS, PERSONS, POSSESSIVE_ENDINGS, DEFINITE, PLURAL_DEFINITE } = await import('../../assets/js/services/grammar.js');
 // The preposition kata grades straight through the shared matcher: both
 // spellings of a contractable phrase pass whichever one the dataset stored.
 const { matchAnswer } = await import('../../assets/js/services/answer-matcher.js');
@@ -303,6 +303,83 @@ test('escapeHtml neutralises markup in dataset strings', () => {
 });
 
 const verbKatas = katas.filter((k) => k.id.startsWith('verbs-'));
+
+test('the case help is answer-blind and every worked example is a shipped one', async () => {
+  const kata = katas.find((k) => k.id === 'cases');
+  const dataset = await loadDataset(kata.datasetUrl);
+  const html = kata.getHelpContent();
+
+  assert.equal(html, kata.getHelpContent(dataset[0]), 'the case help changes with the item');
+  assert.equal(html, kata.getHelpContent(null), 'the case help changes with a missing item');
+
+  // "dem Gast", "seinen Weg", "des Kindes": the determiner plus the noun word
+  // right after it, both as the data spells them. A moving cursor, because
+  // indexOf from zero would find an earlier occurrence of the same word.
+  const shipped = new Set();
+  for (const item of dataset) {
+    let cursor = 0;
+    for (const blank of item.b) {
+      const at = item.w.indexOf(blank.a, cursor);
+      if (at < 0) continue;
+      cursor = at + blank.a.length;
+      // Strip trailing punctuation, so "des Kindes?" pairs with the help.
+      const noun = item.w.slice(cursor).trim().split(/\s+/)[0].replace(/[.,;:?!]+$/, '');
+      if (noun) shipped.add(`${blank.a} ${noun}`.toLowerCase());
+    }
+  }
+
+  // A German noun is capitalised and at least three letters, which is what keeps
+  // prose like "<strong>die</strong> and <strong>das</strong> hide" out.
+  const examples = [...html.matchAll(/\b(der|dem|den|des|die|das|mein\w*|dein\w*|sein\w*|ihr\w*|unser\w*|euer\w*|ein\w*)<\/strong>\s+([A-ZÄÖÜ][a-zäöüß]{2,})|\b(der|dem|den|des|die|das|mein\w*|dein\w*|sein\w*|ihr\w*|unser\w*|euer\w*|ein\w*) ([A-ZÄÖÜ][a-zäöüß]{2,})/g)]
+    .map((match) => match.slice(1).filter(Boolean).slice(0, 2));
+  assert.ok(examples.length >= 5, `expected worked examples, found ${examples.length}`);
+
+  for (const [determiner, noun] of examples) {
+    assert.ok(
+      shipped.has(`${determiner.toLowerCase()} ${noun.toLowerCase()}`),
+      `"${determiner} ${noun}" is not a determiner/noun pair the dataset ships`,
+    );
+  }
+});
+
+// A quarter of the answers are possessives, so the help owes them a table, and
+// that table has to come from the grammar service rather than from prose.
+test('the case help tabulates the possessive endings from grammar.js', async () => {
+  const html = katas.find((k) => k.id === 'cases').getHelpContent();
+
+  assert.match(html, /Possessive determiners/, 'no possessive guidance');
+  for (const [gender, byCase] of Object.entries(POSSESSIVE_ENDINGS)) {
+    for (const ending of new Set(Object.values(byCase))) {
+      if (!ending) continue;
+      assert.ok(html.includes(escapeHtml(ending)), `no row for the ${gender} ending -${ending}`);
+    }
+  }
+});
+
+// The article table was already here; it must survive the rewrite.
+test('the case help still carries the full article matrix', () => {
+  const html = katas.find((k) => k.id === 'cases').getHelpContent();
+
+  for (const gender of ['der', 'die', 'das']) {
+    for (const byCase of Object.values(DEFINITE[gender])) {
+      assert.ok(html.includes(byCase), `the article matrix lost ${byCase}`);
+    }
+  }
+  for (const form of Object.values(PLURAL_DEFINITE)) {
+    assert.ok(html.includes(form), `the article matrix lost the plural ${form}`);
+  }
+});
+
+test('the case help is built from collapsible blocks', () => {
+  const html = katas.find((k) => k.id === 'cases').getHelpContent();
+
+  assert.ok(html.includes('<details'), 'the case help has no collapsible block');
+  assert.equal(html.match(/<details/g).length >= 5, true, 'the case help needs several blocks');
+  assert.ok(
+    html.includes('<details class="group rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60" open>'),
+    'the case help opens no first block',
+  );
+});
 
 // The noun help teaches gender and plural together, since every plural rule in it
 // hangs off the gender. It must not print the noun on screen or its plural.

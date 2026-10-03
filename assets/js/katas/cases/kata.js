@@ -1,13 +1,14 @@
 // katas/cases/kata.js
 // Self-contained case-declension kata: fill-in-the-blank sentences with inline inputs.
 
-import { escapeHtml, createSectionFromTemplate } from '../../services/utility.js';
+import { createSectionFromTemplate } from '../../services/utility.js';
 import { markControl } from '../../ui/answer-view.js';
-import { CASE_LABELS, DEFINITE, hasOrderedBlankPlaceholders, INDEFINITE, PLURAL_DEFINITE } from '../../services/grammar.js';
+import { CASE_LABELS, hasOrderedBlankPlaceholders } from '../../services/grammar.js';
 import { formatAccepted, matchAnswer } from '../../services/answer-matcher.js';
 import { renderBlankSentence } from '../../services/blank-renderer.js';
 import { assertDataset, hasCoreFields, hasValidBlanks } from '../dataset-rules.js';
 import { casesManifest } from './manifest.js';
+import { renderCaseHelp } from './help.js';
 import { casesTemplate } from './template.js';
 
 const VALID_CASE_NAMES = Object.keys(CASE_LABELS);
@@ -24,43 +25,6 @@ export function validateCaseDataset(dataset) {
             throw new Error(`entry ${index} has invalid sentence, translation, or blank answers`);
         }
     });
-}
-
-function renderHelpMatrix() {
-    const rows = [
-        { label: 'Masculine', gender: 'der' },
-        { label: 'Feminine', gender: 'die' },
-        { label: 'Neuter', gender: 'das' },
-        { label: 'Plural', gender: null },
-    ];
-    const cases = Object.keys(CASE_LABELS);
-    return `
-        <div class="overflow-x-auto">
-            <table class="w-full min-w-[34rem] border-collapse text-left text-sm">
-                <thead>
-                    <tr class="border-b border-slate-200 text-xs font-bold uppercase text-purple-600 dark:border-slate-800 dark:text-purple-400">
-                        <th class="px-3 py-2"></th>
-                        ${cases.map((c) => `<th class="px-3 py-2">${escapeHtml(CASE_LABELS[c])}</th>`).join('')}
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 font-mono dark:divide-slate-800/60">
-                    ${rows.map(({ label, gender }) => `
-                        <tr>
-                            <th scope="row" class="px-3 py-2 font-sans font-bold">${escapeHtml(label)}</th>
-                            ${cases.map((c) => `
-                                <td class="whitespace-nowrap px-3 py-2">
-                                    ${gender
-                                        ? `${escapeHtml(DEFINITE[gender][c])} / ${escapeHtml(INDEFINITE[gender][c])}`
-                                        : `${escapeHtml(PLURAL_DEFINITE[c])} / —`}
-                                </td>
-                            `).join('')}
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
-        </div>
-        <p class="mt-3 text-xs text-slate-500 dark:text-slate-400">Definite / indefinite. — = no plural indefinite article.</p>
-    `;
 }
 
 /** Mounts the case kata's section, so `el` is populated for the caller. */
@@ -81,8 +45,12 @@ export function createCaseKata(container) {
         validateDataset: validateCaseDataset,
         el,
 
+        /**
+         * Answer-blind: the body takes no item, so it cannot print the sentence on
+         * screen or the case the blank expects.
+         */
         getHelpContent() {
-            return renderHelpMatrix();
+            return renderCaseHelp();
         },
 
         render(item) {
