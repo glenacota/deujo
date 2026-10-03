@@ -95,6 +95,22 @@ html.dark [data-answer-state="wrong"] {
     backdrop-filter: blur(12px);
 }
 .modal-backdrop.hidden { display: none; }
+
+/* ---- Milestone toast ---------------------------------------------------- */
+/* Geometry is shared; only the palette differs between a promotion and a
+   demotion. `.animate-bounce` stays a Tailwind class so the reduced-motion
+   rules above and below can switch it off. */
+.toast-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    border: 4px solid;
+    box-shadow: 0 25px 50px -12px rgb(15 23 42 / 0.25);
+}
+.toast-card--promoted { background: rgb(251 191 36); color: rgb(2 6 23); border-color: rgb(2 6 23); }
+.toast-card--demoted { background: rgb(251 113 133); color: rgb(76 5 25); border-color: rgb(76 5 25); }
+
 #milestoneToast { z-index: 70; }
 canvas#fireworksCanvas { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 60; }
 
