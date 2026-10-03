@@ -35,6 +35,7 @@ class StubElement {
     this.textContent = '';
     this.value = '';
     this.disabled = false;
+    this.listeners = {};
   }
 
   get className() { return [...this.classList].join(' '); }
@@ -83,9 +84,14 @@ class StubElement {
   getAttribute(name) { return this.attributes[name] ?? null; }
   removeAttribute(name) { delete this.attributes[name]; }
 
-  /** The noun kata wires click listeners on its gender buttons in the factory. */
-  addEventListener() {}
-  removeEventListener() {}
+  /** The noun and Perfekt katas wire click listeners on their choice buttons. */
+  addEventListener(type, handler) { (this.listeners[type] ??= []).push(handler); }
+  removeEventListener(type, handler) {
+    this.listeners[type] = (this.listeners[type] ?? []).filter((h) => h !== handler);
+  }
+
+  /** Fires the click handlers this element was given. */
+  click() { (this.listeners.click ?? []).forEach((handler) => handler()); }
 
   matchesTag(tag) { return this.tagName === tag.toUpperCase(); }
 
@@ -130,7 +136,11 @@ class StubTemplate extends StubElement {
       const selfClosing = tag.endsWith('/>');
       const element = new StubElement(name);
       for (const attr of attrs.matchAll(/([\w-]+)="([^"]*)"/g)) {
-        if (attr[1] === 'data-role') element.dataset.role = attr[2];
+        // `data-*` attributes land in `dataset`, camelCased, as in the real DOM.
+        const key = attr[1].startsWith('data-')
+          ? attr[1].slice(5).replace(/-(\w)/g, (_, letter) => letter.toUpperCase())
+          : null;
+        if (key) element.dataset[key] = attr[2];
         else element.setAttribute(attr[1], attr[2]);
       }
       (stack.at(-1) ?? this.content).appendChild(element);

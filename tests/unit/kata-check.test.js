@@ -8,6 +8,7 @@ import '../helpers/bootstrap.js';
 
 const { createPrepositionKata } = await import('../../assets/js/katas/prepositions/kata.js');
 const { createCaseKata } = await import('../../assets/js/katas/cases/kata.js');
+const { createVerbKata } = await import('../../assets/js/katas/verbs/kata.js');
 
 /**
  * Builds a kata on a fresh container, renders once, then grades the same
@@ -160,4 +161,53 @@ test('an unfilled blank still blocks the check with a warning', () => {
   const result = grade(createPrepositionKata, item, ['  ']);
   assert.equal(result.warning, 'Please fill in all blanks before checking.');
   assert.equal(result.correct, undefined, 'a warning is not a verdict');
+});
+
+/** Perfekt kata mounted on its own container, with its choice buttons clickable. */
+const perfekt = (verb) => {
+  const container = document.createElement('div');
+  const kata = createVerbKata('perf', container);
+  kata.render(verb);
+  return (aux, participle) => {
+    container.querySelectorAll('[data-role="aux"]').find((btn) => btn.dataset.aux === aux).click();
+    container.querySelector('[data-role="participle"]').value = participle;
+    return kata.check(verb);
+  };
+};
+
+const GEHEN = {
+  id: 'v_1', w: 'gehen', m: 'to go',
+  perf: ['bin gegangen', 'bist gegangen', 'ist gegangen', 'sind gegangen', 'seid gegangen', 'sind gegangen'],
+};
+
+test('the Perfekt kata grades the auxiliary choice and the participle', () => {
+  // The auxiliary is a choice and the participle the only typed answer.
+  assert.equal(perfekt(GEHEN)('sein', 'gegangen').correct, true);
+  assert.equal(perfekt(GEHEN)('haben', 'gegangen').correct, false);
+  assert.equal(perfekt(GEHEN)('sein', 'gehen').correct, false);
+});
+
+test('the Perfekt kata reads "haben" verbs as haben, not sein', () => {
+  const verb = {
+    id: 'v_2', w: 'machen', m: 'to make',
+    perf: ['habe gemacht', 'hast gemacht', 'hat gemacht', 'haben gemacht', 'habt gemacht', 'haben gemacht'],
+  };
+
+  assert.equal(perfekt(verb)('haben', 'gemacht').correct, true);
+  assert.equal(perfekt(verb)('sein', 'gemacht').correct, false);
+});
+
+test('the Perfekt kata warns before an answer is ready', () => {
+  const kata = createVerbKata('perf', document.createElement('div'));
+  kata.render(GEHEN);
+
+  // No auxiliary chosen: the check reports instead of grading.
+  const noChoice = kata.check(GEHEN);
+  assert.equal(noChoice.correct, undefined);
+  assert.match(noChoice.warning, /sein or haben/);
+
+  // Auxiliary chosen, nothing typed.
+  const noWord = perfekt(GEHEN)('sein', '   ');
+  assert.equal(noWord.correct, undefined);
+  assert.match(noWord.warning, /participle/);
 });

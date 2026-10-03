@@ -4,7 +4,7 @@
 import { escapeHtml, createSectionFromTemplate } from '../../services/utility.js';
 import { acceptedAnswers, matchAnswer } from '../../services/answer-matcher.js';
 import { markControl } from '../../ui/answer-view.js';
-import { PERSONS, TENSES } from '../../services/grammar.js';
+import { PERSONS, TENSES, normalizePhrase } from '../../services/grammar.js';
 import { assertDataset, hasAltList, hasCoreFields } from '../dataset-rules.js';
 import { getVerbManifest } from './manifest.js';
 import { verbsTemplate } from './template.js';
@@ -13,8 +13,29 @@ import { verbsTemplate } from './template.js';
 const TENSE_PLACEHOLDERS = {
     pres: ['e.g. gehe', 'e.g. gehst', 'e.g. geht', 'e.g. gehen', 'e.g. geht', 'e.g. gehen'],
     praet: ['e.g. ging', 'e.g. gingst', 'e.g. ging', 'e.g. gingen', 'e.g. gingt', 'e.g. gingen'],
-    perf: ['e.g. bin gegangen', 'e.g. bist gegangen', 'e.g. ist gegangen', 'e.g. sind gegangen', 'e.g. seid gegangen', 'e.g. sind gegangen'],
 };
+
+// The conjugated Perfekt auxiliaries; every other one-part form is "sein".
+const HABEN_AUXILIARIES = ['habe', 'hast', 'hat', 'haben', 'habt'];
+
+/**
+ * Splits one Perfekt form into its two answers: `"ist gegangen"` and any `alt`
+ * spelling split the same way, so the kata grades a choice plus a typed word.
+ */
+function splitPerfekt(form) {
+    const [auxiliary, ...participle] = normalizePhrase(form).split(' ');
+    return {
+        aux: HABEN_AUXILIARIES.includes(auxiliary) ? 'haben' : 'sein',
+        participle: participle.join(' '),
+    };
+}
+
+/** Pressed-state styling for the Perfekt auxiliary buttons. */
+function markSelected(btn, active) {
+    btn.setAttribute('aria-pressed', String(active));
+    ['ring-2', 'ring-purple-500', 'bg-purple-100', 'dark:bg-purple-950/60']
+        .forEach((cls) => btn.classList.toggle(cls, active));
+}
 
 /** A conjugated form is a string, or `{a, alt}` when two spellings are correct. */
 function isUsableForm(form) {
@@ -47,16 +68,56 @@ export function validateVerbDataset(dataset) {
 export function createVerbKata(tenseKey, container) {
     const tense = TENSES[tenseKey];
     const manifest = getVerbManifest(tenseKey);
+    // Perfekt asks for one auxiliary choice and one participle, not six forms.
+    const isPerf = tenseKey === 'perf';
 
     const section = createSectionFromTemplate(verbsTemplate);
     container.appendChild(section);
+
+    if (isPerf) {
+        section.querySelector('[data-role="six"]').classList.add('hidden');
+        section.querySelector('[data-role="perf"]').classList.remove('hidden');
+    }
 
     const el = {
         section,
         word: section.querySelector('[data-role="word"]'),
         meaning: section.querySelector('[data-role="meaning"]'),
         inputs: PERSONS.map((p) => section.querySelector(`[data-role="conj_${p.key}"]`)),
+        participle: section.querySelector('[data-role="participle"]'),
+        auxButtons: Array.from(section.querySelectorAll('[data-role="aux"]')),
     };
+
+    let auxiliary = null;
+    el.auxButtons.forEach((btn) => btn.addEventListener('click', () => {
+        auxiliary = btn.dataset.aux;
+        el.auxButtons.forEach((b) => markSelected(b, b.dataset.aux === auxiliary));
+    }));
+
+    /**
+     * Perfekt grading: the auxiliary is a choice, the participle the only typed
+     * answer. The participle is the same in all six forms, so one is enough.
+     */
+    function checkPerfekt(verb) {
+        if (!auxiliary) return { warning: 'Please select sein or haben.' };
+
+        const targets = [...new Set(acceptedAnswers(verb.perf[0]).map(splitPerfekt))];
+        const given = el.participle.value.trim();
+        if (!given) return { warning: 'Please type the participle before checking.' };
+
+        const auxOk = auxiliary === targets[0].aux;
+        const partOk = targets.some((target) => matchAnswer(given, target.participle).ok);
+
+        const btnByAux = new Map(el.auxButtons.map((btn) => [btn.dataset.aux, btn]));
+        markControl(btnByAux.get(auxiliary), { ok: auxOk, inside: true, note: false });
+        if (!auxOk) markControl(btnByAux.get(targets[0].aux), { ok: true, inside: true });
+        markControl(el.participle, { ok: partOk, expected: targets[0].participle });
+
+        return {
+            correct: auxOk && partOk,
+            fields: [{ ok: auxOk }, { ok: partOk }],
+        };
+    }
 
     return {
         ...manifest,
@@ -91,6 +152,14 @@ export function createVerbKata(tenseKey, container) {
         render(verb) {
             el.word.textContent = verb.w;
             el.meaning.textContent = `🇬🇧 ${verb.m}`;
+
+            if (isPerf) {
+                auxiliary = null;
+                el.auxButtons.forEach((btn) => markSelected(btn, false));
+                el.participle.value = '';
+                return;
+            }
+
             el.inputs.forEach((input, i) => {
                 input.value = '';
                 input.placeholder = TENSE_PLACEHOLDERS[tenseKey][i];
@@ -99,6 +168,8 @@ export function createVerbKata(tenseKey, container) {
 
         /** @returns a verdict `{ correct, fields }`, or `{ warning }` when the answer is not ready to grade. */
         check(verb) {
+            if (isPerf) return checkPerfekt(verb);
+
             const targetForms = verb[tenseKey];
             if (!targetForms) return { warning: 'This exercise has no conjugations to fill in.' };
 
