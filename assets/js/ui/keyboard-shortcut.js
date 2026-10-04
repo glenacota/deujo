@@ -52,7 +52,8 @@ export function bindKeyboardShortcuts({
 
     const shortcuts = [
         {
-            matches: (event) => event.key === 'Enter' && isFocusModeActive(),
+            matches: (event) => event.key === 'Enter' && isFocusModeActive() &&
+                !event.target?.closest?.('button, a'),
             run: (event) => {
                 event.preventDefault();
                 const target = event.target;
@@ -79,6 +80,13 @@ export function bindKeyboardShortcuts({
             run: showHelp,
         },
         {
+            matches: (event, typing) => event.key === '/' && isFocusModeActive() && !typing,
+            run: (event) => {
+                event.preventDefault();
+                loadNext();
+            },
+        },
+        {
             matches: (event, typing) => {
                 if (!event.shiftKey || !event.code?.startsWith('Digit')) return false;
                 const slot = Number(event.code.slice(5));
@@ -90,14 +98,9 @@ export function bindKeyboardShortcuts({
             },
         },
         {
-            matches: (event, typing) => event.key === '/' && isFocusModeActive() && !typing,
-            run: (event) => {
-                event.preventDefault();
-                loadNext();
-            },
-        },
-        {
-            matches: (event, typing) => event.key === 'Backspace' && isFocusModeActive() && !typing,
+            // Focus on body only: after a button click or verdict Backspace must not exit.
+            matches: (event, typing) => event.key === 'Backspace' && isFocusModeActive() && !typing &&
+                document.activeElement === document.body,
             run: (event) => {
                 event.preventDefault();
                 exitToMenu();
@@ -121,6 +124,7 @@ export function bindKeyboardShortcuts({
             if (!areHotkeysEnabled()) return;
             // One gate for every shortcut, so a new binding cannot forget it.
             if (modals.isOpen()) return;
+            if (event.repeat) return;
 
             const typing = isTypingTarget(event.target);
             const shortcut = shortcuts.find(({ matches }) => matches(event, typing));

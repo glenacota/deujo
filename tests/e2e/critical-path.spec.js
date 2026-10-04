@@ -81,6 +81,11 @@ test('hotkeys dispatch: kata jump, help, skip, umlaut typing, back to menu', asy
         await expect(page.locator('#focusView')).toBeVisible();
     }
 
+    // A clicked gender button holds focus, so Backspace must not leave the kata.
+    await page.locator(`${ACTIVE_SECTION} [data-role="gender"]`).first().click();
+    await page.keyboard.press('Backspace');
+    await expect(page.locator('#focusView')).toBeVisible();
+
     await page.evaluate(() => document.activeElement?.blur());
     await page.keyboard.press('Backspace');
     await expect(page.locator('#focusView')).toBeHidden();

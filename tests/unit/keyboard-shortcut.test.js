@@ -31,6 +31,8 @@ const loadModule = async ({ focusMode = false, modalOpen = false, hotkeysEnabled
     };
     globalThis.HTMLInputElement = FakeInputElement;
     globalThis.HTMLTextAreaElement = FakeTextAreaElement;
+    const body = {};
+    globalThis.document = { body, activeElement: body };
 
     const originalError = console.error;
     console.error = (...args) => errors.push(args);
@@ -114,6 +116,37 @@ test('Shift+Digit is a dashboard shortcut and must still work there', async () =
 
     assert.ok(calls.includes('enterKataAtSlot:1'), 'Shift+1 should enter the first kata');
     assert.deepEqual(errors, []);
+});
+
+test('Enter on a button or link is left to the browser', async () => {
+    const { press } = await loadModule({ focusMode: true });
+    const button = { closest: (sel) => (sel.includes('button') ? button : null) };
+
+    const { calls } = press({ key: 'Enter', target: button });
+
+    assert.deepEqual(calls, [], 'no check(), no preventDefault');
+});
+
+test('held keys fire once', async () => {
+    const { press } = await loadModule({ focusMode: true });
+
+    assert.deepEqual(press({ key: '/', repeat: true }).calls, []);
+});
+
+test('Backspace needs focus on body', async () => {
+    const { press } = await loadModule({ focusMode: true });
+    globalThis.document.activeElement = {};
+
+    assert.deepEqual(press({ key: 'Backspace' }).calls, []);
+});
+
+test('Shift+7 on QWERTZ skips, even with 7+ katas', async () => {
+    const { press } = await loadModule({ focusMode: true });
+
+    const { calls } = press({ key: '/', code: 'Digit7', shiftKey: true });
+
+    assert.ok(calls.includes('loadNext'));
+    assert.ok(!calls.some((c) => c.startsWith('enterKataAtSlot')));
 });
 
 test('Shift+Digit ignores slots past the last kata', async () => {
