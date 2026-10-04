@@ -9,6 +9,8 @@
     display: inline-block;
     background: linear-gradient(to bottom, #000 0%, #000 33.33%, #DD0000 33.33%, #DD0000 66.66%, #FFCC00 66.66%, #FFCC00 100%);
 }
+#logo img { transition: transform 80ms ease-out; }
+#logo:active img { transform: scale(0.9); }
 /* ---- Answer marking ---------------------------------------------------- */
 .answer-field {
     display: inline-flex;
