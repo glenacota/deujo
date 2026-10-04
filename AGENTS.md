@@ -8,7 +8,7 @@ no backend, no login.
   needs a real HTTP server — opening `index.html` via `file://` will fail).
 - Run unit tests: `npm test`
 - Run browser smoke tests: `npm run test:e2e` (first time: `npx playwright
-  install chromium`). It boots `tests/e2e/server.mjs` itself — no server needed.
+  install webkit`). It boots `tests/e2e/server.mjs` itself — no server needed.
 - Run one test file: `node --test tests/unit/<name>.test.js`,
   `npx playwright test -g "<name>"`
 - Rebuild Tailwind after changing class names: `npm run build:css` (or

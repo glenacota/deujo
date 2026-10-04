@@ -103,9 +103,10 @@ export function clearAnswerMarks(root) {
 }
 
 /**
- * Freezes one kata section while the verdict is on screen. Controls that were
- * already disabled (a noun with no plural) stay disabled, so a kata's own
- * per-item rules survive the lock.
+ * Freezes one kata section while the verdict is on screen. `inert` blocks
+ * focus and taps; `readOnly` keeps text fields out of iOS's disabled greying.
+ * `disabled` is never touched, so a kata's own per-item rules (a noun with no
+ * plural) survive the lock and the call is idempotent.
  *
  * Takes the section itself, not a container: every kata is mounted from boot,
  * so locking a container would freeze the katas the learner is not looking at.
@@ -114,13 +115,8 @@ export function setSectionLocked(section, locked) {
   if (!section) return;
 
   section.classList.toggle('pointer-events-none', locked);
-  section.querySelectorAll('input, button, select, textarea').forEach((control) => {
-    if (locked) {
-      control.dataset.wasDisabled = String(control.disabled);
-      control.disabled = true;
-    } else {
-      control.disabled = control.dataset.wasDisabled === 'true';
-      delete control.dataset.wasDisabled;
-    }
+  section.inert = locked;
+  section.querySelectorAll('input, textarea').forEach((control) => {
+    control.readOnly = locked;
   });
 }

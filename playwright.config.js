@@ -29,7 +29,7 @@ export default defineConfig({
     projects: [
         {
             name: 'iphone-13-mini',
-            use: { ...devices['iPhone 13 mini'] },
+            use: { ...devices['iPhone 13 mini'], browserName: 'webkit' },
         },
     ],
 

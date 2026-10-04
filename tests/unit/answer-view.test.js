@@ -138,11 +138,15 @@ test('locking preserves controls that the kata itself had disabled', async () =>
   closed.disabled = true; // a noun with no plural
 
   setSectionLocked(section, true);
-  assert.equal(open.disabled, true);
+  setSectionLocked(section, true);
+  assert.equal(section.inert, true);
+  assert.equal(open.readOnly, true);
+  assert.equal(open.disabled, false, 'locking never disables, so iOS keeps the colours');
   assert.equal(closed.disabled, true);
 
   setSectionLocked(section, false);
-  assert.equal(open.disabled, false, 'the usable field comes back');
+  assert.equal(section.inert, false);
+  assert.equal(open.readOnly, false, 'the usable field comes back');
   assert.equal(closed.disabled, true, 'the kata own rule still applies');
 });
 

@@ -53,6 +53,7 @@ export class UiController {
 
         root.title = HINTS[summary.tone] ?? '';
         root.hidden = false;
+        root.scrollIntoView?.({ block: 'nearest' });
     }
 
     hideVerdict() {

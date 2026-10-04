@@ -14,10 +14,21 @@
 /* ---- Answer marking ---------------------------------------------------- */
 .answer-field {
     display: inline-flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 0.35rem;
     vertical-align: middle;
+    max-width: 100%;
+    min-width: 0;
 }
+/* A full-width input needs a wrapper that fills its row, or width:100% collapses. */
+.answer-field:has(> .blank-input:not(.blank-input--inline)) {
+    display: flex;
+    flex: 1 1 0;
+    width: 100%;
+}
+.answer-field > .blank-input:not(.blank-input--inline) { flex: 1 1 8rem; min-width: 0; width: auto; }
+.answer-field:has(> .blank-input:not(.blank-input--inline)) > .answer-note { flex: 1 1 100%; }
 .answer-badge {
     flex: none;
     font-size: 0.95rem;
@@ -29,7 +40,8 @@ button > .answer-badge { margin-left: 0.45rem; font-size: 0.85rem; }
     font-size: 0.75rem;
     font-weight: 600;
     line-height: 1.2;
-    white-space: nowrap;
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 .answer-note[data-answer-state="correct"] { color: rgb(4 120 87); }
 .answer-note[data-answer-state="wrong"] { color: rgb(190 18 60); }
@@ -40,12 +52,16 @@ html.dark .answer-note[data-answer-state="wrong"] { color: rgb(253 164 175); }
     border-color: rgb(16 185 129) !important;
     background-color: rgb(236 253 245) !important;
     color: rgb(6 130 87) !important;
+    -webkit-text-fill-color: currentColor;
+    opacity: 1;
     box-shadow: 0 0 0 1px rgb(16 185 129 / 0.45);
 }
 [data-answer-state="wrong"] {
     border-color: rgb(244 63 94) !important;
     background-color: rgb(255 241 242) !important;
     color: rgb(159 18 57) !important;
+    -webkit-text-fill-color: currentColor;
+    opacity: 1;
     box-shadow: 0 0 0 1px rgb(244 63 94 / 0.45);
 }
 html.dark [data-answer-state="correct"] {
@@ -119,6 +135,21 @@ html.dark .blank-input::placeholder { color: rgb(71 85 105); }
 .verdict-form { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 700; overflow-wrap: anywhere; }
 .verdict-note { opacity: 0.85; overflow-wrap: anywhere; }
 html.dark .verdict-lesson { border-top-color: rgb(226 232 240 / 0.18); }
+/* Keeps a scrolled-to verdict clear of the sticky action bar. */
+.verdict { scroll-margin-bottom: 6rem; }
+
+/* Phones: Check/Next stays reachable however long the verdict grows. */
+@media (max-width: 1023px) {
+    #kataActions {
+        position: sticky;
+        bottom: 0;
+        z-index: 20;
+        margin-bottom: 0;
+        padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+        background: rgb(241 245 249 / 0.95);
+    }
+    html.dark #kataActions { background: rgb(15 23 42 / 0.95); }
+}
 
 @keyframes verdict-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) {
