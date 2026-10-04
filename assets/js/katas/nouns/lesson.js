@@ -13,8 +13,8 @@ const GENDER_LABELS = { der: 'masculine', die: 'feminine', das: 'neuter' };
  * the correction below says so instead of pretending the rule held.
  */
 const GENDER_ENDINGS = [
-    { pattern: /(ung|heit|keit|schaft|tion|zion|ei|ie)$/, gender: 'die', rule: '-ung, -heit, -keit, -schaft, -tion and -ei are always die.' },
-    { pattern: /(chen|lein|nis)$/, gender: 'das', rule: '-chen, -lein and -nis are always das.' },
+    { pattern: /(ung|heit|keit|schaft|tion|zion|ei|ie)$/, gender: 'die', rule: 'Nouns ending in -ung and the endings -heit, -keit, -schaft, -tion, -zion, -ei and -ie usually take die.' },
+    { pattern: /(chen|lein|nis)$/, gender: 'das', rule: 'Nouns ending in -chen, -lein and -nis usually take das.' },
     { pattern: /(er|ling|ismus|or)$/, gender: 'der', rule: '-er, -ling, -ismus and -or are usually der, but die and das exist.' },
     { pattern: /(um|on|us|so)$/, gender: 'das', rule: 'A loanword in -um, -on, -us or -so is usually das.' },
 ];
@@ -62,6 +62,7 @@ function pluralLesson(noun, expected) {
  * @returns {import('../../services/lesson.js').Lesson|null}
  */
 export function renderNounLesson({ noun, field, expected } = {}) {
+    if (typeof expected !== 'string' || !expected.trim()) return null;
     if (field === 'gender') return genderLesson(noun);
     if (field === 'plural') return pluralLesson(noun, expected);
     return null;

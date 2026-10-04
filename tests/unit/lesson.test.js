@@ -22,7 +22,7 @@ test('a lesson is two trimmed strings, or nothing at all', () => {
 test('the article row is generated from the tables, never hand written', () => {
   assert.equal(articleRow('dat'), 'der → dem · die → der · das → dem · plural → den + die');
   assert.equal(articleRow('akk'), 'der → den · die → die · das → das · plural → die');
-  assert.equal(articleRow('nom'), '');
+  assert.equal(articleRow('nom'), 'der → der · die → die · das → das · plural → die');
   assert.equal(caseNote('gen'), 'Genitiv: der → des · die → der · das → des · plural → der');
   assert.equal(caseNote('vocative'), '');
 });
@@ -92,7 +92,7 @@ test('the preposition lesson teaches the group, not the phrase again', () => {
 test('the noun lesson leads with the gender and its ending', () => {
   const reliable = renderNounLesson({ noun: { w: 'Wohnung', g: 'die', p: 'Wohnungen' }, field: 'gender', expected: 'die' });
   assert.equal(reliable.form, 'die');
-  assert.match(reliable.note, /-ung .* are always die/);
+  assert.match(reliable.note, /Nouns ending in -ung .* usually take die/);
 
   // The interesting case: the ending lies, and the correction says so instead of
   // quoting a rule the word breaks.
@@ -153,6 +153,10 @@ test('the Perfekt lesson covers the auxiliary and the participle', () => {
   const strong = renderVerbLesson({ verb: { w: 'gehen' }, tenseKey: 'perf', index: 0, expected: 'gegangen' });
   assert.match(strong.note, /gehen changes its stem vowel/);
   assert.match(strong.note, /ge- \+ the changed stem \+ -en/);
+
+  const inseparable = renderVerbLesson({ verb: { w: 'verstehen' }, tenseKey: 'perf', index: 0, expected: 'verstanden' });
+  assert.match(inseparable.note, /ver- \+ the changed stem \+ -en/);
+  assert.doesNotMatch(inseparable.note, /ge-/);
 
   assert.equal(renderVerbLesson({ verb: { w: 'gehen' }, tenseKey: 'perf', index: null, expected: 'werden' }), null);
 });

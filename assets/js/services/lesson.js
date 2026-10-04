@@ -32,7 +32,8 @@ export function lesson(form, note) {
 export function articleRow(caseKey) {
     if (!(caseKey in CASE_LABELS)) return '';
     const gendered = Object.entries(DEFINITE).map(([gender, forms]) => `${gender} → ${forms[caseKey]}`);
-    return [...gendered, `plural → ${PLURAL_DEFINITE[caseKey]}`].join(' · ');
+    const plural = caseKey === 'dat' ? 'den + die' : PLURAL_DEFINITE[caseKey];
+    return [...gendered, `plural → ${plural}`].join(' · ');
 }
 
 /** The case named and its whole article row: `Dativ: der → dem · …`. */

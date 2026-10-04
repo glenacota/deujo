@@ -13,6 +13,7 @@ const ENDINGS = {
     pres: ['-e', '-st', '-t', '-en', '-t', '-en'],
     praet: ['-te', '-test', '-te', '-ten', '-tet', '-ten'],
 };
+const NO_GE_PREFIXES = ['be', 'emp', 'ent', 'er', 'ge', 'miss', 'ver', 'zer'];
 
 /** The infinitive stem: `gehen` → `geh`, `lernen` → `lern`. */
 const infinitiveStem = (verb) => String(verb?.w ?? '').replace(/en$/, '');
@@ -52,10 +53,20 @@ function conjugatedLesson(verb, tenseKey, index, expected) {
  */
 function participleLesson(verb, expected) {
     const participle = String(expected ?? '');
-    const plain = participle.replace(/^ge-/, '').replace(/t$/, '');
-    const rule = plain === infinitiveStem(verb)
-        ? `${verb?.w} is weak: ge- + the stem + -t.`
-        : `${verb?.w} changes its stem vowel, so the participle is ge- + the changed stem + -en.`;
+    const ending = participle.endsWith('en') ? 'en' : participle.endsWith('t') ? 't' : '';
+    if (!ending) return lesson(participle, `${verb?.w} has the irregular participle ${participle}.`);
+
+    const infinitive = String(verb?.w ?? '');
+    const inseparablePrefix = NO_GE_PREFIXES.find((prefix) => infinitive.startsWith(prefix));
+    const hasNoGe = Boolean(inseparablePrefix) || infinitive.endsWith('ieren');
+    let plain = participle.slice(0, -ending.length);
+    if (!hasNoGe && plain.startsWith('ge')) plain = plain.slice(2);
+    const changed = plain !== infinitiveStem(verb);
+    const rule = !changed
+        ? `${infinitive} is weak: ${hasNoGe ? 'the stem without ge-' : `ge- + the stem`} + -${ending}.`
+        : `${infinitive} changes its stem vowel, so the participle is ${hasNoGe
+            ? `${inseparablePrefix ? `${inseparablePrefix}- + ` : ''}the changed stem`
+            : 'ge- + the changed stem'} + -${ending}.`;
 
     return lesson(participle, rule);
 }

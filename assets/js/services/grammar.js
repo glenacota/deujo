@@ -247,6 +247,7 @@ function prepositionOf(answer) {
 export function prepositionGroup(phrase) {
     const answer = normalizePhrase(phrase);
     if (!answer) return null;
+    if (!PREPOSITION_CONTRACTIONS[answer] && !answer.includes(' ')) return null;
     return PREPOSITION_GROUP_OF.get(prepositionOf(answer)) ?? null;
 }
 
