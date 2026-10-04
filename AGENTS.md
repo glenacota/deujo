@@ -8,7 +8,8 @@ no backend, no login.
   needs a real HTTP server — opening `index.html` via `file://` will fail).
 - Run unit tests: `npm test`
 - Run browser smoke tests: `npm run test:e2e` (first time: `npx playwright
-  install webkit`). It boots `tests/e2e/server.mjs` itself — no server needed.
+  install webkit chromium` — both engines are needed, see Testing expectations).
+  It boots `tests/e2e/server.mjs` itself — no server needed.
 - Run one test file: `node --test tests/unit/<name>.test.js`,
   `npx playwright test -g "<name>"`
 - Rebuild Tailwind after changing class names: `npm run build:css` (or
@@ -47,9 +48,29 @@ no backend, no login.
   negative-feedback paths. Anything expressible as a pure function belongs in
   a unit test instead. No module mocking there: drive the real UI, and seed
   `Math.random` for repeatability.
+- A spec that presses Tab must carry `@tab-navigation` in its title. Headless
+  WebKit implements no sequential focus navigation — on a bare page with three
+  buttons, Tab moves focus nowhere and `document.hasFocus()` goes false — so
+  those specs run in the `iphone-13-mini-chromium` project and the WebKit one
+  skips them. WebKit stays the default because it is the engine on iOS and the
+  only one that deviates from the others.
 - New persisted keys go under the `dm_` prefix (`CONFIG.storage.prefix`) so
   `Storage.removeByPrefix()` — used by the Settings "clear progress" danger
-  zone — stays exhaustive.
+  zone — stays exhaustive. `tests/unit/storage-contract.test.js` enforces the
+  prefix, and keeps the key literals in `index.html`'s pre-paint script in sync
+  with `CONFIG.storage` — that script cannot import a module, so nothing else
+  can catch it drifting.
+- A kata's phase (answering vs reviewing) belongs to that kata and lives in
+  `Session` (`assets/js/session.js`). Do not reintroduce a single app-wide phase
+  field: the Check/Skip bar is global chrome, so a global phase makes the "a
+  graded item is never served again" guard agree with the active kata by
+  accident rather than by construction.
+- A shortcut that must not act still has to claim its key. Backspace decides in
+  `run` whether to leave a kata, but `matches` always claims it: Safari's
+  default for an unclaimed Backspace is "go back", which navigates the learner
+  out of the drill. It also cannot rely on `document.activeElement` alone,
+  because Safari does not focus a `<button>` on click — hence the separate
+  "pressed since the last key" signal.
 - No framework, no bundler, no runtime dependency beyond a same-origin JSON
   `fetch()`.
 - Services must stay DOM-free and pure.

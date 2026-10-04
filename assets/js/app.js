@@ -5,6 +5,7 @@ import { summarizeAnswer, summarizeWarning } from './services/answer-summary.js'
 import { AudioEngine } from './services/audio-engine.js';
 import { FxEngine } from './services/fx-engine.js';
 import { GameState } from './state.js';
+import { Phase, Session } from './session.js';
 import { loadKatas } from './katas/registry.js';
 import { applyDocumentPreferences, get } from './services/preferences.js';
 import { clearAnswerMarks, setSectionLocked } from './ui/answer-view.js';
@@ -35,8 +36,8 @@ class App {
     #katas = [];
     #entries = new Map(); // kata id -> { kata, dataset }
     #datasets = new Map(); // dataset URL -> Promise<dataset>, shared by katas on one file
+    #session = new Session(); // kata id -> phase, so a kata's phase is its own
     #focusModeActive = false;
-    #phase = 'answering';
 
     constructor() {
         this.#audio = new AudioEngine();
@@ -175,13 +176,21 @@ class App {
     }
 
     #setPhase(id, phase) {
-        this.#phase = phase;
+        this.#session.setPhase(id, phase);
+
         const section = this.#entries.get(id)?.kata.el.section;
-        const locked = phase !== 'answering';
-        if (locked) this.#focus.releaseFocus(section);
-        // Only the active kata's section: every kata is mounted from boot, so
-        // locking the whole container would freeze all of them.
-        setSectionLocked(section, locked);
+        // Only this kata's section: every kata is mounted from boot, so locking
+        // the whole container would freeze all of them.
+        setSectionLocked(section, !this.#session.isAnswering(id));
+        // The Check/Skip bar is shared chrome outside every section, so it can
+        // only ever describe the kata the learner is actually looking at.
+        if (this.#state.activeKata === id) this.#syncActionBar();
+    }
+
+    #syncActionBar() {
+        const id = this.#state.activeKata;
+        const locked = !this.#session.isAnswering(id);
+        if (locked) this.#focus.releaseFocus(this.#entries.get(id)?.kata.el.section);
         dom.actions.checkLabel.textContent = locked ? 'Next' : 'Check';
         // Skipping a graded answer would let the learner dodge the streak reset.
         dom.actions.skipBtn.classList.toggle('hidden', locked);
@@ -192,7 +201,7 @@ class App {
         if (!section) return;
 
         this.#ui.hideVerdict();
-        this.#setPhase(id, 'answering');
+        this.#setPhase(id, Phase.ANSWERING);
         clearAnswerMarks(section);
         this.#loadNext(id);
 
@@ -202,7 +211,7 @@ class App {
     }
 
     #check(id) {
-        if (this.#phase === 'reviewing') {
+        if (this.#session.isReviewing(id)) {
             this.#advance(id);
             return;
         }
@@ -223,7 +232,7 @@ class App {
 
         const summary = summarizeAnswer(result);
         this.#ui.showVerdict(summary);
-        this.#setPhase(id, 'reviewing');
+        this.#setPhase(id, Phase.REVIEWING);
     }
 
     /**
@@ -231,7 +240,7 @@ class App {
      * It still costs half a belt point, so dodging hard items has a price.
      */
     #skip(id) {
-        if (this.#phase !== 'answering') return;
+        if (!this.#session.isAnswering(id)) return;
         const { dataset } = this.#entries.get(id) ?? {};
         if (!dataset || !this.#state.current[id]) return;
         const isDemoted = this.#state.applySkip(id);
@@ -261,9 +270,17 @@ class App {
         this.#focus.switchKata(this.#katas, kata);
     }
 
-    // A graded item must not be shown again unanswered, or it can be re-scored.
+    /**
+     * A graded item must not be shown again unanswered, or it can be re-scored.
+     *
+     * Both halves of the discard are keyed to one kata on purpose: a kata left
+     * mid-answer keeps its item and its typing, and leaving it never touches a
+     * sibling that happens to still be showing a verdict.
+     */
     #discardGradedItem() {
-        if (this.#phase === 'reviewing') this.#state.current[this.#state.activeKata] = null;
+        const id = this.#state.activeKata;
+        if (this.#session.isReviewing(id)) this.#state.current[id] = null;
+        this.#session.reset(id);
     }
 
     async #enterKata(id) {
@@ -272,7 +289,7 @@ class App {
         clearAnswerMarks(kata.el.section);
         this.#focus.blurActive();
         this.#setKata(id);
-        this.#setPhase(id, 'answering');
+        this.#setPhase(id, Phase.ANSWERING);
         this.#ui.hideVerdict();
         this.#focusModeActive = true;
         this.#state.setFocusModeActive(true);
@@ -320,7 +337,7 @@ class App {
             modals: this.#modals,
             inputRoot: dom.focus.sections,
             isFocusModeActive: () => this.#focusModeActive,
-            isAnswering: () => this.#phase === 'answering',
+            isAnswering: () => this.#session.isAnswering(this.#state.activeKata),
             kataCount: () => this.#katas.length,
             enterKataAtSlot: (slot) => this.#enterKata(this.#katas[slot - 1].id),
             check: () => this.#check(this.#state.activeKata),

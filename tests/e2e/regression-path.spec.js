@@ -25,7 +25,9 @@ test.beforeEach(async ({ page }) => {
     await seedRandom(page);
 });
 
-test('clear progress wipes every dm_ key and lands on a zeroed dashboard', async ({ page }) => {
+// @tab-navigation: this reaches the nested confirmation with Tab, which
+// headless WebKit cannot do. It still runs on Chromium only -- see the config.
+test('clear progress wipes every dm_ key and lands on a zeroed dashboard @tab-navigation', async ({ page }) => {
     const errors = collectPageErrors(page);
     const answers = nounAnswers();
 

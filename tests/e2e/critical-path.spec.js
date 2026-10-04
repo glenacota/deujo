@@ -23,7 +23,9 @@ test.beforeEach(async ({ page }) => {
     await seedRandom(page);
 });
 
-test('settings modal traps Tab both ways and hands focus back on Escape', async ({ page }) => {
+// @tab-navigation runs this on Chromium: headless WebKit moves focus nowhere
+// on a Tab press, so a focus trap cannot be exercised there at all.
+test('settings modal traps Tab both ways and hands focus back on Escape @tab-navigation', async ({ page }) => {
     const errors = collectPageErrors(page);
     await gotoDashboard(page);
 

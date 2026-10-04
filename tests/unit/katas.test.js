@@ -51,6 +51,21 @@ test('validateKata rejects a kata with a missing field', () => {
   assert.throws(() => validateKata({ ...base, check: undefined }), /requires check\(\)/);
 });
 
+test('validateKata rejects a kata with no help title', () => {
+  // The help modal sets its title from this field, so a kata without one used
+  // to pass validation and then open an untitled modal.
+  const base = katas[0];
+  assert.throws(() => validateKata({ ...base, helpTitle: '' }), /requires non-empty helpTitle/);
+  assert.throws(() => validateKata({ ...base, helpTitle: '   ' }), /requires non-empty helpTitle/);
+  assert.throws(() => validateKata({ ...base, helpTitle: undefined }), /requires non-empty helpTitle/);
+});
+
+test('every registered kata titles its own help modal', () => {
+  for (const kata of katas) {
+    assert.ok(kata.helpTitle?.trim(), `kata ${kata.id} has no helpTitle to show`);
+  }
+});
+
 test('validateKata rejects a kata whose section was never mounted', () => {
   const base = katas[0];
   // The factory mounts the section, so a null one is a real defect rather than

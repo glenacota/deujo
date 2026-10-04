@@ -44,10 +44,17 @@ const loadModule = async ({ focusMode = false, modalOpen = false, hotkeysEnabled
     // Default callbacks just record the call; a test can override one to throw.
     const record = (name) => (callbacks[name] ?? (() => calls.push(name)));
 
+    // Captured rather than discarded, so a test can stage the pointer press
+    // that Safari performs on a control without moving focus to it.
+    const inputRootListeners = {};
+    const inputRoot = {
+        addEventListener(type, handler) { inputRootListeners[type] = handler; },
+    };
+
     const { bindKeyboardShortcuts } = await import('../../assets/js/ui/keyboard-shortcut.js');
     bindKeyboardShortcuts({
         modals,
-        inputRoot: { addEventListener() {} },
+        inputRoot,
         isFocusModeActive: () => focusMode,
         isAnswering: () => true,
         kataCount: () => KATA_COUNT,
@@ -75,7 +82,7 @@ const loadModule = async ({ focusMode = false, modalOpen = false, hotkeysEnabled
         return { calls: [...calls], errors: [...errors] };
     };
 
-    return { press, calls, errors };
+    return { press, pressControl: () => inputRootListeners.pointerdown?.({}), calls, errors };
 };
 
 // The four shortcuts that operate on the kata in focus. `run` is the callback
@@ -133,11 +140,48 @@ test('held keys fire once', async () => {
     assert.deepEqual(press({ key: '/', repeat: true }).calls, []);
 });
 
-test('Backspace needs focus on body', async () => {
+test('Backspace is claimed but must not exit while a control holds focus', async () => {
     const { press } = await loadModule({ focusMode: true });
     globalThis.document.activeElement = {};
 
-    assert.deepEqual(press({ key: 'Backspace' }).calls, []);
+    const { calls } = press({ key: 'Backspace' });
+
+    // Claimed regardless: WebKit's default for Backspace is "go back", so
+    // declining to match would navigate the learner out of the drill.
+    assert.ok(calls.includes('preventDefault'), 'Backspace must not reach the browser');
+    assert.ok(!calls.includes('exitToMenu'), 'a focused control must not cost the answer in progress');
+});
+
+test('a tapped control blocks the exit even though Safari leaves focus on body', async () => {
+    // Safari does not focus a <button> on click, so activeElement is still body
+    // here and cannot report the press on its own.
+    const { press, pressControl } = await loadModule({ focusMode: true });
+    pressControl();
+
+    const { calls } = press({ key: 'Backspace' });
+
+    assert.equal(globalThis.document.activeElement, globalThis.document.body);
+    assert.ok(!calls.includes('exitToMenu'), 'choosing an answer must not throw it away');
+});
+
+test('the press blocks exactly one Backspace, not every later one', async () => {
+    const { press, pressControl } = await loadModule({ focusMode: true });
+    pressControl();
+    press({ key: 'Backspace' });
+
+    const { calls } = press({ key: 'Backspace' });
+
+    assert.ok(calls.includes('exitToMenu'), 'with nothing focused and nothing pressed, Backspace leaves');
+});
+
+test('Backspace still edits text instead of leaving, while a field has focus', async () => {
+    const { press } = await loadModule({ focusMode: true });
+    const input = new globalThis.HTMLInputElement();
+    globalThis.document.activeElement = input;
+
+    const { calls } = press({ key: 'Backspace', target: input });
+
+    assert.deepEqual(calls, [], 'typing must keep the key so it can delete a character');
 });
 
 test('Shift+7 on QWERTZ skips, even with 7+ katas', async () => {

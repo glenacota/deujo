@@ -62,14 +62,14 @@ Use `alt` when one blank accepts multiple spellings that grammar rules cannot de
 ## 🧪 Tests
 
 ```sh
-npm test                          # unit tests
-npm run test:e2e                  # browser smoke tests
-npm run test:all                  # both
+npm test                                  # unit tests
+npm run test:e2e                          # browser smoke tests
+npm run test:all                          # both
 node --test tests/unit/state.test.js
-npx playwright install chromium   # first run only
+npx playwright install webkit chromium    # first run only
 ```
 
-Unit tests use Node's built-in runner. Playwright tests cover critical browser paths, including mobile viewport behavior. See `AGENTS.md` for test conventions.
+Unit tests use Node's built-in runner. Playwright tests cover critical browser paths, including mobile viewport behavior, and run on WebKit — the engine on iOS — except for the specs that press Tab, since headless WebKit does not implement focus navigation. See `AGENTS.md` for test conventions.
 
 ## 🎨 Rebuilding the stylesheet
 

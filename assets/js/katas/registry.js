@@ -1,6 +1,7 @@
 // kata/registry.js
 // The only place that knows which katas exist.
-// To add one: drop `<name>.js` in this folder and append its factory call here.
+// To add one: create `<name>/kata.js` exporting a `create<Name>Kata(container)`
+// factory, then append its factory call here.
 //
 // Each factory mounts its own section into the container it is given, so a
 // kata's `el.section` exists from the moment `loadKatas` returns and no caller
@@ -29,7 +30,7 @@ import { createVerbKata } from './verbs/kata.js';
 
 /** @param {Kata} kata */
 export function validateKata(kata) {
-    const requiredStrings = ['id', 'name', 'subtitle', 'datasetUrl', 'accent'];
+    const requiredStrings = ['id', 'name', 'subtitle', 'datasetUrl', 'accent', 'helpTitle'];
     const requiredFunctions = ['render', 'check', 'getHelpContent', 'validateDataset'];
 
     if (!kata || typeof kata !== 'object') {
