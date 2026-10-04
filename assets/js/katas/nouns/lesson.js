@@ -16,7 +16,7 @@ const GENDER_ENDINGS = [
     { pattern: /(ung|heit|keit|schaft|tion|zion|ei|ie)$/, gender: 'die', rule: 'Nouns ending in -ung and the endings -heit, -keit, -schaft, -tion, -zion, -ei and -ie usually take die.' },
     { pattern: /(chen|lein|nis)$/, gender: 'das', rule: 'Nouns ending in -chen, -lein and -nis usually take das.' },
     { pattern: /(er|ling|ismus|or)$/, gender: 'der', rule: '-er, -ling, -ismus and -or are usually der, but die and das exist.' },
-    { pattern: /(um|on|us|so)$/, gender: 'das', rule: 'A loanword in -um, -on, -us or -so is usually das.' },
+    { pattern: /(um|on|us|so)$/, gender: 'das', rule: 'A loanword in -um, -on, -us or -so is usually das, though a few native words in -us are not: die Maus.' },
 ];
 
 /** The plural rule per gender, since that is what the gender decides. */
