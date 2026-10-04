@@ -13,7 +13,7 @@ Just pure, disciplined practice.
 
 ## ⛩️ Features
 - **Noun & Plural** sparring ring: practice genders and plural forms side-by-side.
-- **Verb Conjugation** katas: train Präsens, Präteritum, and Perfekt, with a full conjugation chart on `?`.
+- **Verb Conjugation** katas: train Präsens, Präteritum, and Perfekt, with a worked conjugation example on `?`.
 - **Cases**: train Dativ, Genitiv, Akkusativ and Nominativ.
 - **Prepositions**: fill in the preposition *and* the case its article takes, including the contracted forms (`zum`, `im`, `aufs`).
 - **Just a spoon of gamification**: unlock higher belt levels, hold your streak stance, and celebrate milestones.
