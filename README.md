@@ -29,62 +29,55 @@ Just pure, disciplined practice.
 ## 🥋 Enter the Dojo (Quick Start)
 The app fetches its JSON datasets from `./assets/`, so serve it over HTTP — opening `index.html` from the filesystem will fail.
 
-```console
+```sh
 git clone https://github.com/glenacota/deujo.git
 cd deujo
-npx serve .            # or: python -m http.server 8000
+npx serve .
 ```
 
-Then open http://localhost:8000 and begin your first kata! 🚀
+Open the URL printed by `serve`.
 
 ## 📜 Add a Kata or Dataset
 
-To add exercises to an existing kata, append entries to its JSON file in `assets/datasets/`. Each entry must match that kata's existing schema, which its `validateDataset()` defines and enforces.
+### Add dataset entries
 
-### Several correct answers for one blank
+Append entries to the kata's JSON file in `assets/datasets/`. Match its existing schema; `validateDataset()` enforces required fields and types. Run `npm test` after changing data.
 
-A blank can have more than one right answer, so a correct variant is never scored wrong. Two mechanisms cover it:
-
-- **Grammar-derived, no data needed.** A contractable preposition phrase accepts both spellings, whichever one the dataset stored: `zum` and `zu dem` are each correct for the other, as are all nine standard contractions in `PREPOSITION_CONTRACTIONS` (`grammar.js`). A phrase that cannot contract (`auf den`, `durch die`) keeps one spelling.
-- **`alt` in the data**, for alternatives the grammar service cannot derive. Replace the answer string with `{ "a": "<primary>", "alt": ["<also correct>", ...] }`:
+Use `alt` when one blank accepts multiple spellings that grammar rules cannot derive:
 
 ```json
 {"w":"Name","g":"der","m":"name","p":{"a":"Namen","alt":["Names"]},"id":"n_5b2a8e1a"}
 ```
 
-`alt` works on a case or preposition blank, on a noun plural (`p`), and on a verb form inside `pres` / `praet` / `perf`. A malformed `alt` fails at load rather than leaving a blank the learner can never fill, and when an answer is wrong the correction beside the blank lists every accepted spelling.
+`alt` works for case and preposition answers, noun plurals (`p`), and verb forms (`pres`, `praet`, `perf`). Preposition contractions are accepted automatically when valid. Invalid `alt` data fails validation.
 
-To add a whole new kata:
+### Add a kata
 
-1. Add `assets/js/katas/<id>/manifest.js`, `template.js` and `kata.js`, plus `assets/datasets/<id>.json`.
-2. The manifest needs a unique `id`, `name`, `subtitle`, `datasetUrl`, `helpTitle` and an `accent` that exists in `CONFIG.accents`. Adding a colour means adding it there *and* running `npm run build:css`.
-3. Export a `create...Kata(container)` factory that parses the template, mounts its `[data-role="section"]` into the container and assigns it to `el.section`. There is no separate mount step: every kata is mounted when `loadKatas()` runs, so `el.section` is never null.
-4. Return the manifest fields, `el`, and `render(item)`, `check(item)`, `getHelpContent()` and `validateDataset(dataset)`. `check()` returns either `{ correct, fields }` or `{ warning }` — never null, and never `correct` alongside a warning.
-5. Grade typed text through `matchAnswer()` from `services/answer-matcher.js`, never a direct string compare, so the learner gets every accepted answer. Show the primary spelling with `acceptedAnswers()` and the full list with `formatAccepted()`.
-6. Register the factory in `assets/js/katas/registry.js`.
-7. Put the help body in `<id>/help.js` as a pure function and build it from the helpers in `katas/help-kit.js` (`banner`, `disclosure`, `rule`, `ruleList`, `wordGroup`). Native `<details>` blocks keep the modal short on a phone. A help body must be **answer-blind**: take no item, or ignore it, so it cannot print the answer to the question on screen.
-
-Keep ids unique and dataset paths relative to the site root. Tailwind scans `index.html` and `assets/js/**/*.js`, so use literal class names. `npm test` validates every registered kata and every shipped dataset.
+1. Create `assets/js/katas/<id>/` with `manifest.js`, `template.js`, `kata.js`, `help.js`, and `lesson.js`. Add the dataset at `assets/datasets/<id>.json`.
+2. Export a `create...Kata(container)` factory. Mount its section and return `id`, `name`, `subtitle`, `datasetUrl`, `accent`, `el.section`, `render(item)`, `check(item)`, `getHelpContent()`, and `validateDataset(dataset)`. `check()` returns `{ correct, fields }` or `{ warning }`. Keep help answer-blind.
+3. Add the factory to `assets/js/katas/registry.js`. Use a unique ID, a site-root-relative `datasetUrl`, and an accent from `CONFIG.accents`.
+4. Grade answers with `matchAnswer()` from `assets/js/services/answer-matcher.js`. Use `acceptedAnswers()` and `formatAccepted()` to show accepted spellings.
+5. Use literal Tailwind class names. Run `npm test`. If you add Tailwind classes or an accent, update `CONFIG.accents` if needed, then run `npm run build:css`.
 
 ## 🧪 Tests
 
-```console
-npm test               # unit tests
-npm run test:e2e       # browser smoke tests (chromium, iPhone 13 mini viewport)
-npm run test:all       # both
-node --test tests/unit/state.test.js          # one unit file
-npx playwright install chromium               # first time only
+```sh
+npm test                          # unit tests
+npm run test:e2e                  # browser smoke tests
+npm run test:all                  # both
+node --test tests/unit/state.test.js
+npx playwright install chromium   # first run only
 ```
 
-`npm test` runs on Node's built-in test runner with no test dependencies. The Playwright layer is a deliberately small smoke test for what Node cannot reach: real focus trapping, real key events, the confetti canvas, and the whole run at phone width. See `AGENTS.md` for the conventions both layers follow.
+Unit tests use Node's built-in runner. Playwright tests cover critical browser paths, including mobile viewport behavior. See `AGENTS.md` for test conventions.
 
 ## 🎨 Rebuilding the stylesheet
 
-`assets/css/tailwind.css` is committed and generated at build time — no CDN compiler runs in the browser. Node is only needed if you change Tailwind classes or `tailwind.config.cjs`.
+`assets/css/tailwind.css` is committed. Rebuild it after changing Tailwind classes or `tailwind.config.cjs`:
 
-```console
-npm run build:css     # one-shot minified build
-npm run watch:css     # rebuild on change while developing
+```sh
+npm run build:css   # one-shot build
+npm run watch:css   # rebuild on change
 ```
 
 ## 🤗 OSS!
