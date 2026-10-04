@@ -231,7 +231,9 @@ class App {
      * It still costs half a belt point, so dodging hard items has a price.
      */
     #skip(id) {
-        if (!this.#entries.has(id) || this.#phase !== 'answering') return;
+        if (this.#phase !== 'answering') return;
+        const { dataset } = this.#entries.get(id) ?? {};
+        if (!dataset || !this.#state.current[id]) return;
         const isDemoted = this.#state.applySkip(id);
         this.#renderProgress(id);
         if (isDemoted) {
@@ -259,8 +261,14 @@ class App {
         this.#focus.switchKata(this.#katas, kata);
     }
 
+    // A graded item must not be shown again unanswered, or it can be re-scored.
+    #discardGradedItem() {
+        if (this.#phase === 'reviewing') this.#state.current[this.#state.activeKata] = null;
+    }
+
     async #enterKata(id) {
         const { kata } = this.#entries.get(id);
+        this.#discardGradedItem();
         clearAnswerMarks(kata.el.section);
         this.#focus.blurActive();
         this.#setKata(id);
@@ -282,6 +290,7 @@ class App {
     }
 
     #exitToMenu() {
+        this.#discardGradedItem();
         this.#focusModeActive = false;
         this.#state.setFocusModeActive(false);
         this.#dashboard.showDashboard();

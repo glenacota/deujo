@@ -17,10 +17,12 @@ export class GameState {
   recent = {};    // kata id -> ids served most recently (session only)
 
   constructor(kataIds = []) {
+    const maxProgress = CONFIG.rules.maxBelt * (CONFIG.rules.milestoneInterval + 1);
     kataIds.forEach((id) => {
       this.current[id] = null;
       this.recent[id] = [];
-      this.beltProgress[id] = Storage.getNumber(this.#beltKey(id));
+      const stored = Storage.getNumber(this.#beltKey(id));
+      this.beltProgress[id] = Number.isFinite(stored) ? Math.min(Math.max(stored, 0), maxProgress) : 0;
     });
 
     this.#loadStreak(kataIds);
@@ -53,7 +55,7 @@ export class GameState {
   }
 
   setActiveKata(kata) {
-    if (!(kata in this.current)) return;
+    if (!Object.hasOwn(this.current, kata)) return;
     this.activeKata = kata;
     Storage.setString(CONFIG.storage.kata, kata);
   }

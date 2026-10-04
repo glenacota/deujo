@@ -203,6 +203,24 @@ test('belt progress is persisted per kata', () => {
   assert.equal(restored.beltProgress[kataId], 2);
 });
 
+test('hand-edited belt progress is clamped on load', () => {
+  const { kataId } = stateFor();
+  const max = maxBelt * (milestoneInterval + 1);
+
+  browser.storage.setItem(`${CONFIG.storage.belt}_${kataId}`, '-7');
+  assert.equal(new GameState([kataId]).beltProgress[kataId], 0);
+  assert.equal(new GameState([kataId]).getCurrentBelt(kataId), 0);
+
+  browser.storage.setItem(`${CONFIG.storage.belt}_${kataId}`, '9999');
+  assert.equal(new GameState([kataId]).beltProgress[kataId], max);
+});
+
+test('setActiveKata ignores inherited property names', () => {
+  const { state } = stateFor();
+  state.setActiveKata('constructor');
+  assert.equal(state.activeKata, KATA_ID);
+});
+
 test('the streak carries across kata switches and is stored once, globally', () => {
   const [first, second] = [KATA_ID, 'test-kata-two'];
   const state = new GameState([first, second]);

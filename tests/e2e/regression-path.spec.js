@@ -6,11 +6,14 @@
 
 import { expect, test } from '@playwright/test';
 import {
+    ACTIVE_SECTION,
     BELT_INTERVAL,
+    answerCurrentNoun,
     answerCurrentNounWrongly,
     appStorageKeys,
     checkAnswer,
     collectPageErrors,
+    currentWord,
     enterNounsKata,
     gotoDashboard,
     nounAnswers,
@@ -75,6 +78,24 @@ test('clear progress wipes every dm_ key and lands on a zeroed dashboard', async
     await expect(page.locator('#focusView')).toBeHidden();
 
     expect(errors).toEqual([]);
+});
+
+test('answer, exit, re-enter serves a fresh item and cannot be re-scored', async ({ page }) => {
+    const answers = nounAnswers();
+
+    await gotoDashboard(page);
+    await enterNounsKata(page);
+    const graded = await currentWord(page);
+    await answerCurrentNoun(page, answers);
+    await checkAnswer(page);
+    await expect(page.locator('#streakDisplay')).toHaveText('1');
+
+    await page.locator('#backToMenuBtn').click();
+    await page.locator('#kata-nouns').click();
+    await expect(page.locator('#focusView')).toBeVisible();
+
+    await expect(page.locator(`${ACTIVE_SECTION} [data-role="word"]`)).not.toHaveText(graded);
+    await expect(page.locator('#checkAnswerBtn [data-role="label"]')).toHaveText('Check');
 });
 
 test('a wrong answer demotes the belt, resets the streak, and shows the correction', async ({ page }) => {
