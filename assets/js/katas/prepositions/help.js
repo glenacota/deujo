@@ -3,8 +3,9 @@
 // stays unit-testable and never touches the DOM.
 //
 // Answer-blind: the body takes no item, so it cannot print the sentence on screen
-// or the phrase the blank expects. It will also not quote a shipped sentence, so
-// no example here can coincide with the item on screen.
+// or the phrase the blank expects. It will also not quote a shipped sentence, nor
+// a determiner with the noun the dataset puts behind it, so no example here can
+// coincide with the item on screen.
 //
 // What this kata actually asks: the answer is the preposition *and* the article it
 // governs, so the case is part of the answer. Three of the four rection groups
@@ -37,13 +38,13 @@ function locationTable() {
     // difference is a word rather than a rule to hold in the head.
     const pairs = [
         { preposition: 'an', place: 'Die Laterne hängt an der Decke.', move: 'Die Vase hängt an den Haken.' },
-        { preposition: 'auf', place: 'Der Brief liegt auf dem Tisch.', move: 'Die Katze springt auf den Schrank.' },
-        { preposition: 'hinter', place: 'Der Hund wartet hinter dem Sofa.', move: 'Die Katze springt hinter den Vorhang.' },
-        { preposition: 'in', place: 'Die Katze schläft in der Küche.', move: 'Der Hund läuft in den Garten.' },
-        { preposition: 'neben', place: 'Die Lampe steht neben dem Bett.', move: 'Der Hund läuft neben die Straße.' },
-        { preposition: 'über', place: 'Der Vogel schwebt über dem Sportplatz.', move: 'Der Adler fliegt über das Tal.' },
-        { preposition: 'unter', place: 'Der Hund schläft unter dem Tisch.', move: 'Das Kind kriecht unter die Bank.' },
-        { preposition: 'vor', place: 'Die Katze wartet vor der Haustür.', move: 'Ein Hund läuft vor das Haus.' },
+        { preposition: 'auf', place: 'Der Brief liegt auf dem Schreibtisch.', move: 'Die Katze springt auf den Schrank.' },
+        { preposition: 'hinter', place: 'Der Hund versteckt sich hinter der Tür.', move: 'Das Kind kriecht hinter das Regal.' },
+        { preposition: 'in', place: 'Die Katze schläft in der Kammer.', move: 'Der Hund läuft in die Scheune.' },
+        { preposition: 'neben', place: 'Die Lampe steht neben der Kommode.', move: 'Der Hund läuft neben das Haus.' },
+        { preposition: 'über', place: 'Der Vogel kreist über dem Sportplatz.', move: 'Der Adler fliegt über den Berg.' },
+        { preposition: 'unter', place: 'Der Hund schläft unter dem Bett.', move: 'Das Kind kriecht unter die Bank.' },
+        { preposition: 'vor', place: 'Die Katze wartet vor der Tür.', move: 'Der Hund läuft vor den Zaun.' },
         { preposition: 'zwischen', place: 'Zwischen den Vorhängen steht ein Bild.', move: 'Er stellt die Karte zwischen die Bücher.' },
     ];
 
@@ -76,7 +77,7 @@ function contractionList() {
                 <span>${escapeHtml(form)} = ${escapeHtml(`${preposition} ${article}`)}</span>
             `).join('')}
         </div>
-        <p class="mt-3 text-xs text-slate-500 dark:text-slate-400">Both spellings count as correct, so "zum" and "zu dem" are equally right. Only a definite article fuses; with <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">ein</code> the phrase stays written out, as in "mit einem".</p>`;
+        <p class="mt-3 text-xs text-slate-500 dark:text-slate-400">Both spellings count as correct, so "zum" and "zu dem" are equally right. Only a definite article fuses; with <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">ein</code> the phrase stays written out, as in "mit einer".</p>`;
 }
 
 export function renderPrepositionHelp() {
@@ -90,7 +91,7 @@ export function renderPrepositionHelp() {
             ${ruleList([
                 rule('Something stays, lies, hangs or waits: <strong>Dativ</strong>.', 'liegen · hängen · schlafen · warten · stehen'),
                 rule('Something moves, goes, jumps or puts itself: <strong>Akkusativ</strong>.', 'gehen · laufen · springen · fahren · klettern · stellen · legen'),
-                rule('Read the verb, then the article. Between the two halves of a contrast only the verb moves.', 'Der Brief liegt <strong>auf dem</strong> Tisch, aber die Kinder klettern <strong>auf den</strong> Tisch.'),
+                rule('Read the verb, then the article. Between the two halves of a contrast only the verb moves.', 'Die Brille liegt <strong>auf dem</strong> Nachttisch und kommt später <strong>auf den</strong> Schreibtisch.'),
             ])}
             ${locationTable()}
         `, { open: true }),
@@ -101,14 +102,14 @@ export function renderPrepositionHelp() {
             </div>
         `),
         disclosure('Where the group loses to the sentence', ruleList([
-            wordGroup('<code>von</code> and <code>zu</code> stay Dativ even when the sentence is about movement.', 'Der Brief ist von der Rezeption, nicht vom Chef.'),
+            wordGroup('<code>von</code> and <code>zu</code> stay Dativ even when the sentence is about movement.', 'Der Brief ist <strong>von der</strong> Post, nicht zu <strong>dem</strong> Chef.'),
             wordGroup('After <code>mit</code> it is nearly always the Dativ, whatever the verb means.', 'mit <strong>dem</strong> Zug · mit meiner Schwester'),
-            rule('<code>wegen</code> and <code>trotz</code> also accept Dativ in speech, but this kata stores the written form, so answer <code>des</code> or <code>der</code>.', 'Trotz <strong>dem</strong> Regen is heard; the kata wants <strong>des</strong> Regens.'),
+            rule('<code>wegen</code> and <code>trotz</code> also accept Dativ in speech, but this kata stores the written form, so answer <code>des</code> or <code>der</code>.', 'Man sagt <strong>trotz dem</strong> Nebel, schreibt aber <strong>des</strong> Nebels.'),
         ])),
         disclosure('A Genitiv is telegraphed too', ruleList([
-            rule('The noun after a Genitiv preposition usually ends in <code>-s</code> or <code>-es</code>, and that is the signal to reach for <code>des</code> or <code>eines</code>.', 'Wegen <strong>des</strong> Regens · wegen <strong>eines</strong> Streiks'),
+            rule('The noun after a Genitiv preposition usually ends in <code>-s</code> or <code>-es</code>, and that is the signal to reach for <code>des</code> or <code>eines</code>.', 'Wegen <strong>des</strong> Winters · infolge <strong>des</strong> Lärms'),
             rule('The same is true without a preposition, when a noun shows who owns what.', 'die Jacke <strong>seines</strong> Bruders'),
-            rule('So the Genitiv is never a leap: the word ending already told you, and the article is only the last step.', 'Anlässlich <strong>des</strong> Jubiläums · während <strong>der</strong> Sitzung'),
+            rule('So the Genitiv is never a leap: the word ending already told you, and the article is only the last step.', 'Bezüglich <strong>des</strong> Hauses · mittels <strong>des</strong> Werkzeugs'),
         ])),
         disclosure('Short forms', contractionList()),
     ].join('');

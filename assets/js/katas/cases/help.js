@@ -3,8 +3,11 @@
 // unit-testable and never touches the DOM.
 //
 // Answer-blind: the body takes no item, so it cannot print the sentence on screen
-// or the case the answer expects. For the same reason it quotes no sentence the
-// dataset ships: the determiner plus its noun is what the learner has to produce.
+// or the case the answer expects. The examples are determiner-plus-noun pairs the
+// dataset really ships, which is what a learner has to produce and which
+// `tests/unit/katas.test.js` enforces; that makes this kata's modal the mirror
+// image of the two-way-prepositions one, where an example must not coincide with
+// a shipped item.
 //
 // What this kata actually asks: every blank is a determiner — an article, a
 // possessive or a numeral — and the noun it belongs to is always still visible in
@@ -119,14 +122,14 @@ function roleHelp() {
         `),
         disclosure('Verbs that force a Dativ', ruleList([
             wordGroup('Giving, showing, telling, recommending — the person is the Dativ object.', 'bringen · schenken · zeigen · erklären · empfehlen · geben · leihen · verkaufen'),
-            wordGroup('Helping and serving — the person is the Dativ object.', 'helfen · dienen · folgen · schmecken · gefallen · passen · danken · antworten'),
+            wordGroup('Helping, replying and reactions — the person is the Dativ object.', 'helfen · dienen · folgen · schmecken · gefallen · passen · danken · antworten'),
             rule('The same verb usually takes an Akkusativ, so a learner who only knows English picks the wrong determiner.', 'Ich sehe <strong>ihn</strong>, but I help <strong>ihm</strong>.'),
             rule('After <code>mit</code> it is nearly always the Dativ, whatever the verb means.', 'mit <strong>dem</strong> Zug · mit meiner Schwester · mit den Schülern'),
         ])),
         disclosure('Possessive determiners', `
             ${possessiveMatrix()}
             ${ruleList([
-                rule('<strong>die</strong> and <strong>das</strong> hide the difference: in the Akkusativ both take the bare stem.', 'seine Hausarbeit · ihre Getränke · ihre Aufgaben'),
+                rule('<strong>die</strong> and <strong>das</strong> hide the difference in the Akkusativ: a feminine noun keeps its <code>-e</code> and a neuter one keeps the bare stem, so both rows read the same as the Nominativ.', 'seine Hausarbeit · ihr Buch · ihr Zimmer'),
                 rule('The Dativ plural is the one place the stem grows by more than a case ending, so it is worth memorising as a set.', 'den Kindern · seinen Eltern · seinen Enkeln'),
                 rule('<code>ein</code> and <code>kein</code> take the same endings, so <code>einer</code> is the Genitiv and <code>einem</code> the Dativ.', 'einer Schülerin'),
             ])}

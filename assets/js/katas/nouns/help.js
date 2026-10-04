@@ -17,14 +17,14 @@ function genderHelp() {
         disclosure('Gender by ending', ruleList([
             rule('<code>-ung, -heit, -keit, -schaft, -ion, -ei</code> are <strong>die</strong>, with no known exception.', 'die Wohnung · die Sicherheit · die Krankheit · die Mannschaft · die Information · die Bäckerei'),
             rule('<code>-chen, -lein, -nis</code> are <strong>das</strong>.', 'das Mädchen · das Brötchen · das Ereignis'),
-            rule('<code>-er, -ling</code> are usually <strong>der</strong>, but some are <strong>die</strong>.', 'der Lehrer · der Frühling — but die Nummer · der Computer'),
+            rule('<code>-er, -ling</code> are usually <strong>der</strong>, but some are <strong>die</strong>.', 'der Lehrer · der Frühling · der Computer — but die Nummer · die Kammer'),
             rule('An activity, a quality or a manner is <strong>das</strong>, whatever the ending looks like.', 'das Essen · das Trinken · das Wissen · das Glück'),
             rule('A loanword in <code>-e, -a, -o, -i, -um, -on</code> is usually <strong>das</strong>.', 'das Auto · das Sofa · das Klima · das Museum · das Telefon'),
             rule('Everything else has to be learned with its gender. There is no rule left to fall back on.', 'der Tisch · die Lampe · das Haus'),
         ]), { open: true }),
         disclosure('Where the ending lies to you', ruleList([
             wordGroup('A person, an animal or a trade is <strong>die</strong> far more often than the ending suggests, even in <code>-er</code>.', 'die Katze · der Nachbar → die Nachbarn · der Kollege → die Kollegen'),
-            wordGroup('Some <strong>das</strong> words borrow the <strong>der</strong> plural ending, so the umlaut comes with the ending rather than with the gender.', 'der Morgen → die Morgen · der Rücken → die Rücken'),
+            wordGroup('Some <strong>das</strong> words take the <strong>der</strong> plural ending, so the umlaut comes with the ending rather than with the gender.', 'das Ei → die Eier · das Museum → die Museen'),
             wordGroup('Family words take <strong>die</strong> and an umlaut, the feminine pattern that looks backwards.', 'die Mutter → die Mütter · die Tochter → die Töchter'),
         ])),
     ].join('');
@@ -47,7 +47,7 @@ function pluralHelp() {
         disclosure('No plural at all', `
             <p class="px-1 text-slate-700 dark:text-slate-300">These nouns have no plural. Their input is switched off, so the whole answer is the gender on its own: <strong>der Schnee</strong>, not an empty field.</p>
             ${ruleList([
-                rule('Things there is only ever one of, or that get counted some other way.', 'der Schnee · der Regen · das Blut · das Gold · der Schlaf · der Lärm · die Ruhe'),
+                rule('Things there is only ever one of, or that get counted some other way.', 'der Schnee · der Regen · das Blut · das Gold · der Schlaf · der Lärm · die Ruhe · der Sport'),
                 rule('Food and meals, which are counted by the portion.', 'das Essen · das Fleisch · das Obst · der Reis · die Butter'),
                 rule('Nouns only ever used in the plural, so they are already plural and take no ending of their own.', 'die Eltern · die Leute · die Ferien · die Kosten · die Daten'),
             ])}
