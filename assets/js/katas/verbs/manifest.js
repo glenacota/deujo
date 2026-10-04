@@ -1,7 +1,7 @@
 // katas/verbs/manifest.js
 import { TENSES } from '../../services/grammar.js';
 
-const SUBTITLE = 'Verbs Conjugation';
+const SUBTITLE = 'Verb Conjugation';
 const ACCENT = 'purple';
 const DATASET_URL = './assets/datasets/verbs.json';
 

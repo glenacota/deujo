@@ -464,7 +464,7 @@ test('the noun help is answer-blind and covers both graded fields', async () => 
     assert.ok(html.includes(`<strong>${gender}</strong>`), `no rule about ${gender}`);
   }
 
-  // 34 shipped nouns have no plural, and their input is disabled. That path has
+  // 35 shipped nouns have no plural, and their input is disabled. That path has
   // to be explained or the learner reads the field as "nothing to answer".
   const pluralLess = dataset.filter((n) => !n.p);
   assert.ok(pluralLess.length > 0, 'dataset has no plural-less nouns');
