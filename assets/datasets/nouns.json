@@ -541,7 +541,7 @@
   {"w":"Lärm","g":"der","m":"noise / din","p":"","id":"n_7ffd03b4"},
   {"w":"Stille","g":"die","m":"silence / quiet","p":"","id":"n_d1c6dce3"},
   {"w":"Ruhe","g":"die","m":"peace / rest","p":"","id":"n_4b78114a"},
-  {"w":"Sport","g":"der","m":"sports","p":"Sportarten","id":"n_971f4e65"},
+  {"w":"Sport","g":"der","m":"sports","p":"","id":"n_971f4e65"},
   {"w":"Spiel","g":"das","m":"game / match","p":"Spiele","id":"n_27850f11"},
   {"w":"Mannschaft","g":"die","m":"team","p":"Mannschaften","id":"n_9f037db2"},
   {"w":"Team","g":"das","m":"team","p":"Teams","id":"n_aefc4feb"},
