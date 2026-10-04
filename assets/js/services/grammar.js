@@ -105,8 +105,8 @@ const CONTRACTED_FORMS = Object.fromEntries(
     ])
 );
 
-/** The six possessive stems; each one takes the endings below. */
-const POSSESSIVE_STEMS = ['mein', 'dein', 'sein', 'ihr', 'unser', 'euer'];
+/** The five possessive stems that take an ending; `euer` is listed apart below. */
+const POSSESSIVE_STEMS = ['mein', 'dein', 'sein', 'ihr', 'unser'];
 
 /**
  * What a possessive stem takes, per case. Gendered, because that is where the
@@ -120,14 +120,29 @@ export const POSSESSIVE_ENDINGS = {
     plural: { nom: 'e', akk: 'e', dat: 'en', gen: 'er' },
 };
 
+/**
+ * `euer` is the one possessive stem that drops its -r in front of an -e ending,
+ * so "eure Jacke" cannot be spelled as a stem plus a suffix. Its forms are
+ * listed rather than derived, and the short spellings Duden also allows (euerm,
+ * eurer) come with them.
+ */
+const POSSESSIVE_EUER = {
+    akk: ['euer', 'eure', 'euren'],
+    dat: ['eurem', 'euerm', 'euerem', 'euerer', 'euren'],
+    gen: ['eures', 'euerer', 'eurer'],
+};
+
 /** Every possessive form a case allows, deduplicated: "meine" serves three genders. */
 export const POSSESSIVE = Object.fromEntries(
     Object.keys(CASE_LABELS)
         .filter((caseKey) => caseKey !== 'nom')
         .map((caseKey) => [
             caseKey,
-            [...new Set(POSSESSIVE_STEMS.flatMap((stem) =>
-                Object.values(POSSESSIVE_ENDINGS).map((byCase) => stem + byCase[caseKey])))],
+            [...new Set([
+                ...POSSESSIVE_STEMS.flatMap((stem) =>
+                    Object.values(POSSESSIVE_ENDINGS).map((byCase) => stem + byCase[caseKey])),
+                ...POSSESSIVE_EUER[caseKey],
+            ])],
         ]),
 );
 
@@ -137,10 +152,10 @@ const PERSONAL = {
     dat: ['mir', 'dir', 'ihm', 'ihr', 'uns', 'ihnen'],
 };
 
-/** Cardinals, "all/both" and the adverbial "lange" used after seit. */
+/** Cardinals and "all/both": "zwei Bücher", "beiden Kindern", "alle Höhe". */
 const NUMERALS = {
     akk: ['eins', 'zwei', 'drei', 'vier', 'fünf', 'sechs', 'beide', 'alle'],
-    dat: ['einem', 'zwei', 'drei', 'vier', 'fünf', 'sechs', 'beiden', 'allen', 'langem'],
+    dat: ['einem', 'zwei', 'drei', 'vier', 'fünf', 'sechs', 'beiden', 'allen'],
     gen: ['eines', 'zweier', 'dreier', 'vierer', 'fünfer', 'sechser', 'beider', 'aller', 'allem', 'alledem'],
 };
 
