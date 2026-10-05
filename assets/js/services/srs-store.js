@@ -6,7 +6,6 @@ import { CONFIG } from '../config.js';
 import { isValidRecord } from './srs-scheduler.js';
 import { Storage } from './storage.js';
 
-const SAVE_DELAY_MS = 500;
 const EMPTY = Object.freeze(Object.create(null));
 
 let data = null;
@@ -35,7 +34,7 @@ function flush() {
 }
 
 function scheduleSave() {
-  if (saveTimer === null) saveTimer = setTimeout(flush, SAVE_DELAY_MS);
+  if (saveTimer === null) saveTimer = setTimeout(flush, CONFIG.srs.saveDebounceMs);
 }
 
 window.addEventListener('pagehide', flush);

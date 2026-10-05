@@ -2,6 +2,7 @@
 // All mutable app state lives here, plus the pure rules for how it changes
 
 import { CONFIG } from './config.js';
+import { addPoints, beltAt, clampProgress, creditOnChange, pointsEarnedInBelt } from './belt-rules.js';
 import { Storage } from './services/storage.js';
 import { SrsStore } from './services/srs-store.js';
 import { newRecord, schedule } from './services/srs-scheduler.js';
@@ -17,12 +18,10 @@ export class GameState {
   recent = {};    // kata id -> ids served most recently (session only)
 
   constructor(kataIds = []) {
-    const maxProgress = CONFIG.rules.maxBelt * (CONFIG.rules.milestoneInterval + 1);
     kataIds.forEach((id) => {
       this.current[id] = null;
       this.recent[id] = [];
-      const stored = Storage.getNumber(this.#beltKey(id));
-      this.beltProgress[id] = Number.isFinite(stored) ? Math.min(Math.max(stored, 0), maxProgress) : 0;
+      this.beltProgress[id] = clampProgress(Storage.getNumber(this.#beltKey(id)));
     });
 
     this.#loadStreak(kataIds);
@@ -74,39 +73,42 @@ export class GameState {
   }
 
   /**
-   * Moves belt points by `points`, clamped to 0..maxProgress. Points are
-   * fractional, so the result is rounded to two decimals: repeated halves and
-   * fifths would otherwise drift into values like 4.700000000000001.
+   * Moves one kata's progress by `points` and reports which way, if either, it
+   * crossed a belt boundary.
+   *
+   * The three outcomes differ only in their points and in whether they also
+   * touch the streak, so the crossing test lives here once. Only one direction
+   * is reachable per outcome in practice -- points are signed and `beltAt`
+   * never falls as progress grows -- but both are reported rather than assumed,
+   * so a future rule change cannot quietly skip a credit that a crossing earns.
    */
-  #addPoints(kataId, points) {
-    const maxProgress = CONFIG.rules.maxBelt * (CONFIG.rules.milestoneInterval + 1);
-    const next = this.beltProgress[kataId] + points;
-    this.beltProgress[kataId] = Math.min(Math.max(Math.round(next * 100) / 100, 0), maxProgress);
-  }
+  #applyOutcome(kataId, points) {
+    const before = beltAt(this.beltProgress[kataId]);
+    const moved = addPoints(this.beltProgress[kataId], points);
+    const after = beltAt(moved);
+    const promoted = after > before;
+    const demoted = after < before;
 
-  #creditBelt(kataId, credit) {
-    const belt = this.getCurrentBelt(kataId);
-    const interval = CONFIG.rules.milestoneInterval;
-    this.beltProgress[kataId] = belt * interval + Math.min(credit, interval);
+    this.beltProgress[kataId] = promoted
+      ? creditOnChange(after, CONFIG.rules.promotionCredit)
+      : demoted
+        ? creditOnChange(after, CONFIG.rules.demotionCredit)
+        : moved;
+
+    return { promoted, demoted };
   }
 
   incrementStreak(kataId) {
-    const previousBelt = this.getCurrentBelt(kataId);
     this.streak++;
     this.maxStreak = Math.max(this.maxStreak, this.streak);
-    this.#addPoints(kataId, CONFIG.rules.correctPoints);
-    const promoted = this.getCurrentBelt(kataId) > previousBelt;
-    if (promoted) this.#creditBelt(kataId, CONFIG.rules.promotionCredit);
+    const { promoted } = this.#applyOutcome(kataId, CONFIG.rules.correctPoints);
     this.#persist(kataId);
     return promoted;
   }
 
   resetStreak(kataId) {
-    const previousBelt = this.getCurrentBelt(kataId);
     this.streak = 0;
-    this.#addPoints(kataId, CONFIG.rules.wrongPoints);
-    const demoted = this.getCurrentBelt(kataId) < previousBelt;
-    if (demoted) this.#creditBelt(kataId, CONFIG.rules.demotionCredit);
+    const { demoted } = this.#applyOutcome(kataId, CONFIG.rules.wrongPoints);
     this.#persist(kataId);
     return demoted;
   }
@@ -117,19 +119,13 @@ export class GameState {
    * answers and a skipped item is not a wrong one.
    */
   applySkip(kataId) {
-    const previousBelt = this.getCurrentBelt(kataId);
-    this.#addPoints(kataId, CONFIG.rules.skipPoints);
-    const demoted = this.getCurrentBelt(kataId) < previousBelt;
-    if (demoted) this.#creditBelt(kataId, CONFIG.rules.demotionCredit);
+    const { demoted } = this.#applyOutcome(kataId, CONFIG.rules.skipPoints);
     this.#persist(kataId);
     return demoted;
   }
 
   getCurrentBelt(kataId) {
-    return Math.min(
-      Math.floor(this.beltProgress[kataId] / CONFIG.rules.milestoneInterval),
-      CONFIG.rules.maxBelt
-    );
+    return beltAt(this.beltProgress[kataId]);
   }
 
   /**
@@ -138,12 +134,7 @@ export class GameState {
    * point and a fresh belt starts with a fifth.
    */
   getBeltPointsEarned(kataId) {
-    const interval = CONFIG.rules.milestoneInterval;
-    const belt = this.getCurrentBelt(kataId);
-    if (belt >= CONFIG.rules.maxBelt) return interval;
-    // Rounded: subtracting belt boundaries from a fifth- or half-point value
-    // leaves float dust like 0.20000000000000018.
-    return Math.round((this.beltProgress[kataId] - belt * interval) * 100) / 100;
+    return pointsEarnedInBelt(this.beltProgress[kataId]);
   }
 
   /**

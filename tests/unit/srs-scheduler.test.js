@@ -7,9 +7,38 @@ import assert from 'node:assert/strict';
 import {
   BOX_COUNT, DAY_MS, newRecord, isValidRecord, schedule,
 } from '../../assets/js/services/srs-scheduler.js';
+import { CONFIG } from '../helpers/bootstrap.js';
 
 const NOW = 1_700_000_000_000;
 const inBox = (box) => ({ box, dueAt: NOW });
+
+test('every box the scheduler can reach has a delay to schedule it with', () => {
+  // The delay ladder moved into CONFIG.srs next to the box count, and the two
+  // have to stay the same length. Raising `boxes` without adding a delay makes
+  // `delaysDays[box]` undefined, so `dueAt` becomes NaN, `isValidRecord`
+  // rejects the record it just wrote, and every answer in the top box silently
+  // forgets itself.
+  assert.equal(
+    CONFIG.srs.delaysDays.length,
+    BOX_COUNT,
+    `CONFIG.srs has ${BOX_COUNT} boxes but ${CONFIG.srs.delaysDays.length} delays`,
+  );
+});
+
+test('every delay is a real, non-negative number of days', () => {
+  CONFIG.srs.delaysDays.forEach((days, box) => {
+    assert.ok(Number.isFinite(days), `box ${box} has a non-finite delay`);
+    assert.ok(days >= 0, `box ${box} has a negative delay`);
+  });
+  assert.equal(CONFIG.srs.dayMs, 24 * 60 * 60 * 1000, 'dayMs is a day in milliseconds');
+});
+
+test('a mistake is due again straight away', () => {
+  // Index 0 is the box a wrong answer drops to, so its delay has to be zero or
+  // every mistake would sit unseen for days.
+  assert.equal(CONFIG.srs.delaysDays[0], 0);
+  assert.equal(schedule(false, inBox(BOX_COUNT - 1), NOW).dueAt, NOW);
+});
 
 test('newRecord starts in the first box', () => {
   assert.deepEqual(newRecord(), { box: 0, dueAt: 0 });

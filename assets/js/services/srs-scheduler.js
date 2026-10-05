@@ -2,12 +2,16 @@
 // Three-stage Leitner boxes: Learning, Review, Mastered. An item moves up one
 // box per correct answer and falls back to the first box on a mistake. Wrong
 // answers come back soon, right answers earn more breathing room.
+//
+// The ladder lives in CONFIG.srs, beside the belt points it shares a reward
+// schedule with. Still pure: `now` is injected, so no clock and no random.
 
-export const BOX_COUNT = 3;
-export const DAY_MS = 86_400_000;
+import { CONFIG } from '../config.js';
 
-// How long an item waits after a correct answer before it counts as due again.
-const BOX_DELAY_DAYS = [0, 2, 9];
+const { boxes, delaysDays, dayMs } = CONFIG.srs;
+
+export const BOX_COUNT = boxes;
+export const DAY_MS = dayMs;
 
 export function newRecord() {
   return { box: 0, dueAt: 0 };
@@ -27,5 +31,5 @@ export function schedule(correct, record, now = Date.now()) {
   const box = correct
     ? Math.min((record?.box ?? 0) + 1, BOX_COUNT - 1)
     : 0;
-  return { box, dueAt: now + BOX_DELAY_DAYS[box] * DAY_MS };
+  return { box, dueAt: now + delaysDays[box] * DAY_MS };
 }

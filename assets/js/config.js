@@ -38,6 +38,18 @@ export const CONFIG = Object.freeze({
   timing: {
     toastMs: 3500,
   },
+  // Leitner spaced repetition. Grouped next to the belt points rather than in
+  // `timing`, because the box ladder and the reward schedule are tuned
+  // together: both decide what a correct answer is worth.
+  srs: {
+    boxes: 3,             // Learning, Review, Mastered
+    // Days an item waits before it counts as due again, indexed by the box it
+    // landed in. Index 0 is the first box, so a mistake is due straight away.
+    delaysDays: [0, 2, 9],
+    dayMs: 86_400_000,
+    // One debounced write for a burst of answers, rather than one per answer.
+    saveDebounceMs: 500,
+  },
   belts: {
     icons: ['⚪️', '🟡', '🟠', '🟢', '🔵', '🟤', '⚫️'],
     labels: ["White", "Yellow", "Orange", "Green", "Blue", "Brown", "Black"],

@@ -65,6 +65,12 @@ no backend, no login.
   field: the Check/Skip bar is global chrome, so a global phase makes the "a
   graded item is never served again" guard agree with the active kata by
   accident rather than by construction.
+- Belt arithmetic lives in `assets/js/belt-rules.js`, not on `GameState`. It is
+  pure and touches no host global, which is what lets
+  `tests/unit/belt-rules.test.js` pin a promotion landing one fifth into the new
+  belt without standing up a `localStorage` stub first. Reach for those
+  functions rather than re-deriving `progress / milestoneInterval` inline; the
+  rounding in `addPoints` is what keeps float dust out of storage.
 - A shortcut that must not act still has to claim its key. Backspace decides in
   `run` whether to leave a kata, but `matches` always claims it: Safari's
   default for an unclaimed Backspace is "go back", which navigates the learner
