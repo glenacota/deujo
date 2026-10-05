@@ -8,7 +8,7 @@ import { GameState } from './state.js';
 import { Phase, Session } from './session.js';
 import { loadKatas } from './katas/registry.js';
 import { applyDocumentPreferences, get } from './services/preferences.js';
-import { clearAnswerMarks, setSectionLocked } from './ui/answer-view.js';
+import { clearAnswerMarks, setSectionLocked } from './platform/dom/answer-marking.js';
 import { renderBeltBadge } from './ui/belt-badge.js';
 import { DashboardView } from './ui/dashboard-view.js';
 import { dom } from './ui/dom.js';

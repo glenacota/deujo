@@ -14,7 +14,7 @@
 // the sentence. So the gender is never in question, only the case. That is what
 // this modal is about.
 
-import { escapeHtml } from '../../services/utility.js';
+import { escapeHtml } from '../../services/escape-html.js';
 import { CASE_LABELS, DEFINITE, INDEFINITE, PLURAL_DEFINITE, POSSESSIVE_ENDINGS, PREPOSITION_GROUPS } from '../../services/grammar.js';
 import { banner, disclosure, rule, ruleList, wordGroup } from '../help-kit.js';
 

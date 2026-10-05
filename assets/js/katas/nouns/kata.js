@@ -1,9 +1,9 @@
 // katas/nouns/kata.js
 // Self-contained noun kata: elements, local selection state, rendering, validation.
 
-import { createSectionFromTemplate } from '../../services/utility.js';
+import { createSectionFromTemplate } from '../../platform/dom/template.js';
 import { acceptedAnswers, matchAnswer } from '../../services/answer-matcher.js';
-import { markControl } from '../../ui/answer-view.js';
+import { markControl } from '../../platform/dom/answer-marking.js';
 import { assertDataset, hasAltList, hasCoreFields } from '../dataset-rules.js';
 import { nounsManifest } from './manifest.js';
 import { renderNounHelp } from './help.js';

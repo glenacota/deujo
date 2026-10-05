@@ -1,11 +1,11 @@
 // katas/cases/kata.js
 // Self-contained case-declension kata: fill-in-the-blank sentences with inline inputs.
 
-import { createSectionFromTemplate } from '../../services/utility.js';
-import { markControl } from '../../ui/answer-view.js';
+import { createSectionFromTemplate } from '../../platform/dom/template.js';
+import { markControl } from '../../platform/dom/answer-marking.js';
 import { CASE_LABELS, hasOrderedBlankPlaceholders } from '../../services/grammar.js';
 import { formatAccepted, matchAnswer } from '../../services/answer-matcher.js';
-import { renderBlankSentence } from '../../services/blank-renderer.js';
+import { renderBlankSentence } from '../../platform/dom/blank-renderer.js';
 import { assertDataset, hasCoreFields, hasValidBlanks } from '../dataset-rules.js';
 import { casesManifest } from './manifest.js';
 import { renderCaseHelp } from './help.js';

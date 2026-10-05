@@ -14,7 +14,7 @@
 // real trap is that a Genitiv preposition almost always arrives with a noun in
 // `-s` or `-es`.
 
-import { escapeHtml } from '../../services/utility.js';
+import { escapeHtml } from '../../services/escape-html.js';
 import { PREPOSITION_CONTRACTIONS, PREPOSITION_GROUP_LABELS, PREPOSITION_GROUPS } from '../../services/grammar.js';
 import { banner, disclosure, rule, ruleList, wordGroup } from '../help-kit.js';
 

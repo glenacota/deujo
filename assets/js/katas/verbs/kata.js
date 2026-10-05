@@ -1,9 +1,9 @@
 // katas/verbs/kata.js
 // Self-contained verb-conjugation kata.
 
-import { createSectionFromTemplate } from '../../services/utility.js';
+import { createSectionFromTemplate } from '../../platform/dom/template.js';
 import { acceptedAnswers, matchAnswer } from '../../services/answer-matcher.js';
-import { markControl } from '../../ui/answer-view.js';
+import { markControl } from '../../platform/dom/answer-marking.js';
 import { PERSONS, TENSES, normalizePhrase } from '../../services/grammar.js';
 import { assertDataset, hasAltList, hasCoreFields } from '../dataset-rules.js';
 import { getVerbManifest } from './manifest.js';

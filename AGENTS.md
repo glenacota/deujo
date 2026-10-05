@@ -80,3 +80,11 @@ no backend, no login.
 - No framework, no bundler, no runtime dependency beyond a same-origin JSON
   `fetch()`.
 - Services must stay DOM-free and pure.
+- The layer order is `services/` → `platform/` → `ui/` and `katas/`, with
+  `app.js` as the only module allowed to see every layer. `ui/` and `katas/`
+  are peers: they must not import each other, which is why answer marking lives
+  in `platform/dom/` rather than in `ui/`. A DOM primitive both peers need goes
+  in `platform/dom/`; a pure function goes in `services/`.
+  `tests/unit/module-boundaries.test.js` reads the real import graph and fails
+  on a sideways or upward edge, on a cycle, and on an unresolved specifier — so
+  a boundary nobody watches stays a comment.

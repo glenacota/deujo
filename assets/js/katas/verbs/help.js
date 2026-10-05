@@ -18,7 +18,7 @@
 // Every dynamic string is escaped before it reaches `UiController#showHelpContent`,
 // which is the one trusted-HTML sink and does not escape for its caller.
 
-import { escapeHtml } from '../../services/utility.js';
+import { escapeHtml } from '../../services/escape-html.js';
 import { PERSONS } from '../../services/grammar.js';
 import { banner, code, disclosure, rule, ruleList } from '../help-kit.js';
 

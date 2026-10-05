@@ -1,4 +1,4 @@
-// ui/answer-view.js
+// platform/dom/answer-marking.js
 // Inline marking of a kata's own controls: colour plus emoji, right where the
 // learner is looking.
 //

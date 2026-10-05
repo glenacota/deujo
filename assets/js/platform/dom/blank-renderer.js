@@ -1,8 +1,11 @@
-// services/blank-renderer.js
+// platform/dom/blank-renderer.js
 // Shared fill-in-the-blank sentence renderer for katas whose dataset sentences
 // use `{n}` placeholders (cases, prepositions, and any future kata of this shape).
+//
+// A DOM renderer, so it belongs to platform/dom rather than services/: services
+// are DOM-free by rule.
 
-import { splitBlanks } from './grammar.js';
+import { splitBlanks } from '../../services/grammar.js';
 
 /**
  * Splits `item.s` on `{n}` placeholders, writes the translation, and appends

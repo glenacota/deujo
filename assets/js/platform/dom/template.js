@@ -1,13 +1,5 @@
-// js/services/utility.js
-
-export function escapeHtml(value) {
-    return String(value)
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#39;');
-}
+// platform/dom/template.js
+// Turns a kata's own markup string into a live element.
 
 /** Parses a kata's own markup string into a live element (its root `[data-role="section"]`). */
 export function createSectionFromTemplate(templateHtml) {
@@ -15,4 +7,3 @@ export function createSectionFromTemplate(templateHtml) {
     template.innerHTML = templateHtml.trim();
     return template.content.querySelector('[data-role="section"]');
 }
-

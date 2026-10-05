@@ -16,7 +16,7 @@ const { PREPOSITION_CONTRACTIONS, PREPOSITION_GROUPS, PERSONS, POSSESSIVE_ENDING
 // The preposition kata grades straight through the shared matcher: both
 // spellings of a contractable phrase pass whichever one the dataset stored.
 const { matchAnswer } = await import('../../assets/js/services/answer-matcher.js');
-const { escapeHtml } = await import('../../assets/js/services/utility.js');
+const { escapeHtml } = await import('../../assets/js/services/escape-html.js');
 
 // One container for all six, exactly as app.js does at boot.
 const katas = loadKatas(document.createElement('div'));

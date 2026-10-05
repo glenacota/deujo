@@ -58,7 +58,7 @@ test('every registered kata uses an accent that exists', () => {
 });
 
 test('app.css paints every answer state, in both themes', () => {
-  // answer-view.js only sets data-answer-state; these rules are the whole
+  // answer-marking.js only sets data-answer-state; these rules are the whole
   // visual contract for a right and a wrong answer.
   for (const state of ['correct', 'wrong']) {
     for (const prefix of ['', 'html.dark ']) {

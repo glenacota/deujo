@@ -2,8 +2,8 @@
 // Self-contained preposition kata: fill in the preposition together with the
 // article it governs, so the case is part of the answer.
 
-import { createSectionFromTemplate } from '../../services/utility.js';
-import { markControl } from '../../ui/answer-view.js';
+import { createSectionFromTemplate } from '../../platform/dom/template.js';
+import { markControl } from '../../platform/dom/answer-marking.js';
 import {
     CASE_LABELS,
     hasOrderedBlankPlaceholders,
@@ -11,7 +11,7 @@ import {
     normalizePhrase,
 } from '../../services/grammar.js';
 import { matchAnswer, formatAccepted } from '../../services/answer-matcher.js';
-import { renderBlankSentence } from '../../services/blank-renderer.js';
+import { renderBlankSentence } from '../../platform/dom/blank-renderer.js';
 import { assertDataset, hasCoreFields, hasValidBlanks } from '../dataset-rules.js';
 import { prepositionsManifest } from './manifest.js';
 import { renderPrepositionHelp } from './help.js';

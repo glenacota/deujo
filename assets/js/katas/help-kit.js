@@ -6,7 +6,7 @@
 // Every helper takes prose as plain text and escapes it. The one exception is a
 // `rule` pattern, which is a module literal and may embed `code()` calls.
 
-import { escapeHtml } from '../services/utility.js';
+import { escapeHtml } from '../services/escape-html.js';
 
 const CODE_CLASS = 'bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono';
 

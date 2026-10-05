@@ -1,4 +1,4 @@
-// tests/unit/answer-view.test.js
+// tests/unit/answer-marking.test.js
 // Inline marking: colour, emoji, and the corrections that travel with them.
 // Uses the shared DOM stub, since there is no jsdom dependency in this project.
 
@@ -13,7 +13,7 @@ const mountInput = (parent, tag = 'input') => {
   return input;
 };
 
-const loadModule = async () => import('../../assets/js/ui/answer-view.js');
+const loadModule = async () => import('../../assets/js/platform/dom/answer-marking.js');
 
 const badgeOf = (wrapper) => wrapper.children.find((c) => c.classList.has('answer-badge'));
 const noteOf = (wrapper) => wrapper.children.find((c) => c.classList.has('answer-note'));
