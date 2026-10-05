@@ -1,12 +1,10 @@
 // katas/cases/kata.js
-// Self-contained case-declension kata: fill-in-the-blank sentences with inline inputs.
+// Case declension: fill in the article each blank needs, so the case is part of
+// the answer. Mounting, rendering and grading are the shared sentence path; only
+// what makes an answer legal and what a mistake teaches are declared here.
 
-import { createSectionFromTemplate } from '../../platform/dom/template.js';
-import { markControl } from '../../platform/dom/answer-marking.js';
-import { CASE_LABELS, hasOrderedBlankPlaceholders } from '../../services/grammar.js';
-import { formatAccepted, matchAnswer } from '../../services/answer-matcher.js';
-import { renderBlankSentence } from '../../platform/dom/blank-renderer.js';
-import { assertDataset, hasCoreFields, hasValidBlanks } from '../dataset-rules.js';
+import { CASE_LABELS } from '../../services/grammar.js';
+import { createSentenceKata, validateSentenceDataset } from '../factories/sentence-kata.js';
 import { casesManifest } from './manifest.js';
 import { renderCaseHelp } from './help.js';
 import { renderCaseLesson } from './lesson.js';
@@ -14,87 +12,33 @@ import { casesTemplate } from './template.js';
 
 const VALID_CASE_NAMES = Object.keys(CASE_LABELS);
 
+/** A blank is usable when it names one of the four cases. */
+const isUsableAnswer = (blank) => VALID_CASE_NAMES.includes(blank?.c);
+
+const describeProblem = (index) => `entry ${index} has invalid sentence, translation, or blank answers`;
+
 export function validateCaseDataset(dataset) {
-    assertDataset(dataset);
-
-    dataset.forEach((item, index) => {
-        const ok = hasCoreFields(item, { sentence: true })
-            && hasValidBlanks(item?.b, (blank) => VALID_CASE_NAMES.includes(blank?.c))
-            && hasOrderedBlankPlaceholders(item?.s, item?.b?.length);
-
-        if (!ok) {
-            throw new Error(`entry ${index} has invalid sentence, translation, or blank answers`);
-        }
-    });
+    validateSentenceDataset(dataset, isUsableAnswer, describeProblem);
 }
 
 /** Mounts the case kata's section, so `el` is populated for the caller. */
-export function createCaseKata(container) {
-    let inputs = [];
-
-    const section = createSectionFromTemplate(casesTemplate);
-    container.appendChild(section);
-
-    const el = {
-        section,
-        sentence: section.querySelector('[data-role="sentence"]'),
-        translation: section.querySelector('[data-role="translation"]'),
-    };
-
-    return {
-        ...casesManifest,
-        validateDataset: validateCaseDataset,
-        el,
-
-        /**
-         * Answer-blind: the body takes no item, so it cannot print the sentence on
-         * screen or the case the blank expects.
-         */
-        getHelpContent() {
-            return renderCaseHelp();
-        },
-
-        render(item) {
-            inputs = renderBlankSentence(el, item, () => {
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.autocomplete = 'off';
-                input.maxLength = '20'
-                input.spellcheck = false;
-                input.autocapitalize = 'none';
-                input.autocorrect = 'off';
-                input.lang = 'de';
-                input.size = 6;
-                input.className = 'blank-input blank-input--inline blank-input--narrow';
-                return input;
-            });
-        },
-
-        check(item) {
-            if (!inputs.length || inputs.some((input) => !input.value.trim())) {
-                return { warning: 'Please fill in all blanks before checking.' };
-            }
-
-            const misses = [];
-            const fields = inputs.map((input, i) => {
-                const given = input.value.trim();
-                // The learner may type the article with the noun that follows it
-                // ("der Mann"), which is the same answer, not a different one.
-                const { ok, accepted } = matchAnswer(given, item.b[i], { allowExtraWords: true });
-                // The dataset spelling, not the whole answer object, goes on show.
-                const expected = accepted[0] ?? item.b[i].a;
-                markControl(input, { ok, expected, note: ok ? null : formatAccepted(accepted) });
-                if (!ok) misses.push({ blank: item.b[i], given, expected });
-                return { ok };
-            });
-
-            return {
-                correct: fields.every((f) => f.ok),
-                fields,
-                // The first miss teaches: a two-blank sentence has two rules, and
-                // the panel has room for one.
-                lesson: renderCaseLesson(misses[0]),
-            };
-        },
-    };
-}
+export const createCaseKata = (container) => createSentenceKata({
+    manifest: casesManifest,
+    template: casesTemplate,
+    // Answer-blind: the body takes no item, so it cannot print the sentence on
+    // screen or the case the blank expects.
+    help: renderCaseHelp,
+    input: {
+        maxLength: 20,
+        size: 6,
+        className: 'blank-input blank-input--inline blank-input--narrow',
+    },
+    // The learner may type the article with the noun that follows it
+    // ("der Mann"), which is the same answer, not a different one.
+    matchOptions: { allowExtraWords: true },
+    // The dataset spelling, not the whole answer object, goes on show.
+    expectedFor: (blank, accepted) => accepted[0] ?? blank.a,
+    lessonFor: renderCaseLesson,
+    isUsableAnswer,
+    describeProblem,
+})(container);

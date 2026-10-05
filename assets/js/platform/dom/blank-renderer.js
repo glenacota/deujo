@@ -8,6 +8,28 @@
 import { splitBlanks } from '../../services/grammar.js';
 
 /**
+ * The blank input a sentence kata builds. Nine attributes are the same for all
+ * of them -- someone typing German wants no autocorrect, no spellcheck, and a
+ * German keyboard -- so a kata only states the four that genuinely differ: how
+ * long its longest answer is, how wide the field is, its classes, and an
+ * example.
+ */
+export function createBlankInput({ maxLength, size, className, placeholder } = {}) {
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.autocomplete = 'off';
+    input.maxLength = maxLength;
+    input.spellcheck = false;
+    input.autocapitalize = 'none';
+    input.autocorrect = 'off';
+    input.lang = 'de';
+    input.size = size;
+    if (placeholder) input.placeholder = placeholder;
+    input.className = className;
+    return input;
+}
+
+/**
  * Splits `item.s` on `{n}` placeholders, writes the translation, and appends
  * text nodes + one input per blank to `el.sentence`. Each input is built by
  * `createInput(index)` so callers keep control of size/maxLength/placeholder/
