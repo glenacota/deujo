@@ -1,12 +1,12 @@
 // app.js
 'use strict';
 
-import { summarizeAnswer, summarizeWarning } from './services/answer-summary.js';
 import { AudioEngine } from './platform/audio-engine.js';
 import { createDatasetLoader } from './platform/dataset-loader.js';
 import { FxEngine } from './platform/fx-engine.js';
 import { GameState } from './state.js';
-import { Phase, Session } from './session.js';
+import { KataFlow } from './kata-flow.js';
+import { Session } from './session.js';
 import { loadKatas } from './katas/registry.js';
 import { applyDocumentPreferences, get } from './platform/preferences.js';
 import { clearAnswerMarks, setSectionLocked } from './platform/dom/answer-marking.js';
@@ -35,10 +35,7 @@ class App {
     #modals;
     #settings;
     #katas = [];
-    #entries = new Map(); // kata id -> { kata, dataset }
-    #loader = createDatasetLoader();
-    #session = new Session(); // kata id -> phase, so a kata's phase is its own
-    #focusModeActive = false;
+    #flow;
 
     constructor() {
         this.#audio = new AudioEngine();
@@ -66,8 +63,15 @@ class App {
     async bootstrap() {
         try {
             this.#katas = loadKatas(dom.focus.sections);
-            this.#katas.forEach((kata) => this.#entries.set(kata.id, { kata, dataset: null }));
             this.#state = new GameState(this.#katas.map((p) => p.id));
+            this.#flow = new KataFlow({
+                state: this.#state,
+                session: new Session(),
+                katas: this.#katas,
+                loader: createDatasetLoader(),
+                view: this.#buildView(),
+                rewards: this.#rewards,
+            });
             this.#init();
         } catch (error) {
             console.error('Error loading language datasets:', error);
@@ -82,151 +86,40 @@ class App {
         this.#ui.renderStreak(this.#state);
         this.#katas.forEach(({ id }) => renderBeltBadge(this.#dashboard.getBelt(id), this.#state, id));
         this.#bindEvents();
-
-        if (this.#state.wasFocusModeActive() && this.#state.activeKata) {
-            this.#enterKata(this.#state.activeKata);
-        } else {
-            this.#dashboard.showDashboard();
-        }
+        this.#flow.start();
     }
 
-    #handleFeedback(id, isCorrect) {
-        if (isCorrect) {
-            const isPromoted = this.#state.incrementStreak(id);
-            this.#renderProgress(id);
-
-            if (isPromoted) {
-                this.#rewards.promoted(this.#state.getCurrentBelt(id), this.#state.streak);
-            } else {
-                this.#rewards.correct();
-            }
-        } else {
-            const isDemoted = this.#state.resetStreak(id);
-            this.#renderProgress(id);
-
-            if (isDemoted) {
-                this.#rewards.demoted(this.#state.getCurrentBelt(id));
-            } else {
-                this.#rewards.wrong();
-            }
-        }
-    }
-
-    async #loadDataset(id) {
-        const entry = this.#entries.get(id);
-        if (!entry) return null;
-        if (entry.dataset) return entry.dataset;
-
-        this.#focus.showStatus('Loading exercises...');
-
-        try {
-            const dataset = await this.#loader.load(entry.kata);
-            entry.dataset = dataset;
-            if (this.#state.activeKata === id) this.#focus.clearStatus();
-            return dataset;
-        } catch (error) {
-            console.error(`Error loading dataset for "${id}":`, error);
-            if (this.#state.activeKata === id) {
-                this.#focus.showStatus(`Could not load ${entry.kata.name} exercises.`, 'error');
-            }
-            return null;
-        }
-    }
-
-    #renderProgress(id) {
-        this.#ui.renderStreak(this.#state);
-        // Belt badges live on the dashboard card, independent of the kata's own
-        // (lazy) focus-section mount.
-        renderBeltBadge(this.#dashboard.getBelt(id), this.#state, id);
-        if (this.#state.activeKata === id) {
-            this.#focus.renderHeader(this.#entries.get(id).kata, this.#state);
-        }
-    }
-
-    #loadNext(id) {
-        const { kata, dataset } = this.#entries.get(id);
-        if (!dataset) return;
-        const item = this.#state.pickNext(dataset, id);
-        this.#state.setCurrentItem(id, item);
-        if (item) kata.render(item);
-        this.#focus.releaseFocus(kata.el.section);
-    }
-
-    #setPhase(id, phase) {
-        this.#session.setPhase(id, phase);
-
-        const section = this.#entries.get(id)?.kata.el.section;
-        // Only this kata's section: every kata is mounted from boot, so locking
-        // the whole container would freeze all of them.
-        setSectionLocked(section, !this.#session.isAnswering(id));
-        // The Check/Skip bar is shared chrome outside every section, so it can
-        // only ever describe the kata the learner is actually looking at.
-        if (this.#state.activeKata === id) this.#syncActionBar();
-    }
-
-    #syncActionBar() {
-        const id = this.#state.activeKata;
-        const locked = !this.#session.isAnswering(id);
-        if (locked) this.#focus.releaseFocus(this.#entries.get(id)?.kata.el.section);
-        this.#focus.setActionBar({ locked });
-    }
-
-    #advance(id) {
-        const section = this.#entries.get(id)?.kata.el.section;
-        if (!section) return;
-
-        this.#ui.hideVerdict();
-        this.#setPhase(id, Phase.ANSWERING);
-        clearAnswerMarks(section);
-        this.#loadNext(id);
-        this.#focus.restartEnterAnimation(section);
-    }
-
-    #check(id) {
-        if (this.#session.isReviewing(id)) {
-            this.#advance(id);
-            return;
-        }
-
-        const { kata, dataset } = this.#entries.get(id) ?? {};
-        if (!dataset) return;
-        const item = this.#state.currentItem(id);
-        if (!item) return;
-
-        const result = kata.check(item);
-        if (result.warning) {
-            this.#ui.showVerdict(summarizeWarning(result.warning));
-            return;
-        }
-
-        this.#state.recordAnswer(id, item.id, result.correct);
-        this.#handleFeedback(id, result.correct);
-
-        const summary = summarizeAnswer(result);
-        this.#ui.showVerdict(summary);
-        this.#setPhase(id, Phase.REVIEWING);
-    }
-
-    /**
-     * Skipping discards the pending answer and moves on without grading it.
-     * It still costs half a belt point, so dodging hard items has a price.
-     */
-    #skip(id) {
-        if (!this.#session.isAnswering(id)) return;
-        const { dataset } = this.#entries.get(id) ?? {};
-        if (!dataset || !this.#state.currentItem(id)) return;
-        const isDemoted = this.#state.applySkip(id);
-        this.#renderProgress(id);
-        if (isDemoted) this.#rewards.demoted(this.#state.getCurrentBelt(id));
-        this.#advance(id);
-    }
-
-    #showHelpModal(id) {
-        const kata = this.#entries.get(id)?.kata;
-        if (!kata) return;
-
-        this.#ui.showHelpContent(kata.helpTitle, kata.getHelpContent(this.#state.currentItem(id)));
-        this.#modals.open(dom.modals.help.root, dom.actions.helpBtn);
+    /** The page operations `KataFlow` drives, composed from the UI pieces. */
+    #buildView() {
+        const focus = this.#focus;
+        const ui = this.#ui;
+        const state = this.#state;
+        return {
+            showStatus: (message, type) => focus.showStatus(message, type),
+            clearStatus: () => focus.clearStatus(),
+            renderHeader: (kata) => focus.renderHeader(kata, state),
+            renderProgress: (kata) => {
+                ui.renderStreak(state);
+                // Belt badges live on the dashboard card, independent of the kata's own focus-section mount.
+                renderBeltBadge(this.#dashboard.getBelt(kata.id), state, kata.id);
+                if (state.activeKata === kata.id) focus.renderHeader(kata, state);
+            },
+            showKata: (id) => focus.switchKata(this.#katas, id),
+            showFocusMode: () => this.#dashboard.showFocusMode(),
+            showDashboard: () => this.#dashboard.showDashboard(),
+            showVerdict: (summary) => ui.showVerdict(summary),
+            hideVerdict: () => ui.hideVerdict(),
+            showHelp: (title, html) => {
+                ui.showHelpContent(title, html);
+                this.#modals.open(dom.modals.help.root, dom.actions.helpBtn);
+            },
+            setLocked: (kata, locked) => setSectionLocked(kata.el.section, locked),
+            clearMarks: (kata) => clearAnswerMarks(kata.el.section),
+            setActionBar: (options) => focus.setActionBar(options),
+            releaseFocus: (kata) => focus.releaseFocus(kata.el.section),
+            blurActive: () => focus.blurActive(),
+            restartEnterAnimation: (kata) => focus.restartEnterAnimation(kata.el.section),
+        };
     }
 
     #openSettings() {
@@ -234,86 +127,39 @@ class App {
         this.#modals.open(dom.modals.settings.root, dom.settings.btn);
     }
 
-    #setKata(kata) {
-        this.#state.setActiveKata(kata);
-        this.#focus.switchKata(this.#katas, kata);
-    }
-
-    /**
-     * A graded item must not be shown again unanswered, or it can be re-scored.
-     *
-     * Both halves of the discard are keyed to one kata on purpose: a kata left
-     * mid-answer keeps its item and its typing, and leaving it never touches a
-     * sibling that happens to still be showing a verdict.
-     */
-    #discardGradedItem() {
-        const id = this.#state.activeKata;
-        if (this.#session.isReviewing(id)) this.#state.setCurrentItem(id, null);
-        this.#session.reset(id);
-    }
-
-    async #enterKata(id) {
-        const { kata } = this.#entries.get(id);
-        this.#discardGradedItem();
-        clearAnswerMarks(kata.el.section);
-        this.#focus.blurActive();
-        this.#setKata(id);
-        this.#setPhase(id, Phase.ANSWERING);
-        this.#ui.hideVerdict();
-        this.#focusModeActive = true;
-        this.#state.setFocusModeActive(true);
-        this.#focus.renderHeader(kata, this.#state);
-        this.#dashboard.showFocusMode();
-
-        const dataset = await this.#loadDataset(id);
-        if (!dataset || this.#state.activeKata !== id) return;
-        const open = this.#state.currentItem(id);
-        if (open) {
-            kata.render(open);
-            this.#focus.releaseFocus(kata.el.section);
-        } else {
-            this.#loadNext(id);
-        }
-    }
-
-    #exitToMenu() {
-        this.#discardGradedItem();
-        this.#focusModeActive = false;
-        this.#state.setFocusModeActive(false);
-        this.#dashboard.showDashboard();
-    }
-
     #bindEvents() {
+        const flow = this.#flow;
+
         this.#katas.forEach(({ id }) => {
-            this.#dashboard.getCard(id).addEventListener('click', () => this.#enterKata(id));
+            this.#dashboard.getCard(id).addEventListener('click', () => flow.enter(id));
         });
 
-        dom.actions.checkBtn.addEventListener('click', () => this.#check(this.#state.activeKata));
-        dom.actions.skipBtn.addEventListener('click', () => this.#skip(this.#state.activeKata));
-        dom.actions.helpBtn.addEventListener('click', () => this.#showHelpModal(this.#state.activeKata));
+        dom.actions.checkBtn.addEventListener('click', () => flow.check());
+        dom.actions.skipBtn.addEventListener('click', () => flow.skip());
+        dom.actions.helpBtn.addEventListener('click', () => flow.help());
 
         dom.settings.btn.addEventListener('click', () => this.#openSettings());
 
         dom.share.btn.addEventListener('click', () => {
-            const kata = this.#entries.get(this.#state.activeKata)?.kata;
+            const kata = flow.activeKata;
             if (kata) this.#share.shareProgress(this.#state, kata);
         });
-        dom.focus.backBtn.addEventListener('click', () => this.#exitToMenu());
-        dom.logo.addEventListener('click', () => this.#exitToMenu());
-        
+        dom.focus.backBtn.addEventListener('click', () => flow.exit());
+        dom.logo.addEventListener('click', () => flow.exit());
+
         dom.buyMeCoffee.btn.addEventListener('click', () => window.open('https://ko-fi.com/A6C827EN29', '_blank', 'noopener,noreferrer'));
 
         bindKeyboardShortcuts({
             modals: this.#modals,
             inputRoot: dom.focus.sections,
-            isFocusModeActive: () => this.#focusModeActive,
-            isAnswering: () => this.#session.isAnswering(this.#state.activeKata),
+            isFocusModeActive: () => flow.focusModeActive,
+            isAnswering: () => flow.isAnswering(),
             kataCount: () => this.#katas.length,
-            enterKataAtSlot: (slot) => this.#enterKata(this.#katas[slot - 1].id),
-            check: () => this.#check(this.#state.activeKata),
+            enterKataAtSlot: (slot) => flow.enter(this.#katas[slot - 1].id),
+            check: () => flow.check(),
             showHelp: () => dom.actions.helpBtn.click(),
-            loadNext: () => this.#skip(this.#state.activeKata),
-            exitToMenu: () => this.#exitToMenu(),
+            loadNext: () => flow.skip(),
+            exitToMenu: () => flow.exit(),
             openSettings: () => this.#openSettings(),
             areHotkeysEnabled: () => get('hotkeys'),
         });
