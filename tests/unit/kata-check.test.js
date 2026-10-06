@@ -197,6 +197,34 @@ test('the Perfekt kata reads "haben" verbs as haben, not sein', () => {
   assert.equal(perfekt(verb)('sein', 'gemacht').correct, false);
 });
 
+// Duden prints both auxiliaries for verbs like fahren ("habe/bin gefahren"), so
+// the dataset carries the second one as an `alt`. Both buttons must then pass,
+// and the note has to admit the other reading was right.
+test('the Perfekt kata accepts either auxiliary when the dataset lists both', () => {
+  const fahren = {
+    id: 'v_3', w: 'fahren', m: 'to drive',
+    perf: [
+      { a: 'bin gefahren', alt: ['habe gefahren'] },
+      { a: 'bist gefahren', alt: ['hast gefahren'] },
+      { a: 'ist gefahren', alt: ['hat gefahren'] },
+      { a: 'sind gefahren', alt: ['haben gefahren'] },
+      { a: 'seid gefahren', alt: ['habt gefahren'] },
+      { a: 'sind gefahren', alt: ['haben gefahren'] },
+    ],
+  };
+
+  assert.equal(perfekt(fahren)('sein', 'gefahren').correct, true);
+  assert.equal(perfekt(fahren)('haben', 'gefahren').correct, true);
+
+  // The participle is still the only thing typed, so it stays graded.
+  assert.equal(perfekt(fahren)('haben', 'gefahlen').correct, false);
+
+  // No verb ships three readings, so the two-button contract is unchanged.
+  const kata = createVerbKata('perf', document.createElement('div'));
+  kata.render(fahren);
+  assert.equal(kata.el.auxButtons.length, 2);
+});
+
 test('the Perfekt kata warns before an answer is ready', () => {
   const kata = createVerbKata('perf', document.createElement('div'));
   kata.render(GEHEN);

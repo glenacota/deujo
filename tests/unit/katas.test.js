@@ -313,6 +313,64 @@ test('validateVerbDataset accepts a form with a second correct spelling', () => 
   assert.throws(() => validateVerbDataset([{ ...goodVerb, pres: [...sixForms.slice(1), { a: 'x', alt: 'y' }] }]), /entry 0/);
 });
 
+// The shipped Perfekt entries may name a second auxiliary via `alt`, which
+// validateVerbDataset accepts and the perf kata grades. The verb and the
+// auxiliary travel together, so an entry whose alt is still a haben-verb form
+// would let a learner pass with "habe gefahren" for a verb only sein allows.
+test('every shipped verb perf form lists only a real auxiliary and a real participle', async () => {
+  const dataset = await loadDataset('./assets/datasets/verbs.json');
+  const SEIN = ['bin', 'bist', 'ist', 'sind', 'seid', 'sind'];
+  const HABEN = ['habe', 'hast', 'hat', 'haben', 'habt', 'haben'];
+  const primaryOf = (form) => (typeof form === 'string' ? { a: form, alt: [] } : form);
+
+  for (const verb of dataset) {
+    verb.perf.forEach((form, index) => {
+      const { a, alt } = primaryOf(form);
+      const answerAux = [a, ...alt].map((text) => String(text).split(' ')[0]);
+      const participle = a.split(' ').slice(1).join(' ');
+
+      assert.ok(participle, `${verb.w} person ${index} has no participle`);
+      for (const aux of answerAux) {
+        assert.ok(
+          SEIN.includes(aux) || HABEN.includes(aux),
+          `${verb.w} person ${index}: "${aux}" is not a Perfekt auxiliary`,
+        );
+      }
+      // An alt must swap the auxiliary and keep the participle, so the
+      // participle box is never right for one form and wrong for the other.
+      for (const text of alt) {
+        assert.equal(
+          String(text).split(' ').slice(1).join(' '),
+          participle,
+          `${verb.w} person ${index}: alt changes the participle`,
+        );
+        assert.notEqual(String(text), a, `${verb.w} person ${index}: alt repeats the answer`);
+      }
+    });
+  }
+});
+
+// The perf kata grades the auxiliary as a sein/haben choice, derived from the
+// first word of every accepted form. So an `alt` under the other auxiliary is
+// what makes both buttons correct, and this pins that both readings really are
+// reachable through the shared matcher the kata grades with.
+test('a dual-auxiliary verb accepts both readings, a single-auxiliary verb only one', async () => {
+  const { acceptedAnswers } = await import('../../assets/js/services/answer-matcher.js');
+  const dataset = await loadDataset('./assets/datasets/verbs.json');
+  const auxiliariesOf = (form) => new Set(
+    acceptedAnswers(form).map((text) => text.split(' ')[0]),
+  );
+
+  const fahren = dataset.find((v) => v.w === 'fahren');
+  assert.deepEqual([...auxiliariesOf(fahren.perf[0])].sort(), ['bin', 'habe']);
+
+  // Duden prints one auxiliary for these, so the second button must stay wrong.
+  for (const w of ['schlafen', 'gefallen', 'begegnen', 'liegen']) {
+    const verb = dataset.find((v) => v.w === w);
+    assert.equal(auxiliariesOf(verb.perf[0]).size, 1, `${w} should allow one auxiliary`);
+  }
+});
+
 test('escapeHtml neutralises markup in dataset strings', () => {
   assert.equal(escapeHtml('<img src=x onerror="a">&\''), '&lt;img src=x onerror=&quot;a&quot;&gt;&amp;&#39;');
 });

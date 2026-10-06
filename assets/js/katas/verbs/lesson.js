@@ -76,20 +76,34 @@ function participleLesson(verb, expected) {
  * @param tenseKey one of the `TENSES` keys
  * @param index which blank was missed, or null when the auxiliary choice was
  * @param expected the answer that belongs beside the wrong control
+ * @param accepted every answer that would also have been right, so a note for
+ *   one of several valid answers does not read as though it were the only one
  */
-export function renderVerbLesson({ verb, tenseKey, index, expected } = {}) {
+export function renderVerbLesson({ verb, tenseKey, index, expected, accepted } = {}) {
     if (tenseKey === 'perf') {
         return index === null
-            ? renderAuxLesson({ expected })
+            ? renderAuxLesson({ expected, accepted })
             : participleLesson(verb, expected);
     }
     if (!Number.isInteger(index)) return null;
     return conjugatedLesson(verb, tenseKey, index, expected);
 }
 
-/** The auxiliary is a choice, so the correction teaches the choice, not a form. */
-export function renderAuxLesson({ expected } = {}) {
+/**
+ * The auxiliary is a choice, so the correction teaches the choice, not a form.
+ * `accepted` lists every auxiliary this verb allows, because Duden prints two
+ * for verbs like fahren ("habe/bin gefahren"); then the note has to admit that
+ * the rejected choice was a defensible one.
+ */
+export function renderAuxLesson({ expected, accepted = [] } = {}) {
     if (expected !== 'sein' && expected !== 'haben') return null;
+    if (accepted.length > 1) {
+        const both = ['haben', 'sein'].filter((aux) => accepted.includes(aux));
+        return lesson(
+            expected,
+            `This verb takes ${both.join(' or ')} here — Duden lists both, so the other one is right too.`,
+        );
+    }
     return lesson(
         expected,
         expected === 'sein'

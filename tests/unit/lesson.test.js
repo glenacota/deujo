@@ -160,3 +160,25 @@ test('the Perfekt lesson covers the auxiliary and the participle', () => {
 
   assert.equal(renderVerbLesson({ verb: { w: 'gehen' }, tenseKey: 'perf', index: null, expected: 'werden' }), null);
 });
+
+// Duden prints two auxiliaries for verbs like fahren ("habe/bin gefahren"). The
+// note must then admit the rejected choice was defensible, rather than teaching
+// a rule that would mark the learner's own answer wrong.
+test('a dual-auxiliary Perfekt note names both auxiliaries', () => {
+  const note = renderVerbLesson({
+    verb: { w: 'fahren' },
+    tenseKey: 'perf',
+    index: null,
+    expected: 'haben',
+    accepted: ['haben', 'sein'],
+  });
+  assert.equal(note.form, 'haben');
+  assert.match(note.note, /haben or sein/);
+  assert.match(note.note, /right too/);
+  assert.doesNotMatch(note.note, /default when neither applies/);
+
+  // One auxiliary, or none listed, keeps the single-verb rule: an omitted
+  // `accepted` must not read as though a second answer existed.
+  const single = renderVerbLesson({ verb: { w: 'gehen' }, tenseKey: 'perf', index: null, expected: 'sein' });
+  assert.match(single.note, /movement and a new state/);
+});

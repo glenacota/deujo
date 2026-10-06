@@ -106,12 +106,16 @@ export function createVerbKata(tenseKey, container) {
         const given = el.participle.value.trim();
         if (!given) return { warning: 'Please type the participle before checking.' };
 
-        const auxOk = auxiliary === targets[0].aux;
+        // Both auxiliaries can be right, so any accepted one counts; the
+        // dataset lists the other as an `alt` on the same form.
+        const auxOk = targets.some((target) => target.aux === auxiliary);
         const partOk = targets.some((target) => matchAnswer(given, target.participle).ok);
 
         const btnByAux = new Map(el.auxButtons.map((btn) => [btn.dataset.aux, btn]));
         markControl(btnByAux.get(auxiliary), { ok: auxOk, inside: true, note: false });
-        if (!auxOk) markControl(btnByAux.get(targets[0].aux), { ok: true, inside: true });
+        if (!auxOk) {
+            for (const { aux } of targets) markControl(btnByAux.get(aux), { ok: true, inside: true });
+        }
         markControl(el.participle, { ok: partOk, expected: targets[0].participle });
 
         return {
@@ -120,7 +124,7 @@ export function createVerbKata(tenseKey, container) {
             // The auxiliary is the choice that carries the rule, so a wrong one
             // outranks a wrong participle.
             lesson: !auxOk
-                ? renderVerbLesson({ verb, tenseKey, index: null, expected: targets[0].aux })
+                ? renderVerbLesson({ verb, tenseKey, index: null, expected: targets[0].aux, accepted: targets.map((t) => t.aux) })
                 : !partOk
                     ? renderVerbLesson({ verb, tenseKey, index: 0, expected: targets[0].participle })
                     : null,
