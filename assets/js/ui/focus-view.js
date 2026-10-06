@@ -38,4 +38,17 @@ export class FocusView {
         const activeSection = katas.find(({ id }) => id === activeId)?.el.section;
         katas.forEach(({ el }) => el.section.classList.toggle('hidden', el.section !== activeSection));
     }
+
+    /** Locked means a verdict is showing: the bar offers Next, and Skip is hidden. */
+    setActionBar({ locked }) {
+        dom.actions.checkLabel.textContent = locked ? 'Next' : 'Check';
+        // Skipping a graded answer would let the learner dodge the streak reset.
+        dom.actions.skipBtn.classList.toggle('hidden', locked);
+    }
+
+    restartEnterAnimation(section) {
+        section.classList.remove('motion-safe:animate-kata-enter');
+        void section.offsetWidth; // Forces reflow so the animation replays.
+        section.classList.add('motion-safe:animate-kata-enter');
+    }
 }

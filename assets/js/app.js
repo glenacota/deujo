@@ -16,6 +16,7 @@ import { dom } from './ui/dom.js';
 import { FocusView } from './ui/focus-view.js';
 import { bindKeyboardShortcuts } from './ui/keyboard-shortcut.js';
 import { ModalController } from './ui/modal-controller.js';
+import { RewardPresenter } from './ui/reward-presenter.js';
 import { ShareController } from './ui/share-controller.js';
 import { SettingsView } from './ui/settings-view.js';
 import { ThemeController } from './ui/theme-controller.js';
@@ -24,13 +25,12 @@ import { UiController } from './ui/ui-controller.js';
 
 class App {
     #audio;
-    #fx;
     #state;
     #ui;
     #dashboard;
     #focus;
     #theme;
-    #toast;
+    #rewards;
     #share;
     #modals;
     #settings;
@@ -42,14 +42,18 @@ class App {
 
     constructor() {
         this.#audio = new AudioEngine();
-        this.#fx = new FxEngine('fireworksCanvas');
         this.#modals = new ModalController();
         this.#modals.bind();
         this.#ui = new UiController(this.#modals);
         this.#dashboard = new DashboardView();
         this.#focus = new FocusView();
         this.#theme = new ThemeController();
-        this.#toast = new ToastController();
+        this.#rewards = new RewardPresenter({
+            audio: this.#audio,
+            fx: new FxEngine('fireworksCanvas'),
+            toast: new ToastController(),
+            isConfettiEnabled: () => get('confetti'),
+        });
         this.#share = new ShareController(this.#modals);
         this.#settings = new SettingsView({
             audio: this.#audio,
@@ -92,21 +96,18 @@ class App {
             this.#renderProgress(id);
 
             if (isPromoted) {
-                this.#audio.playMilestone();
-                if (get('confetti')) this.#fx.triggerShow();
-                this.#toast.show(true, this.#state.getCurrentBelt(id), this.#state.streak);
+                this.#rewards.promoted(this.#state.getCurrentBelt(id), this.#state.streak);
             } else {
-                this.#audio.playCorrect();
+                this.#rewards.correct();
             }
         } else {
             const isDemoted = this.#state.resetStreak(id);
             this.#renderProgress(id);
 
             if (isDemoted) {
-                this.#audio.playDemotion();
-                this.#toast.show(false, this.#state.getCurrentBelt(id));
+                this.#rewards.demoted(this.#state.getCurrentBelt(id));
             } else {
-                this.#audio.playWrong();
+                this.#rewards.wrong();
             }
         }
     }
@@ -167,9 +168,7 @@ class App {
         const id = this.#state.activeKata;
         const locked = !this.#session.isAnswering(id);
         if (locked) this.#focus.releaseFocus(this.#entries.get(id)?.kata.el.section);
-        dom.actions.checkLabel.textContent = locked ? 'Next' : 'Check';
-        // Skipping a graded answer would let the learner dodge the streak reset.
-        dom.actions.skipBtn.classList.toggle('hidden', locked);
+        this.#focus.setActionBar({ locked });
     }
 
     #advance(id) {
@@ -180,10 +179,7 @@ class App {
         this.#setPhase(id, Phase.ANSWERING);
         clearAnswerMarks(section);
         this.#loadNext(id);
-
-        section.classList.remove('motion-safe:animate-kata-enter');
-        void section.offsetWidth;
-        section.classList.add('motion-safe:animate-kata-enter');
+        this.#focus.restartEnterAnimation(section);
     }
 
     #check(id) {
@@ -221,10 +217,7 @@ class App {
         if (!dataset || !this.#state.currentItem(id)) return;
         const isDemoted = this.#state.applySkip(id);
         this.#renderProgress(id);
-        if (isDemoted) {
-            this.#audio.playDemotion();
-            this.#toast.show(false, this.#state.getCurrentBelt(id));
-        }
+        if (isDemoted) this.#rewards.demoted(this.#state.getCurrentBelt(id));
         this.#advance(id);
     }
 
