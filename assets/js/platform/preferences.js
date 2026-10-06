@@ -1,4 +1,4 @@
-// services/preferences.js
+// platform/preferences.js
 // Single owner of the user's settings: reads, defaults, and writes.
 // UI modules (settings-view, keyboard-shortcut) never touch storage directly.
 

@@ -1,4 +1,4 @@
-// services/storage.js
+// platform/storage.js
 // Thin wrapper around localStorage
 
 import { CONFIG } from '../config.js';

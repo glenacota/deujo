@@ -2,12 +2,12 @@
 'use strict';
 
 import { summarizeAnswer, summarizeWarning } from './services/answer-summary.js';
-import { AudioEngine } from './services/audio-engine.js';
-import { FxEngine } from './services/fx-engine.js';
+import { AudioEngine } from './platform/audio-engine.js';
+import { FxEngine } from './platform/fx-engine.js';
 import { GameState } from './state.js';
 import { Phase, Session } from './session.js';
 import { loadKatas } from './katas/registry.js';
-import { applyDocumentPreferences, get } from './services/preferences.js';
+import { applyDocumentPreferences, get } from './platform/preferences.js';
 import { clearAnswerMarks, setSectionLocked } from './platform/dom/answer-marking.js';
 import { renderBeltBadge } from './ui/belt-badge.js';
 import { DashboardView } from './ui/dashboard-view.js';

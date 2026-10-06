@@ -14,8 +14,8 @@ globalThis.window.matchMedia = () => ({ matches: false, addEventListener() {} })
 
 globalThis.document.documentElement = { classList: new StubClassList() };
 
-const { Storage } = await import('../../assets/js/services/storage.js');
-const { get, set } = await import('../../assets/js/services/preferences.js');
+const { Storage } = await import('../../assets/js/platform/storage.js');
+const { get, set } = await import('../../assets/js/platform/preferences.js');
 const { dom } = await import('../../assets/js/ui/dom.js');
 const { SettingsView } = await import('../../assets/js/ui/settings-view.js');
 

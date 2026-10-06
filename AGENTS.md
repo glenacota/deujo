@@ -86,12 +86,16 @@ no backend, no login.
   "pressed since the last key" signal.
 - No framework, no bundler, no runtime dependency beyond a same-origin JSON
   `fetch()`.
-- Services must stay DOM-free and pure.
+- Services must stay DOM-free and pure: no `document`, `window`, `localStorage`,
+  or any other host global. Anything that reaches one is a host adapter, and
+  belongs in `platform/`.
 - The layer order is `services/` → `platform/` → `ui/` and `katas/`, with
   `app.js` as the only module allowed to see every layer. `ui/` and `katas/`
   are peers: they must not import each other, which is why answer marking lives
   in `platform/dom/` rather than in `ui/`. A DOM primitive both peers need goes
-  in `platform/dom/`; a pure function goes in `services/`.
+  in `platform/dom/`; a pure function goes in `services/`; anything reaching a
+  host global goes in `platform/`.
   `tests/unit/module-boundaries.test.js` reads the real import graph and fails
-  on a sideways or upward edge, on a cycle, and on an unresolved specifier — so
-  a boundary nobody watches stays a comment.
+  on a sideways or upward edge, on a cycle, and on an unresolved specifier,
+  and scans `services/` for host globals — so a boundary nobody watches stays
+  a comment.

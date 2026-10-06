@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { browser, CONFIG } from '../helpers/bootstrap.js';
 
 const { GameState } = await import('../../assets/js/state.js');
-const { SrsStore } = await import('../../assets/js/services/srs-store.js');
+const { SrsStore } = await import('../../assets/js/platform/srs-store.js');
 const { BOX_COUNT, DAY_MS } = await import('../../assets/js/services/srs-scheduler.js');
 
 const { milestoneInterval, maxBelt, recentExclude, promotionCredit, demotionCredit } = CONFIG.rules;

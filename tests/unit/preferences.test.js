@@ -18,8 +18,8 @@ globalThis.window.matchMedia = (query) => ({
 
 globalThis.document.documentElement = { classList: new StubClassList() };
 
-const { Storage } = await import('../../assets/js/services/storage.js');
-const { applyDocumentPreferences, defaults, get, resetAll, set } = await import('../../assets/js/services/preferences.js');
+const { Storage } = await import('../../assets/js/platform/storage.js');
+const { applyDocumentPreferences, defaults, get, resetAll, set } = await import('../../assets/js/platform/preferences.js');
 
 beforeEach(() => browser.reset());
 
@@ -49,7 +49,7 @@ test('animations default to off when the OS asks for reduced motion', async () =
   // The default is read at import time, so re-import with a cache-busting
   // query while the matchMedia stub reports reduced motion.
   REDUCED_MOTION.matches = true;
-  const { defaults: reducedDefaults } = await import('../../assets/js/services/preferences.js?reduced=1');
+  const { defaults: reducedDefaults } = await import('../../assets/js/platform/preferences.js?reduced=1');
 
   assert.equal(reducedDefaults().animations, false, 'reduced-motion users get animations off by default');
   REDUCED_MOTION.matches = false;

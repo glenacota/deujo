@@ -7,7 +7,7 @@ import { browser, CONFIG } from '../helpers/bootstrap.js';
 import { installThrowingStorage } from '../helpers/browser-stub.js';
 
 // Storage must be imported after the stub exists.
-const { Storage } = await import('../../assets/js/services/storage.js');
+const { Storage } = await import('../../assets/js/platform/storage.js');
 
 beforeEach(() => browser.reset());
 

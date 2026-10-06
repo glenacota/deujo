@@ -3,9 +3,9 @@
 // `change` listener for the inputs, plus the panel's button clicks.
 
 import { CONFIG } from '../config.js';
-import { SrsStore } from '../services/srs-store.js';
-import { Storage } from '../services/storage.js';
-import { defaults, get, resetAll, set } from '../services/preferences.js';
+import { SrsStore } from '../platform/srs-store.js';
+import { Storage } from '../platform/storage.js';
+import { defaults, get, resetAll, set } from '../platform/preferences.js';
 import { dom } from './dom.js';
 
 export class SettingsView {

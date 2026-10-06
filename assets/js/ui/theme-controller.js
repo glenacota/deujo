@@ -1,6 +1,6 @@
 // ui/theme-controller.js
 
-import { get } from '../services/preferences.js';
+import { get } from '../platform/preferences.js';
 
 export class ThemeController {
     #media = null;

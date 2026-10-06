@@ -3,8 +3,8 @@
 
 import { CONFIG } from './config.js';
 import { addPoints, beltAt, clampProgress, creditOnChange, pointsEarnedInBelt } from './belt-rules.js';
-import { Storage } from './services/storage.js';
-import { SrsStore } from './services/srs-store.js';
+import { Storage } from './platform/storage.js';
+import { SrsStore } from './platform/srs-store.js';
 import { newRecord, schedule } from './services/srs-scheduler.js';
 
 export class GameState {

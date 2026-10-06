@@ -1,9 +1,9 @@
-// services/srs-store.js
+// platform/srs-store.js
 // In-memory review records ({ kataId: { itemId: record } }) with debounced persistence.
 // Only items the user has answered are stored; "no record" == new item.
 
 import { CONFIG } from '../config.js';
-import { isValidRecord } from './srs-scheduler.js';
+import { isValidRecord } from '../services/srs-scheduler.js';
 import { Storage } from './storage.js';
 
 const EMPTY = Object.freeze(Object.create(null));

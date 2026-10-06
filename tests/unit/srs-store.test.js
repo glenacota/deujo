@@ -6,7 +6,7 @@ import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { browser, CONFIG } from '../helpers/bootstrap.js';
 
-const { SrsStore } = await import('../../assets/js/services/srs-store.js');
+const { SrsStore } = await import('../../assets/js/platform/srs-store.js');
 
 const SRS_KEY = CONFIG.storage.srs;
 const KATA = 'store-kata';
