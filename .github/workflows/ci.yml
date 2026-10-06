@@ -1,0 +1,71 @@
+# Verifies what `npm run test:all` verifies locally, plus the one thing only a
+# clean checkout can check: that the committed stylesheet still matches its
+# sources. Everything else the suite owns — the kata contract, the storage keys,
+# the belt arithmetic, the module boundaries — is a unit test that a contributor
+# can run without this file, so CI's job is to make sure nobody forgets to.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A new push supersedes an in-flight run on the same ref.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # 22 is the current LTS and comfortably above what @playwright/test
+          # needs. Pinned so a Node release cannot turn a green main into red.
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Unit tests
+        run: npm test
+
+      # assets/css/tailwind.css is committed, and Tailwind only emits the
+      # utilities it finds in a scanned source file. A class the app names but
+      # the build never saw renders as no styling at all, with nothing failing:
+      # this is the check that turns "forgot to rebuild" into a red build.
+      - name: Stylesheet matches its sources
+        run: |
+          npm run build:css
+          git diff --exit-code -- assets/css/tailwind.css \
+            || (echo "::error::assets/css/tailwind.css is stale. Run 'npm run build:css' and commit the result." && exit 1)
+
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install browsers
+        # Both engines, deliberately: the @tab-navigation specs run on Chromium
+        # and everything else on WebKit, so a workflow that installed only one
+        # would silently run a subset of the suite.
+        run: npx playwright install --with-deps webkit chromium
+
+      - name: Browser smoke tests
+        run: npm run test:e2e
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
