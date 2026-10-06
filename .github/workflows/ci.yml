@@ -1,8 +1,9 @@
 # Verifies what `npm run test:all` verifies locally, plus the one thing only a
 # clean checkout can check: that the committed stylesheet still matches its
 # sources. Everything else the suite owns — the kata contract, the storage keys,
-# the belt arithmetic, the module boundaries — is a unit test that a contributor
-# can run without this file, so CI's job is to make sure nobody forgets to.
+# the belt arithmetic, the module boundaries — is a unit test or a lint rule that
+# a contributor can run without this file, so CI's job is to make sure nobody
+# forgets to.
 
 name: CI
 
@@ -32,6 +33,9 @@ jobs:
           cache: npm
 
       - run: npm ci
+
+      - name: Lint
+        run: npm run lint
 
       - name: Unit tests
         run: npm test

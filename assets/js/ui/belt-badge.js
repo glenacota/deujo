@@ -26,8 +26,7 @@ export function renderBeltBadge(el, state, kataId, options = {}) {
         : `${rank} belt, ${formatPoints(earned)} of ${TICKS} points to ${CONFIG.belts.labels[belt + 1]} belt`;
 
     // Black belt has no next rank, so its earned ticks stay on the current colour.
-    el.className = `belt-ticks belt-label-${belt} belt-next-${Math.min(belt + 1, CONFIG.rules.maxBelt)}`
-        + (compact ? ' belt-ticks-compact' : '');
+    el.className = `belt-ticks belt-label-${belt} belt-next-${Math.min(belt + 1, CONFIG.rules.maxBelt)}${compact ? ' belt-ticks-compact' : ''}`;
     el.dataset.label = `${rank} belt`;
     // Hover text follows the render; index.html's static value is only a
     // placeholder for the first paint.

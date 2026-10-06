@@ -107,7 +107,9 @@ test('resetAll leaves stored progress alone', () => {
   // The settings reset and the "clear progress" action are separate: one drops
   // preferences, the other drops dm_ progress keys. Only the settings go.
   const progress = [
-    CONFIG.storage.belt + '_nouns',
+    // Same shape as GameState's beltKey, which is private to it. If that
+    // derivation changes, this list silently stops naming the real keys.
+    `${CONFIG.storage.belt}_nouns`,
     CONFIG.storage.streak,
     CONFIG.storage.maxStreak,
     CONFIG.storage.srs,

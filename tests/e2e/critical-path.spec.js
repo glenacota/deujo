@@ -8,7 +8,6 @@ import {
     ACTIVE_SECTION,
     BELT_INTERVAL,
     canvasHasInk,
-    checkAnswer,
     collectPageErrors,
     currentWord,
     enterNounsKata,

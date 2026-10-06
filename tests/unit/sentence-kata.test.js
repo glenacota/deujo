@@ -14,7 +14,6 @@ import '../helpers/bootstrap.js';
 
 const { createSentenceKata, validateSentenceDataset } = await import('../../assets/js/katas/factories/sentence-kata.js');
 const { sentenceTemplate } = await import('../../assets/js/katas/factories/sentence-template.js');
-const { renderBlankSentence } = await import('../../assets/js/platform/dom/blank-renderer.js');
 
 const MANIFEST = {
     id: 'test', name: 'Test', subtitle: 'Sub', datasetUrl: './x.json',
