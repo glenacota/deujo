@@ -36,6 +36,13 @@ no backend, no login.
 - Every kata ships a `validateDataset()`, and `npm test` must exercise it
   against that kata's shipped JSON (see `tests/unit/katas.test.js`). A new
   kata or dataset without this is incomplete.
+- A fill-in-the-blank kata (dataset sentences using `{n}` placeholders) builds
+  on `katas/factories/sentence-kata.js` and `sentenceTemplate()`, and declares
+  only what differs: `isUsableAnswer`, `describeProblem`, `lessonFor`, `input`.
+  Do not copy a grader or a section template out of `cases/` or
+  `prepositions/` — that duplication is what the factory exists to remove, and
+  `tests/unit/sentence-kata.test.js` covers the shared path. Note `lessonFor`
+  runs on every verdict, so read `miss?.expected`, not `miss.expected`.
 - A kata's help body lives in `<id>/help.js` as a pure function and is built from
   the helpers in `katas/help-kit.js`. Help must be **answer-blind**: it takes no
   item, or ignores it, so the modal cannot print the answer to the question on

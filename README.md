@@ -59,6 +59,32 @@ Use `alt` when one blank accepts multiple spellings that grammar rules cannot de
 4. Grade answers with `matchAnswer()` from `assets/js/services/answer-matcher.js`. Use `acceptedAnswers()` and `formatAccepted()` to show accepted spellings.
 5. Use literal Tailwind class names. Run `npm test`. If you add Tailwind classes or an accent, update `CONFIG.accents` if needed, then run `npm run build:css`.
 
+#### Or, if it is a fill-in-the-blank sentence kata
+
+If your dataset sentences carry `{0}`, `{1}` placeholders and each blank has an answer, you do not need a grader or a template of your own. `assets/js/katas/factories/` already has the whole path: mounting, the blank inputs, the empty-blank guard, the note beside a wrong answer, and the dataset check.
+
+Write `template.js` as one line and `kata.js` as configuration. `katas/cases/` is a 43-line worked example:
+
+```js
+// katas/<id>/template.js
+export const myTemplate = sentenceTemplate('Fill in the article');
+
+// katas/<id>/kata.js
+export const createMyKata = (container) => createSentenceKata({
+    manifest: myManifest,
+    template: myTemplate,
+    help: renderMyHelp,                    // answer-blind
+    input: { maxLength: 20, size: 6, className: 'blank-input blank-input--inline' },
+    isUsableAnswer: (blank) => MY_CASES.includes(blank?.c),
+    describeProblem: (index) => `entry ${index} has an invalid blank`,
+    lessonFor: (miss) => renderMyLesson(miss),
+})(container);
+```
+
+Only three things are yours to decide: what counts as a legal answer, what the correction panel teaches, and how the inputs look. `expectedFor` overrides which spelling a miss shows, and `matchOptions` reaches `matchAnswer` — `cases` uses `{ allowExtraWords: true }` so the learner may type the noun along with the article.
+
+One trap worth knowing: `lessonFor` is called on **every** verdict, including a correct one, where there is no miss to teach. Read `miss?.expected` rather than `miss.expected`.
+
 ## 🧪 Tests
 
 ```sh
@@ -70,6 +96,8 @@ npx playwright install webkit chromium    # first run only
 ```
 
 Unit tests use Node's built-in runner. Playwright tests cover critical browser paths, including mobile viewport behavior, and run on WebKit — the engine on iOS — except for the specs that press Tab, since headless WebKit does not implement focus navigation. See `AGENTS.md` for test conventions.
+
+GitHub Actions runs `npm test`, the browser tests, and a check that `assets/css/tailwind.css` still matches what `npm run build:css` produces. That last one exists because Tailwind only emits the utilities it finds in a scanned file: a class you name but never rebuild renders as no styling, and nothing else fails.
 
 ## 🎨 Rebuilding the stylesheet
 
