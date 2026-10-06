@@ -2,12 +2,8 @@
 // Which phase each kata is in: waiting for an answer, or waiting for the
 // learner to acknowledge a verdict.
 //
-// This was one `#phase` field on the App, shared by all six katas. A single
-// field cannot describe six at once, so it was only ever correct by accident:
-// entering a kata happened to reset it, which meant the guard that stops a
-// graded item from being served again had to read a global that merely agreed
-// with the active kata by luck. Per kata, that guard reads the phase of the
-// kata it is actually about.
+// Phase is per kata, so the guard that stops a graded item from being served
+// again reads the phase of the kata it is about.
 //
 // Deliberately pure — no DOM, no storage, no clock — so a test imports it
 // statically instead of reaching for the browser stub.

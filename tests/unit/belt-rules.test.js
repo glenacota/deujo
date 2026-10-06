@@ -2,10 +2,7 @@
 // The belt arithmetic on its own: how points move, which belt a value sits in,
 // and where a crossing answer lands.
 //
-// This module imports no browser stub and calls no `bootstrap`. That is the
-// point of the extraction: these rules used to be private methods on GameState,
-// so pinning "a demotion lands four fifths of the way up" meant standing up a
-// fake localStorage first. Now it is a plain import, like `session.test.js`.
+// This module imports no browser stub and calls no `bootstrap`: the rules are pure.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';

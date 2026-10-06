@@ -95,7 +95,7 @@ export function renderVerbLesson({ verb, tenseKey, index, expected, accepted } =
  * for verbs like fahren ("habe/bin gefahren"); then the note has to admit that
  * the rejected choice was a defensible one.
  */
-export function renderAuxLesson({ expected, accepted = [] } = {}) {
+function renderAuxLesson({ expected, accepted = [] } = {}) {
     if (expected !== 'sein' && expected !== 'haben') return null;
     if (accepted.length > 1) {
         const both = ['haben', 'sein'].filter((aux) => accepted.includes(aux));

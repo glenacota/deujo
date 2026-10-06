@@ -1,8 +1,7 @@
 // tests/unit/sentence-kata.test.js
 // The shared engine behind the fill-in-the-blank sentence katas.
 //
-// This exists because `cases` and `prepositions` each used to carry their own
-// copy of this path. What is pinned here is the copy that was duplicated:
+// What is pinned here is the path `cases` and `prepositions` share:
 // the empty-blank guard, the note beside a wrong input, the fixed attributes on
 // every blank, and the dataset scaffold. The parts that stay per-kata are
 // checked in `kata-check.test.js`, which grades real entries through the real

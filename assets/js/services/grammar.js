@@ -133,7 +133,7 @@ const POSSESSIVE_EUER = {
 };
 
 /** Every possessive form a case allows, deduplicated: "meine" serves three genders. */
-export const POSSESSIVE = Object.fromEntries(
+const POSSESSIVE = Object.fromEntries(
     Object.keys(CASE_LABELS)
         .filter((caseKey) => caseKey !== 'nom')
         .map((caseKey) => [
@@ -193,7 +193,7 @@ const determinersFor = (caseKey) => new Set([
     ...NEGATIVE[caseKey],
 ]);
 
-export const DETERMINERS = Object.freeze({
+const DETERMINERS = Object.freeze({
     akk: determinersFor('akk'),
     dat: determinersFor('dat'),
     gen: determinersFor('gen'),
@@ -219,7 +219,7 @@ export function normalizePhrase(value) {
  * Splits "zum" / "in den" into its determiner, but only when the preposition is
  * the expected one. Returns null when the answer does not belong to it.
  */
-export function decomposePrepositionPhrase(answer, preposition) {
+function decomposePrepositionPhrase(answer, preposition) {
     const contracted = PREPOSITION_CONTRACTIONS[answer];
     if (contracted) return contracted.preposition === preposition ? contracted.article : null;
     if (!answer.startsWith(`${preposition} `)) return null;

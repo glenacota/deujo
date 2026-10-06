@@ -2,11 +2,8 @@
 // The engine behind every fill-in-the-blank sentence kata: mount a section,
 // render `item.s` with one input per `{n}`, and grade what was typed.
 //
-// `cases` and `prepositions` used to each carry their own copy of this path,
-// which meant the "fill in every blank" guard, the note beside a wrong input,
-// and the input's nine fixed attributes existed twice and could drift. They
-// differ only in three places: what counts as a legal answer, what the note
-// says, and what the correction panel teaches. Those are the three this asks for.
+// Katas differ only in what counts as a legal answer, what the note says, and
+// what the correction panel teaches. Those are the three this asks for.
 
 import { createSectionFromTemplate } from '../../platform/dom/template.js';
 import { createBlankInput, renderBlankSentence } from '../../platform/dom/blank-renderer.js';

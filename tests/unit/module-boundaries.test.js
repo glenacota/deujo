@@ -2,10 +2,7 @@
 // The layering, checked against the source instead of trusted in a comment.
 //
 // `katas/` and `ui/` are peers that both sit above `platform/`, so neither may
-// import sideways into the other, and `services/` sits below both. This is the
-// rule the answer-marking move restored: katas used to reach into
-// `ui/answer-view.js` for one helper, which made the two peers depend on each
-// other and left nothing to enforce it.
+// import sideways into the other, and `services/` sits below both.
 //
 // A boundary nobody checks is a comment. These read the real import graph, so
 // an import that crosses a line fails here instead of quietly reshaping the

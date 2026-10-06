@@ -1,11 +1,5 @@
 // belt-rules.js
-// The belt arithmetic, with no state and no storage.
-//
-// This used to be private methods on GameState, which meant asking "does a
-// promotion restart the bar one fifth of the way in?" needed a localStorage
-// stub installed before the import. The rules are pure, so they live here
-// instead, and this module reaches nothing that touches a host global -- a
-// test can import it directly, the way `session.js` can.
+// The belt arithmetic, with no state and no storage. Pure: touches no host global.
 
 import { CONFIG } from './config.js';
 

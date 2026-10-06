@@ -2,17 +2,12 @@
 // The three verb katas' help modal, as pure markup. One pure function per tense
 // so the content stays unit-testable and never touches the DOM.
 //
-// Answer-blind on purpose. The modal used to print the current verb's whole
-// conjugation table, which handed over all six blanks (or the participle) and
-// made the kata's own "no note on a miss" note honest for the wrong reason. It
-// now teaches the rule and works one fixed verb, so opening help still costs the
-// learner the part that has to be thought about: which person, which ending,
-// which auxiliary.
+// Answer-blind: it teaches the rule and works one fixed verb, so opening help
+// never reveals which person, ending or auxiliary the current item needs.
 //
 // The worked verbs (messen, schneiden and the Perfekt examples) and the worked
 // sentences are deliberately verbs the dataset does not ship. A worked table of a
-// shipped verb is the same leak the old modal had, just for one item instead of
-// for all of them, so a new verb may only be added here after checking
+// shipped verb leaks an answer, so a new verb may only be added here after checking
 // `assets/datasets/verbs.json`.
 //
 // Every dynamic string is escaped before it reaches `UiController#showHelpContent`,
