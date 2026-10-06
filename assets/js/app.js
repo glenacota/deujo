@@ -2,6 +2,7 @@
 'use strict';
 
 import { AudioEngine } from './platform/audio-engine.js';
+import { CONFIG } from './config.js';
 import { createDatasetLoader } from './platform/dataset-loader.js';
 import { FxEngine } from './platform/fx-engine.js';
 import { GameState } from './state.js';
@@ -74,8 +75,8 @@ class App {
             });
             this.#init();
         } catch (error) {
-            console.error('Error loading language datasets:', error);
-            this.#ui.showFatalError('Please check your network, local server, or console logs.');
+            console.error('App failed to start:', error);
+            this.#ui.showFatalError('The app could not start. See the browser console for details.');
         }
     }
 
@@ -86,7 +87,12 @@ class App {
         this.#ui.renderStreak(this.#state);
         this.#katas.forEach(({ id }) => renderBeltBadge(this.#dashboard.getBelt(id), this.#state, id));
         this.#bindEvents();
-        this.#flow.start();
+        this.#report(this.#flow.start());
+    }
+
+    /** Datasets load lazily, so a rejected `enter` is a runtime failure, not a boot one. */
+    #report(promise) {
+        promise.catch((error) => console.error('Kata action failed:', error));
     }
 
     /** The page operations `KataFlow` drives, composed from the UI pieces. */
@@ -129,25 +135,34 @@ class App {
 
     #bindEvents() {
         const flow = this.#flow;
+        // One command surface, shared by every click and every shortcut.
+        const actions = {
+            enter: (id) => this.#report(flow.enter(id)),
+            exit: () => flow.exit(),
+            check: () => flow.check(),
+            skip: () => flow.skip(),
+            help: () => flow.help(),
+            settings: () => this.#openSettings(),
+        };
 
         this.#katas.forEach(({ id }) => {
-            this.#dashboard.getCard(id).addEventListener('click', () => flow.enter(id));
+            this.#dashboard.getCard(id).addEventListener('click', () => actions.enter(id));
         });
 
-        dom.actions.checkBtn.addEventListener('click', () => flow.check());
-        dom.actions.skipBtn.addEventListener('click', () => flow.skip());
-        dom.actions.helpBtn.addEventListener('click', () => flow.help());
+        dom.actions.checkBtn.addEventListener('click', actions.check);
+        dom.actions.skipBtn.addEventListener('click', actions.skip);
+        dom.actions.helpBtn.addEventListener('click', actions.help);
 
-        dom.settings.btn.addEventListener('click', () => this.#openSettings());
+        dom.settings.btn.addEventListener('click', actions.settings);
 
         dom.share.btn.addEventListener('click', () => {
             const kata = flow.activeKata;
             if (kata) this.#share.shareProgress(this.#state, kata);
         });
-        dom.focus.backBtn.addEventListener('click', () => flow.exit());
-        dom.logo.addEventListener('click', () => flow.exit());
+        dom.focus.backBtn.addEventListener('click', actions.exit);
+        dom.logo.addEventListener('click', actions.exit);
 
-        dom.buyMeCoffee.btn.addEventListener('click', () => window.open('https://ko-fi.com/A6C827EN29', '_blank', 'noopener,noreferrer'));
+        dom.buyMeCoffee.btn.addEventListener('click', () => window.open(CONFIG.links.support, '_blank', 'noopener,noreferrer'));
 
         bindKeyboardShortcuts({
             modals: this.#modals,
@@ -155,12 +170,12 @@ class App {
             isFocusModeActive: () => flow.focusModeActive,
             isAnswering: () => flow.isAnswering(),
             kataCount: () => this.#katas.length,
-            enterKataAtSlot: (slot) => flow.enter(this.#katas[slot - 1].id),
-            check: () => flow.check(),
-            showHelp: () => dom.actions.helpBtn.click(),
-            loadNext: () => flow.skip(),
-            exitToMenu: () => flow.exit(),
-            openSettings: () => this.#openSettings(),
+            enterKataAtSlot: (slot) => actions.enter(this.#katas[slot - 1].id),
+            check: actions.check,
+            showHelp: actions.help,
+            loadNext: actions.skip,
+            exitToMenu: actions.exit,
+            openSettings: actions.settings,
             areHotkeysEnabled: () => get('hotkeys'),
         });
     }

@@ -38,6 +38,9 @@ export const CONFIG = Object.freeze({
   timing: {
     toastMs: 3500,
   },
+  links: {
+    support: 'https://ko-fi.com/A6C827EN29',
+  },
   // Leitner spaced repetition. Grouped next to the belt points rather than in
   // `timing`, because the box ladder and the reward schedule are tuned
   // together: both decide what a correct answer is worth.
