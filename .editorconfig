@@ -1,0 +1,41 @@
+# Editor and formatting conventions.
+#
+# The setting that earns its place is insert_final_newline. A file without a
+# trailing newline silently breaks `echo ... >> file`, which glues onto the last
+# line instead of starting a new one — a confusing way to lose an edit.
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.md]
+# Two trailing spaces are a hard line break in Markdown.
+trim_trailing_whitespace = false
+
+[*.{json,yml,yaml,cjs}]
+indent_style = space
+indent_size = 2
+
+[assets/js/**/*.js]
+# 4 is the majority here: app.js, ui/, and all of katas/ use it.
+indent_style = space
+indent_size = 4
+
+[tests/unit/**/*.js]
+# These use 2, unlike the e2e specs. Matching their neighbours beats matching a
+# project-wide rule that does not exist.
+indent_style = space
+indent_size = 2
+
+[tests/e2e/**/*.js]
+indent_style = space
+indent_size = 4
+
+# assets/js/services/, assets/js/platform/, and the root modules (config, state,
+# session, belt-rules) are still a mix of 2 and 4, so no indent_size is claimed
+# for them: a new file there should match its neighbours rather than this file.
+# Normalising the codebase is a separate decision from recording it.

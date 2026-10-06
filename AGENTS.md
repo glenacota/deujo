@@ -7,11 +7,15 @@ no backend, no login.
 - Serve locally: `npx serve .` (the app `fetch()`s local JSON datasets, so it
   needs a real HTTP server — opening `index.html` via `file://` will fail).
 - Run unit tests: `npm test`
+- Run the linter: `npm run lint` (`npm run lint:fix` to apply). ESLint covers
+  hygiene only; the structural rules live in a test, because they need to read
+  the real import graph.
 - Run browser smoke tests: `npm run test:e2e` (first time: `npx playwright
   install webkit chromium` — both engines are needed, see Testing expectations).
   It boots `tests/e2e/server.mjs` itself — no server needed.
 - Run one test file: `node --test tests/unit/<name>.test.js`,
   `npx playwright test -g "<name>"`
+- Everything CI runs: `npm run test:all`
 - Rebuild Tailwind after changing class names: `npm run build:css` (or
   `npm run watch:css` while developing).
   

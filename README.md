@@ -88,16 +88,19 @@ One trap worth knowing: `lessonFor` is called on **every** verdict, including a 
 ## 🧪 Tests
 
 ```sh
-npm test                                  # unit tests
-npm run test:e2e                          # browser smoke tests
-npm run test:all                          # both
+npm run lint                             # ESLint, hygiene only
+npm test                                 # unit tests
+npm run test:e2e                         # browser smoke tests
+npm run test:all                         # all three, as CI runs them
 node --test tests/unit/state.test.js
-npx playwright install webkit chromium    # first run only
+npx playwright install webkit chromium   # first run only
 ```
 
 Unit tests use Node's built-in runner. Playwright tests cover critical browser paths, including mobile viewport behavior, and run on WebKit — the engine on iOS — except for the specs that press Tab, since headless WebKit does not implement focus navigation. See `AGENTS.md` for test conventions.
 
-GitHub Actions runs `npm test`, the browser tests, and a check that `assets/css/tailwind.css` still matches what `npm run build:css` produces. That last one exists because Tailwind only emits the utilities it finds in a scanned file: a class you name but never rebuild renders as no styling, and nothing else fails.
+ESLint covers hygiene only — unused bindings, undefined names, a few footguns. The architectural rules live in `tests/unit/module-boundaries.test.js`, which reads the real import graph, so it can hold lines a linter cannot: no layer may import sideways or upward, and nothing under `services/` may name a host global.
+
+GitHub Actions runs `npm run test:all`, plus a check that `assets/css/tailwind.css` still matches what `npm run build:css` produces. That last one exists because Tailwind only emits the utilities it finds in a scanned file: a class you name but never rebuild renders as no styling, and nothing else fails.
 
 ## 🎨 Rebuilding the stylesheet
 
