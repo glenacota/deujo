@@ -14,12 +14,12 @@ export class GameState {
   maxStreak = 0;
   beltProgress = {};  // per kata: fractional mastery points, unaffected by the global streak
   activeKata = '';
-  current = {};   // kata id -> current item
+  #current = new Map();   // kata id -> current item
   recent = {};    // kata id -> ids served most recently (session only)
 
   constructor(kataIds = []) {
     kataIds.forEach((id) => {
-      this.current[id] = null;
+      this.#current.set(id, null);
       this.recent[id] = [];
       this.beltProgress[id] = clampProgress(Storage.getNumber(this.#beltKey(id)));
     });
@@ -54,9 +54,16 @@ export class GameState {
   }
 
   setActiveKata(kata) {
-    if (!Object.hasOwn(this.current, kata)) return;
+    if (!this.#current.has(kata)) return;
     this.activeKata = kata;
     Storage.setString(CONFIG.storage.kata, kata);
+  }
+
+  /** The item a kata is showing, or null when it has none open. */
+  currentItem(kataId) { return this.#current.get(kataId) ?? null; }
+
+  setCurrentItem(kataId, item) {
+    if (this.#current.has(kataId)) this.#current.set(kataId, item ?? null);
   }
 
   setFocusModeActive(isActive) { Storage.setBoolean(CONFIG.storage.focusMode, isActive); }

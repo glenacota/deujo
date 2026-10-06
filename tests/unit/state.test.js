@@ -47,6 +47,21 @@ const drawMany = (state, dataset, kataId, times = 100) => {
   return counts;
 };
 
+test('the current item is held per kata and ignores unknown katas', () => {
+  const { kataId, state } = stateFor();
+  assert.equal(state.currentItem(kataId), null);
+
+  const item = { id: 'x_1' };
+  state.setCurrentItem(kataId, item);
+  assert.equal(state.currentItem(kataId), item);
+
+  state.setCurrentItem(kataId, undefined);
+  assert.equal(state.currentItem(kataId), null);
+
+  state.setCurrentItem('nope', item);
+  assert.equal(state.currentItem('nope'), null);
+});
+
 test('a correct answer promotes exactly once per milestone', () => {
   const { kataId, state } = stateFor();
   const flags = [];

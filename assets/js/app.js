@@ -170,7 +170,7 @@ class App {
         const { kata, dataset } = this.#entries.get(id);
         if (!dataset) return;
         const item = this.#state.pickNext(dataset, id);
-        this.#state.current[id] = item;
+        this.#state.setCurrentItem(id, item);
         if (item) kata.render(item);
         this.#focus.releaseFocus(kata.el.section);
     }
@@ -218,7 +218,7 @@ class App {
 
         const { kata, dataset } = this.#entries.get(id) ?? {};
         if (!dataset) return;
-        const item = this.#state.current[id];
+        const item = this.#state.currentItem(id);
         if (!item) return;
 
         const result = kata.check(item);
@@ -242,7 +242,7 @@ class App {
     #skip(id) {
         if (!this.#session.isAnswering(id)) return;
         const { dataset } = this.#entries.get(id) ?? {};
-        if (!dataset || !this.#state.current[id]) return;
+        if (!dataset || !this.#state.currentItem(id)) return;
         const isDemoted = this.#state.applySkip(id);
         this.#renderProgress(id);
         if (isDemoted) {
@@ -256,7 +256,7 @@ class App {
         const kata = this.#entries.get(id)?.kata;
         if (!kata) return;
 
-        this.#ui.showHelpContent(kata.helpTitle, kata.getHelpContent(this.#state.current[id]));
+        this.#ui.showHelpContent(kata.helpTitle, kata.getHelpContent(this.#state.currentItem(id)));
         this.#modals.open(dom.modals.help.root, dom.actions.helpBtn);
     }
 
@@ -279,7 +279,7 @@ class App {
      */
     #discardGradedItem() {
         const id = this.#state.activeKata;
-        if (this.#session.isReviewing(id)) this.#state.current[id] = null;
+        if (this.#session.isReviewing(id)) this.#state.setCurrentItem(id, null);
         this.#session.reset(id);
     }
 
@@ -298,8 +298,9 @@ class App {
 
         const dataset = await this.#loadDataset(id);
         if (!dataset || this.#state.activeKata !== id) return;
-        if (this.#state.current[id]) {
-            kata.render(this.#state.current[id]);
+        const open = this.#state.currentItem(id);
+        if (open) {
+            kata.render(open);
             this.#focus.releaseFocus(kata.el.section);
         } else {
             this.#loadNext(id);
