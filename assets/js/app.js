@@ -3,6 +3,7 @@
 
 import { summarizeAnswer, summarizeWarning } from './services/answer-summary.js';
 import { AudioEngine } from './platform/audio-engine.js';
+import { createDatasetLoader } from './platform/dataset-loader.js';
 import { FxEngine } from './platform/fx-engine.js';
 import { GameState } from './state.js';
 import { Phase, Session } from './session.js';
@@ -35,7 +36,7 @@ class App {
     #settings;
     #katas = [];
     #entries = new Map(); // kata id -> { kata, dataset }
-    #datasets = new Map(); // dataset URL -> Promise<dataset>, shared by katas on one file
+    #loader = createDatasetLoader();
     #session = new Session(); // kata id -> phase, so a kata's phase is its own
     #focusModeActive = false;
 
@@ -117,33 +118,8 @@ class App {
 
         this.#focus.showStatus('Loading exercises...');
 
-        // The three verb katas share one file, so the fetch and the schema check
-        // are cached by URL rather than per kata: entering all six katas costs
-        // four requests, not six. A failure evicts the entry so the next attempt
-        // really refetches instead of replaying the same rejection forever.
-        const { datasetUrl } = entry.kata;
-        if (!this.#datasets.has(datasetUrl)) {
-            this.#datasets.set(datasetUrl, fetch(datasetUrl)
-                .then((response) => {
-                    if (!response.ok) throw new Error(`Failed to load dataset for "${id}".`);
-                    return response.json();
-                })
-                .then((dataset) => {
-                    try {
-                        entry.kata.validateDataset(dataset);
-                    } catch (error) {
-                        throw new Error(`Invalid dataset for "${id}": ${error.message}`);
-                    }
-                    return dataset;
-                })
-                .catch((error) => {
-                    this.#datasets.delete(datasetUrl);
-                    throw error;
-                }));
-        }
-
         try {
-            const dataset = await this.#datasets.get(datasetUrl);
+            const dataset = await this.#loader.load(entry.kata);
             entry.dataset = dataset;
             if (this.#state.activeKata === id) this.#focus.clearStatus();
             return dataset;
