@@ -69,7 +69,6 @@
     </header>
 
     <main class="max-w-4xl mx-auto lg:px-4 px-3 pt-1 lg:pt-3 pb-3 lg:pb-10 flex-grow w-full flex flex-col">
-        <!-- Dashboard: Kata Selection Grid, cards built from each kata's manifest (see katas/registry.js) -->
         <div id="dashboardView" class="w-full mb-0 mt-10 lg:mb-4">
             <template id="kataCardTemplate">
                 <button type="button" data-role="card" class="text-left p-4 rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-950/80 hover:shadow-lg transition-all active:scale-[0.99]">
@@ -103,15 +102,12 @@
                 <span id="focusBeltBar" class="belt-ticks belt-ticks-compact belt-label-0" data-label="White belt"></span>
             </div>
         </div>
-        <!-- How many belt points this kata still needs for its next belt. -->
+        
         <p id="kataStatus" class="hidden mt-3 text-center text-sm font-semibold text-slate-500 dark:text-slate-400" role="status" aria-live="polite"></p>
 
         <!-- Each kata owns its own markup (see katas/<kata>/template.js) and mounts itself here. -->
         <div id="kataSections"></div>
 
-        <!-- Right answers read as ✅ green, wrong ones as ❌ red with the correct value always shown.
-             A wrong answer also grows the rule that produces that value, so the correction
-             travels to the next sentence instead of dying with this one. -->
         <div id="answerVerdict" class="verdict" hidden role="status" aria-live="polite">
             <div class="verdict-head">
                 <span id="answerVerdictIcon" class="verdict-icon" aria-hidden="true"></span>
@@ -169,7 +165,6 @@
 
     <canvas id="fireworksCanvas"></canvas>
 
-    <!-- Milestone Banner Toast -->
     <div id="milestoneToast" class="fixed top-8 left-1/2 -translate-x-1/2 hidden transform">
         <div id="milestoneToastCard" class="toast-card toast-card--promoted animate-bounce">
             <div>
@@ -180,7 +175,6 @@
         </div>
     </div>
 
-    <!-- Fatal Error Modal -->
     <div id="errorModal" class="modal-backdrop hidden" role="alertdialog" aria-modal="true" aria-labelledby="errorModalTitle">
         <div class="modal-panel">
             <div class="modal-header">
@@ -193,7 +187,6 @@
         </div>
     </div>
 
-    <!-- Active Kata Help Modal -->
     <div id="helpModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle">
         <div class="modal-panel">
             <div class="modal-header">
@@ -205,7 +198,6 @@
         </div>
     </div>
 
-    <!-- Share Fallback Modal -->
     <div id="shareModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="shareModalTitle">
         <div class="modal-panel">
             <div class="modal-header">
@@ -219,7 +211,6 @@
         </div>
     </div>
 
-    <!-- How To Play Modal -->
     <div id="howToModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="howToModalTitle">
         <div class="modal-panel">
             <div class="modal-header">
@@ -247,7 +238,6 @@
         </div>
     </div>
 
-    <!-- Settings Modal -->
     <div id="settingsModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle">
         <div class="modal-panel">
             <div class="modal-header">
@@ -324,7 +314,7 @@
                             <span class="settings-switch-track" aria-hidden="true"></span>
                         </label>
                     </div>
-                    <!-- Read-only for now: rebinding is not implemented. -->
+                    
                     <details class="settings-hotkeys-details">
                         <summary class="settings-summary">Shortcut list</summary>
                         <ul class="settings-hotkeys" aria-label="Keyboard shortcuts">
@@ -355,9 +345,6 @@
                 <span class="settings-esc-hint">Press <kbd class="modal-key">Esc</kbd> to close</span>
             </div>
 
-            <!-- Two-step delete: consequences first, then an explicit OK. A nested
-                 dialog, not a ModalController modal: the settings panel stays open
-                 underneath, and Esc must reach this box first. -->
             <div id="settingsClearConfirm" class="settings-confirm-backdrop hidden" tabindex="-1" role="alertdialog" aria-labelledby="settingsClearTitle" aria-describedby="settingsClearWarning">
                 <div class="settings-confirm-panel">
                     <h4 id="settingsClearTitle" class="settings-confirm-title">Delete all progress?</h4>
