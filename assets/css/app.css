@@ -134,7 +134,6 @@ html.dark .pick-slot--open { border-bottom-color: rgb(168 85 247); }
     line-height: 1.2;
     transition: background-color 120ms ease, border-color 120ms ease;
 }
-.pick-option:hover:not(:disabled) { border-color: rgb(168 85 247); }
 .pick-option[aria-pressed="true"] {
     border-color: rgb(168 85 247);
     background: rgb(250 245 255);
@@ -143,6 +142,22 @@ html.dark .pick-slot--open { border-bottom-color: rgb(168 85 247); }
 .pick-option:focus-visible { outline: 2px solid rgb(168 85 247); outline-offset: 2px; }
 .pick-option--compact { min-height: 36px; font-size: 0.85rem; padding: 0.25rem 0.5rem; }
 .pick-option:disabled { opacity: 1; cursor: default; }
+/* The digit the hotkey uses, printed on the left of the option so it reads as the
+   key to press beside the word it picks. The margin is on the right because the
+   form is what follows it. */
+.pick-key {
+    margin-right: 0.4rem;
+    padding: 0.05rem 0.3rem;
+    border-radius: 0.25rem;
+    background: rgb(203 213 225);
+    color: rgb(71 85 105);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.65rem;
+    font-weight: 700;
+    line-height: 1.4;
+    vertical-align: middle;
+}
+html.dark .pick-key { background: rgb(51 65 85); color: rgb(203 213 225); }
 html.dark .pick-option {
     background: rgb(2 6 23);
     border-color: rgb(51 65 85);

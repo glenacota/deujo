@@ -24,7 +24,27 @@ import { assertDataset, hasCoreFields } from '../dataset-rules.js';
 const NOT_READY = 'Answer every blank before checking.';
 
 /** The two steps of one blank, in the order they are taken. */
-const Step = Object.freeze({ CASE: 'case', FORM: 'form' });
+const Step = Object.freeze({ CASE: 'case', FORM: 'form', DONE: 'done' });
+
+/**
+ * The hover treatment of the noun kata's gender buttons, so a picker option and a
+ * gender button answer a tap the same way. Tailwind only emits the classes it
+ * finds in a scanned file, which is why they live on the string the factory
+ * builds rather than in app.css.
+ */
+const OPTION_CLASS = 'pick-option hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/40';
+
+/**
+ * The digit each stage starts at, and the widest row any of them builds.
+ *
+ * Step one and step two get disjoint ranges on purpose. Both rows are open at
+ * once — step one's stays on show with the chosen case pressed, so the learner
+ * can see what they picked — and a shared range would mean `3` could stand for
+ * Nominativ or for a determiner depending on which row the eye had drifted to.
+ * Disjoint ranges make every digit mean exactly one button.
+ */
+const DIGITS = Object.freeze({ [Step.CASE]: 1, [Step.FORM]: 5 });
+const OPTIONS_PER_ROW = 4;
 
 /**
  * The dataset check both picker katas share: a sentence carrying one `{n}`
@@ -110,23 +130,55 @@ export function createPickerKata({
          * One row of buttons, rebuilt per blank. Rebuilt rather than reused
          * because the option set is per blank, and a stale button left over from
          * the previous blank would offer a form this sentence cannot take.
+         *
+         * Each button carries its digit, so the hotkey is visible rather than a
+         * trick to memorise, and `aria-keyshortcuts` names it to a screen reader.
+         *
+         * @param firstDigit the digit on the first button, so step one and step
+         *   two each print the range the keyboard actually listens for
          */
-        const buildRow = (host, values, onPick) => {
+        const buildRow = (host, values, onPick, firstDigit) => {
             host.textContent = '';
             const fragment = document.createDocumentFragment();
-            values.forEach((value) => {
+            values.forEach((value, position) => {
+                const digit = firstDigit + position;
                 const button = document.createElement('button');
                 button.type = 'button';
-                button.textContent = String(value);
                 button.dataset.value = String(value);
-                button.className = 'pick-option';
+                button.className = OPTION_CLASS;
                 button.setAttribute('aria-pressed', 'false');
+                button.setAttribute('aria-keyshortcuts', String(digit));
+                // Digit before the word, so the key reads as the key to press
+                // beside the thing it picks rather than as a footnote after it.
+                button.appendChild(hotkey(digit));
+                button.appendChild(optionLabel(String(value)));
                 button.addEventListener('click', () => onPick(String(value)));
                 fragment.appendChild(button);
             });
             host.appendChild(fragment);
             return Array.from(host.children);
         };
+
+        /**
+         * The digit printed on an option. Hidden from assistive tech, because
+         * `aria-keyshortcuts` already carries it and the button's own name is the
+         * German form, which is what a learner wants read aloud.
+         */
+        function hotkey(digit) {
+            const key = document.createElement('kbd');
+            key.className = 'pick-key';
+            key.textContent = String(digit);
+            key.setAttribute('aria-hidden', 'true');
+            return key;
+        }
+
+        /** The German form on an option, in its own element so the digit can precede it. */
+        function optionLabel(text) {
+            const label = document.createElement('span');
+            label.className = 'pick-option-label';
+            label.textContent = text;
+            return label;
+        }
 
         /** Step one's chosen case stays pressed while step two is open. */
         const pressCase = (chosen) => Array.from(el.stageCase.children)
@@ -137,6 +189,7 @@ export function createPickerKata({
             el.stageForm,
             determinerOptions(item.b[index]),
             (form) => pickForm(form),
+            DIGITS[Step.FORM],
         );
 
         /** Paints the sentence slots, the prompt and the progress line. */
@@ -163,6 +216,10 @@ export function createPickerKata({
          * for the last blank standing in for the first.
          */
         function showReview() {
+            // DONE, so a digit that arrives after the last pick finds nothing to
+            // press. The buttons are still in the DOM behind the hidden step
+            // block, and without this a stray key would re-answer a graded blank.
+            step = Step.DONE;
             el.steps.hidden = true;
             el.review.hidden = false;
             el.progress.textContent = '';
@@ -252,7 +309,7 @@ export function createPickerKata({
             if (open < answers.length - 1) {
                 open += 1;
                 step = Step.CASE;
-                buildRow(el.stageForm, [], () => {});
+                buildRow(el.stageForm, [], () => {}, DIGITS[Step.FORM]);
                 paint();
                 return;
             }
@@ -272,6 +329,34 @@ export function createPickerKata({
                 return help();
             },
 
+            /**
+             * Picks the option the digit names, on whichever stage is open, for
+             * the number hotkeys the keyboard funnel routes here.
+             *
+             * @param {number} digit the key pressed, in the open stage's own
+             *   range: 1-4 for the case row, 5-8 for the form row
+             * @returns {boolean} false when no option carries that digit, so the
+             *   key is left to the page rather than swallowed by a no-op
+             */
+            pickOption(digit) {
+                // Nothing to pick once every blank is answered, or before an item
+                // is on screen at all.
+                if (!item || step === Step.DONE) return false;
+
+                // A digit from the other stage is refused rather than guessed at:
+                // both rows are on screen, and `3` must mean one button only.
+                const first = DIGITS[step];
+                const position = digit - first;
+                if (!Number.isInteger(position) || position < 0 || position >= OPTIONS_PER_ROW) return false;
+
+                const host = step === Step.FORM ? el.stageForm : el.stageCase;
+                const button = host.children[position];
+                if (!button) return false;
+
+                button.click();
+                return true;
+            },
+
             render(next) {
                 item = next;
                 answers = (next?.b ?? []).map(() => ({ caseKey: null, form: null }));
@@ -283,8 +368,8 @@ export function createPickerKata({
                 el.review.textContent = '';
                 el.promptForm.hidden = true;
 
-                buildRow(el.stageCase, cases.map((caseKey) => CASE_LABELS[caseKey]), (label) => pickCase(label));
-                buildRow(el.stageForm, [], () => {});
+                buildRow(el.stageCase, cases.map((caseKey) => CASE_LABELS[caseKey]), (label) => pickCase(label), DIGITS[Step.CASE]);
+                buildRow(el.stageForm, [], () => {}, DIGITS[Step.FORM]);
                 paint();
             },
 

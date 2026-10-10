@@ -64,6 +64,19 @@ const loadModule = async ({ focusMode = false, modalOpen = false, hotkeysEnabled
         loadNext: record('loadNext'),
         exitToMenu: record('exitToMenu'),
         openSettings: record('openSettings'),
+        // A custom `pickOption` is still recorded, so a test can assert which
+    // digit was asked for and what the kata did with it.
+    pickOption: callbacks.pickOption
+            ? (digit) => {
+                calls.push(`pickOption:${digit}`);
+                return callbacks.pickOption(digit) === true;
+            }
+            : (digit) => {
+                calls.push(`pickOption:${digit}`);
+                // The default stands in for a picker that can use every digit in
+                // both of its rows; a test narrows it to model a narrower one.
+                return digit <= 8;
+            },
         areHotkeysEnabled: () => hotkeysEnabled,
     });
 
@@ -278,6 +291,77 @@ test('disabling hotkeys silences every shortcut but not modal handling', async (
 
     const { press: shifting } = await loadModule({ focusMode: false, hotkeysEnabled: false });
     assert.deepEqual(shifting({ key: '!', code: 'Digit1', shiftKey: true }).calls, [], 'nor may ⇧+1 jump katas');
+});
+
+test('an unmodified digit picks the option that carries it', async () => {
+    // Step one is 1-4 and step two 5-8, so all eight are live somewhere. The
+    // picker prints the digit on every option, so this is read off the screen.
+    const { press } = await loadModule({ focusMode: true });
+
+    for (const key of ['1', '2', '3', '4', '5', '6', '7', '8']) {
+        const { calls, errors } = press({ key });
+        assert.ok(calls.includes(`pickOption:${key}`), `${key} should be offered to the kata`);
+        assert.ok(calls.includes('preventDefault'), `${key} must not reach the page`);
+        assert.deepEqual(errors, []);
+    }
+});
+
+test('a digit the open stage has no option for is left to the page', async () => {
+    // The preposition kata offers three cases, so 4 has nothing to pick in step
+    // one, and step two has not opened at all. Swallowing either would be a
+    // binding that could only ever do nothing.
+    const { press } = await loadModule({
+        focusMode: true,
+        callbacks: { pickOption: (digit) => digit <= 3 },
+    });
+
+    assert.ok(press({ key: '3' }).calls.includes('pickOption:3'), 'and it claims the key when it can act');
+    // A fresh module per press, because the recorder accumulates across a run.
+    // The kata is still asked — only the key is left alone — so what matters is
+    // that preventDefault never fires for a digit it cannot use.
+    const { press: unclaimed } = await loadModule({
+        focusMode: true,
+        callbacks: { pickOption: (digit) => digit <= 3 },
+    });
+    const { calls, errors } = unclaimed({ key: '4' });
+    assert.ok(!calls.includes('preventDefault'), 'nothing to pick, so the key is left to the page');
+    assert.deepEqual(errors, [], 'and refusing a digit is not a failure');
+});
+
+test('a digit stays inert where a digit has no business being one', async () => {
+    const { press } = await loadModule({ focusMode: false });
+    assert.deepEqual(press({ key: '1' }).calls, [], 'the dashboard has no options to pick');
+
+    const { press: modal } = await loadModule({ focusMode: true, modalOpen: true });
+    assert.deepEqual(modal({ key: '1' }).calls, [], 'nor behind a modal');
+
+    // Typing a number into a field is the commonest reason to press one.
+    const { press: typing } = await loadModule({ focusMode: true });
+    const input = new globalThis.HTMLInputElement();
+    assert.deepEqual(typing({ key: '1', target: input }).calls, [], 'typing keeps its digits');
+
+    // AltGr is how a European layout types a bracket, so a modified digit is not
+    // a pick however it reads.
+    assert.deepEqual(typing({ key: '1', altKey: true }).calls, []);
+    assert.deepEqual(typing({ key: '1', ctrlKey: true }).calls, []);
+    assert.deepEqual(typing({ key: '1', metaKey: true }).calls, []);
+});
+
+test('Shift+Digit stays the kata jump and never picks an option', async () => {
+    // The two must not collide: a learner who holds Shift for the jump must not
+    // also answer the item behind it.
+    const { press } = await loadModule({ focusMode: false });
+
+    const { calls } = press({ key: '!', code: 'Digit1', shiftKey: true });
+
+    assert.ok(calls.includes('enterKataAtSlot:1'));
+    assert.ok(!calls.some((c) => c.startsWith('pickOption')), 'Shift+1 must not also pick an option');
+});
+
+test('disabling hotkeys silences the digit picks too', async () => {
+    const { press } = await loadModule({ focusMode: true, hotkeysEnabled: false });
+
+    assert.deepEqual(press({ key: '1' }).calls, [], 'a preference off is a preference off');
 });
 
 test('a keypress with no physical code is a silent no-op', async () => {

@@ -143,6 +143,36 @@ test('a skip costs half a belt point and leaves the streak standing', async ({ p
     expect(errors).toEqual([]);
 });
 
+// A picker option is picked by mouse or by its printed digit, and the digit is
+// the fast path for drilling. Driven through the real key listener, because the
+// wiring from keypress to the active kata is exactly what a unit test fakes.
+test('a picker answer is given by its digit alone, with no typing', async ({ page }) => {
+    const errors = collectPageErrors(page);
+    await gotoDashboard(page);
+    await page.locator('#kata-prepositions').click();
+
+    const section = page.locator(ACTIVE_SECTION);
+    const stage = (role) => section.locator(`[data-role="${role}"] > button`);
+    await expect(stage('stage-form')).toHaveCount(0);
+
+    // Step one: the first digit on the open row.
+    await page.keyboard.press('1');
+    await expect(stage('stage-form')).toHaveCount(4);
+
+    // Step two: its own range starts at 5, so the same "first option" is 5.
+    // Read `data-value` rather than the text: the button also carries its
+    // printed digit, so its text is "ein5" where the answer is "ein".
+    const firstForm = await stage('stage-form').first().getAttribute('data-value');
+    await page.keyboard.press('5');
+    await expect(section.locator('.pick-slot').first()).toHaveText(firstForm ?? '');
+
+    // A digit the row cannot use is left alone rather than answering something.
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#answerVerdict')).toBeVisible();
+
+    expect(errors).toEqual([]);
+});
+
 test('375px viewport: dashboard and kata never scroll sideways', async ({ page }) => {
     const errors = collectPageErrors(page);
     await gotoDashboard(page);

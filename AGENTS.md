@@ -60,6 +60,17 @@ no backend, no login.
   distractor is hand-authored per item — and `validatePickerDataset` refuses any
   answer the picker could not put on a button: a form from the wrong case, a
   noun, or an `alt` list, which widens a typed answer and has no button to widen.
+- A picker option is picked by mouse or by the digit printed on its left. Step
+  one is 1–4 and step two 5–8, disjoint on purpose: both rows are on screen at
+  once, so a shared range would make `3` mean Nominativ or a determiner
+  depending on which row the eye had drifted to. The digit is bound in
+  `ui/keyboard-shortcut.js` (the one funnel for every binding) and routed through
+  `KataFlow.pickOption` to the kata's own `pickOption`, because `ui/` and
+  `katas/` are peers and may not import each other. A picker answering by digit
+  **must** return false when no option carries that digit — a digit belonging to
+  the other stage, or one past the end of the row: the binding claims the key
+  only when the kata used it, so an unusable digit stays with the page instead of
+  being swallowed by a no-op.
 - A kata's help body lives in `<id>/help.js` as a pure function and is built from
   the helpers in `katas/help-kit.js`. Help must be **answer-blind**: it takes no
   item, or ignores it, so the modal cannot print the answer to the question on

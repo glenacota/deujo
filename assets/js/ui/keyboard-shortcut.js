@@ -4,6 +4,14 @@
 
 import { getActiveInputs } from './dom.js';
 
+/**
+ * The digits a picker option can be picked with. Step one is 1-4 and step two
+ * 5-8, so the two rows get disjoint ranges: they are both on screen at once, and
+ * a shared range would make `3` mean Nominativ or a determiner depending on
+ * which row the eye had drifted to. The picker owns which row a digit is for.
+ */
+const DIGIT_OPTIONS = ['1', '2', '3', '4', '5', '6', '7', '8'];
+
 function isTypingTarget(target) {
     return target instanceof HTMLInputElement ||
         target instanceof HTMLTextAreaElement ||
@@ -22,6 +30,7 @@ export function bindKeyboardShortcuts({
     loadNext,
     exitToMenu,
     openSettings,
+    pickOption = () => false,
     areHotkeysEnabled = () => true,
 }) {
     // Safari does not move focus to a <button> when it is clicked, so after a
@@ -84,6 +93,23 @@ export function bindKeyboardShortcuts({
                     }
                 }
                 check();
+            },
+        },
+        {
+            // A numbered option on the open stage: 1 is the first button, and so
+            // on. The shift+digit kata jump above keeps its own digits, so the
+            // unmodified ones are free.
+            matches: (event, { typing }) => {
+                if (typing || event.shiftKey || event.altKey || event.ctrlKey || event.metaKey) return false;
+                if (!isFocusModeActive() || !isAnswering()) return false;
+                return DIGIT_OPTIONS.includes(event.key);
+            },
+            run: (event) => {
+                // Claimed only when the kata actually has that option, so a digit
+                // the open stage cannot use stays available to the page rather
+                // than being swallowed by a binding that would do nothing.
+                if (!pickOption(Number(event.key))) return;
+                event.preventDefault();
             },
         },
         {

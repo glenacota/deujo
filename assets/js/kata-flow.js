@@ -127,6 +127,12 @@ export class KataFlow {
         this.#advance(id);
     }
 
+    pickOption(position) {
+        const kata = this.activeKata;
+        if (!kata || !this.isAnswering()) return false;
+        return kata.pickOption?.(position) === true;
+    }
+
     help() {
         const id = this.#state.activeKata;
         const kata = this.#entries.get(id)?.kata;

@@ -182,6 +182,42 @@ test('the picker stands still when the learner asked for less motion', () => {
   );
 });
 
+// The digit on an option is how a learner finds the hotkey, so it has to be
+// legible in both themes rather than a dark smudge on a dark button.
+test('the picker hotkey badge is legible in both themes, and sits left of the form', () => {
+  const key = app.get('.pick-key') ?? {};
+  assert.ok(key.background, 'the digit has no background of its own');
+  assert.ok(key.color, 'and no colour to sit on it');
+  assert.ok(app.get('html.dark .pick-key')?.color, 'the digit is unreadable in dark mode');
+
+  // It is printed before the form, so the gap belongs on its right. A left
+  // margin here would push the digit away from the word it picks.
+  assert.equal(key['margin-right'], '0.4rem');
+  assert.equal(key['margin-left'], undefined, 'the digit leads, so it must not trail');
+});
+
+// The options hover exactly as the noun kata's gender buttons do. Those classes
+// are named in picker-kata.js rather than app.css, so Tailwind has to have
+// emitted them from that string.
+test('a picker option hovers exactly like a noun gender button', () => {
+  const picker = readFileSync(new URL('../../assets/js/katas/factories/picker-kata.js', import.meta.url), 'utf8');
+  const nouns = readFileSync(new URL('../../assets/js/katas/nouns/template.js', import.meta.url), 'utf8');
+
+  const genderButton = nouns.match(/<button[^>]*data-role="gender"[^>]*>/)[0];
+  const hovers = [...new Set([...genderButton.matchAll(/(?:dark:)?hover:[a-z0-9]+(?:\/[0-9]+)?/g)].map((m) => m[0]))];
+
+  assert.ok(hovers.length >= 3, `the gender button should carry a hover treatment, found ${hovers}`);
+  for (const hover of hovers) {
+    assert.ok(picker.includes(hover), `a picker option does not carry ${hover}`);
+    assertTailwindEmits([hover], 'picker option hover');
+  }
+
+  // A hover rule in app.css would outrank those utilities and quietly win, so
+  // the two treatments would drift without anything failing. There must be one
+  // source for the hover, and it is the class string.
+  assert.equal(app.get('.pick-option:hover'), undefined, 'app.css must not also define the hover');
+});
+
 test('the shared kata input class carries the values the katas depend on', () => {
   // P5 consolidated nine copies of this into app.css; if a declaration is dropped
   // here the blanks silently lose their size or their focus ring.

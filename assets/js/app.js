@@ -176,6 +176,7 @@ class App {
             loadNext: actions.skip,
             exitToMenu: actions.exit,
             openSettings: actions.settings,
+            pickOption: (position) => flow.pickOption(position),
             areHotkeysEnabled: () => get('hotkeys'),
         });
     }

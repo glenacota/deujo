@@ -322,6 +322,120 @@ test('a second render discards the previous item\'s picks', () => {
     assert.equal(kata.el.sentence.querySelectorAll('.pick-slot').length, 1);
 });
 
+test('every option prints the digit that picks it, and names it to assistive tech', () => {
+    const { kata, container } = build();
+    kata.render(ITEM);
+    const caseButtons = container.querySelectorAll('[data-role="stage-case"] > *');
+
+    caseButtons.forEach((button, index) => {
+        const digit = index + 1;
+        // Printed, so the hotkey is read off the screen rather than memorised...
+        assert.equal(button.querySelectorAll('.pick-key')[0]?.textContent, String(digit));
+        // ...and named, so a screen reader hears it too rather than as button text.
+        assert.equal(button.getAttribute('aria-keyshortcuts'), String(digit));
+    });
+
+    // Step two is 5-8, disjoint from step one, because both rows are on screen
+    // at once and a shared range would make a digit ambiguous between them.
+    buttonIn(container, 'stage-case', 'Dativ').click();
+    container.querySelectorAll('[data-role="stage-form"] > *').forEach((button, index) => {
+        assert.equal(button.querySelectorAll('.pick-key')[0]?.textContent, String(index + 5));
+        assert.equal(button.getAttribute('aria-keyshortcuts'), String(index + 5));
+    });
+});
+
+test('the digit is printed before the form it picks', () => {
+    const { kata, container } = build();
+    kata.render(ITEM);
+
+    const [button] = container.querySelectorAll('[data-role="stage-case"] > *');
+    // Read as the key to press beside the word, not as a footnote after it.
+    assert.deepEqual(
+        Array.from(button.children).map((child) => child.className),
+        ['pick-key', 'pick-option-label'],
+    );
+    assert.equal(button.querySelectorAll('.pick-option-label')[0].textContent, 'Nominativ');
+});
+
+test('a digit picks the option in that position on whichever stage is open', () => {
+    const { kata, container } = build();
+    kata.render(ITEM);
+
+    assert.equal(kata.pickOption(3), true, 'step one, the third case');
+    assert.equal(kata.el.stageForm.hidden, false, 'so step two opened');
+
+    // Where the answer sits is the generator's business, not this test's: read it
+    // off the row so the assertion is about the digit picking *that* button.
+    const forms = Array.from(container.querySelectorAll('[data-role="stage-form"] > *'));
+    const wanted = forms.findIndex((button) => button.dataset.value === 'dem');
+
+    assert.equal(kata.pickOption(wanted + 5), true, 'step two, the answer\'s own position');
+    assert.equal(container.querySelectorAll('.pick-slot')[0].textContent, 'dem');
+});
+
+test('a digit from the other stage is refused, not guessed at', () => {
+    const { kata } = build();
+    kata.render(ITEM);
+
+    // Both rows are on screen once step two opens, so `3` must mean the case and
+    // nothing else, and `5` must mean the form.
+    assert.equal(kata.pickOption(5), false, 'a step-two digit on the step-one row');
+    kata.pickOption(1);
+    assert.equal(kata.pickOption(3), false, 'and a step-one digit once step two is open');
+});
+
+test('a digit with no option in that position is refused, not silently claimed', () => {
+    const { kata } = build();
+    kata.render(ITEM);
+
+    // Four cases and four forms is the widest row any stage builds, so 9 is past
+    // the end of both, and 0 is before the start of either.
+    assert.equal(kata.pickOption(9), false);
+    assert.equal(kata.pickOption(0), false);
+    assert.equal(kata.el.stageForm.hidden, true, 'and nothing was opened by asking');
+});
+
+test('a digit after the last pick does not re-answer a graded blank', () => {
+    const { kata, container } = build();
+    kata.render(ITEM);
+
+    // Answer both blanks straight through, so the review list is up.
+    const answerOpen = () => {
+        const pick = (stage, value) => container
+            .querySelectorAll(`[data-role="${stage}"] > *`)
+            .find((button) => button.dataset.value === value)
+            .click();
+        pick('stage-case', 'Dativ');
+        pick('stage-form', 'dem');
+        pick('stage-case', 'Akkusativ');
+        pick('stage-form', 'seine');
+    };
+    answerOpen();
+
+    // The buttons are still in the DOM behind the hidden step block, so without
+    // a DONE step a stray key would re-answer an item that is already graded.
+    assert.equal(container.querySelectorAll('[data-role="review"] > *').length, 2);
+    assert.equal(kata.pickOption(1), false);
+    assert.equal(kata.pickOption(5), false);
+});
+
+test('a digit before anything is rendered is refused', () => {
+    const { kata } = build();
+    assert.equal(kata.pickOption(0), false, 'no item, no options, nothing to pick');
+});
+
+test('the options carry the noun kata\'s hover treatment', () => {
+    const { kata, container } = build();
+    kata.render(ITEM);
+
+    const [button] = container.querySelectorAll('[data-role="stage-case"] > *');
+    // The gender buttons hover to a tinted background and a brighter border; a
+    // picker option that did not would feel like a different control entirely.
+    for (const hover of ['hover:border-blue-500', 'hover:bg-blue-50', 'dark:hover:bg-blue-950/40']) {
+        assert.ok(button.classList.contains(hover), `a picker option is missing ${hover}`);
+    }
+});
+
 test('help is answer-blind: it is called with no item at all', () => {
     let called = null;
     const { kata } = build({ help: (...args) => { called = args; return '<p>x</p>'; } });
