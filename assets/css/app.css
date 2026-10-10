@@ -160,8 +160,10 @@ html.dark .pick-option[aria-pressed="true"] { background: rgb(59 7 100); }
    lesson never meant. The step number carries the structure instead. */
 .picker-step-label {
     margin-bottom: 0.5rem;
-    font-size: 0.875rem;
+    font-size: 0.75rem;
+    line-height: 1rem;
     font-weight: 600;
+    text-transform: uppercase;
     color: rgb(71 85 105);
 }
 .picker-step-label--form { margin-top: 1rem; }

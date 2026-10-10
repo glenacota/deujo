@@ -50,7 +50,7 @@ export function validatePrepositionDataset(dataset) {
 /** Mounts the preposition kata's section, so `el` is populated for the caller. */
 export const createPrepositionKata = (container) => createPickerKata({
     manifest: prepositionsManifest,
-    template: pickerTemplate('Try it — two steps'),
+    template: pickerTemplate(),
     help: renderPrepositionHelp,
     prompt: askCase,
     cases: CASES,

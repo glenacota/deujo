@@ -35,7 +35,7 @@ export function validateCaseDataset(dataset) {
 /** Mounts the case kata's section, so `el` is populated for the caller. */
 export const createCaseKata = (container) => createPickerKata({
     manifest: casesManifest,
-    template: pickerTemplate('Try it — two steps'),
+    template: pickerTemplate(),
     // Answer-blind: the body takes no item, so it cannot print the sentence on
     // screen or the case the blank expects.
     help: renderCaseHelp,

@@ -35,7 +35,7 @@ function build(overrides = {}) {
     const lessons = [];
     const config = {
         manifest: MANIFEST,
-        template: pickerTemplate('Try it'),
+        template: pickerTemplate(),
         help: () => '<p>help body</p>',
         prompt: (item, blank, index) => `Step 1 · blank ${index}?`,
         cases: CASES,
@@ -386,22 +386,12 @@ test('the failure message is the kata\'s own wording, with the offending index',
     );
 });
 
-test('the shared template carries the kata\'s instruction and every render target', () => {
-    const html = pickerTemplate('Try it — two steps');
+test('the shared template carries the instruction and every render target', () => {
+    const html = pickerTemplate();
 
-    assert.match(html, /Try it — two steps/);
     for (const role of ['section', 'sentence', 'translation', 'prompt', 'progress', 'stage-case', 'stage-form', 'review']) {
         assert.match(html, new RegExp(`data-role="${role}"`), `the template has no ${role}`);
     }
-});
-
-test('two katas using the template differ only in their instruction', () => {
-    // The reason it is a factory: a copied template would copy its Tailwind
-    // classes too, and Tailwind only emits what a scanned file contains.
-    assert.equal(
-        pickerTemplate('First').replace('First', ''),
-        pickerTemplate('Second').replace('Second', ''),
-    );
 });
 
 test('the trigger reads the sentence, never the answer', () => {
