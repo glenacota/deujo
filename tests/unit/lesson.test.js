@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { articleRow, caseNote, lesson } from '../../assets/js/services/lesson.js';
-import { determinerCases, prepositionGroup } from '../../assets/js/services/grammar.js';
+import { determinerCases, prepositionRection } from '../../assets/js/services/grammar.js';
 import { renderCaseLesson } from '../../assets/js/katas/cases/lesson.js';
 import { renderPrepositionLesson } from '../../assets/js/katas/prepositions/lesson.js';
 import { renderNounLesson } from '../../assets/js/katas/nouns/lesson.js';
@@ -38,55 +38,92 @@ test('a determiner is traced back to the case it belongs to', () => {
   assert.deepEqual(determinerCases(''), []);
 });
 
-test('a preposition phrase is traced back to its rection group', () => {
-  assert.equal(prepositionGroup('zum'), 'dat', 'the fused form is still "zu"');
-  assert.equal(prepositionGroup('zu dem'), 'dat');
-  assert.equal(prepositionGroup('in die'), 'two');
-  assert.equal(prepositionGroup('hinsichtlich des'), 'gen');
-  assert.equal(prepositionGroup('zwischen'), null, 'no determiner, still the group');
-  assert.equal(prepositionGroup('der Hund'), null, 'no preposition at all');
-  assert.equal(prepositionGroup(''), null);
+test('a preposition in a sentence is traced back to its rection group', () => {
+  assert.equal(prepositionRection('bei'), 'dat');
+  assert.equal(prepositionRection('auf'), 'two', 'the one group that decides for itself');
+  assert.equal(prepositionRection('hinsichtlich'), 'gen');
+  assert.equal(prepositionRection('Hund'), null, 'a noun is not a preposition');
+  assert.equal(prepositionRection(''), null);
 });
 
-test('the case lesson names the case and the case the learner reached for', () => {
-  const built = renderCaseLesson({ blank: { a: 'dem', c: 'dat' }, given: 'das', expected: 'dem' });
+// A picker grades its two stages apart, so a miss arrives as {blank, given,
+// caseOk}: the correction has to say which of the two stages went wrong.
+const caseMiss = (overrides = {}) => ({
+  blank: { a: 'dem', c: 'dat' },
+  given: { caseKey: 'dat', form: 'das' },
+  caseOk: true,
+  ...overrides,
+});
+
+test('the case lesson names the case the learner reached for', () => {
+  const built = renderCaseLesson(caseMiss());
 
   assert.equal(built.form, 'dem');
   assert.match(built.note, /^Dativ: der → dem · die → der · das → dem · plural → den \+ die\./);
-  assert.match(built.note, /You wrote "das", which is Akkusativ\./);
+  assert.match(built.note, /"das" is Akkusativ; this blank is Dativ\./);
+});
+
+test('a wrong case is the finding, and the note says so in stage-one terms', () => {
+  const built = renderCaseLesson(caseMiss({ given: { caseKey: 'akk', form: 'den' }, caseOk: false }));
+
+  assert.equal(built.form, 'dem');
+  assert.match(built.note, /You named Akkusativ, but this blank is Dativ\./);
+  assert.doesNotMatch(built.note, /is Akkusativ; this blank/, 'the ending is not the finding here');
 });
 
 test('the case lesson stays quiet about a form that fits two cases', () => {
-  const built = renderCaseLesson({ blank: { a: 'den', c: 'akk' }, given: 'den', expected: 'den' });
+  const built = renderCaseLesson(caseMiss({ blank: { a: 'den', c: 'akk' }, given: { caseKey: 'akk', form: 'den' } }));
 
   assert.match(built.note, /^Akkusativ:/);
-  assert.doesNotMatch(built.note, /You wrote/, '"den" is Akkusativ and Dativ, so no case is claimed');
+  assert.doesNotMatch(built.note, /is Akkusativ;/, '"den" is Akkusativ and Dativ, so no case is claimed');
 });
 
 test('the case lesson refuses a blank that claims no case', () => {
-  assert.equal(renderCaseLesson({ blank: { a: 'dem' }, given: 'das', expected: 'dem' }), null);
+  assert.equal(renderCaseLesson({ blank: { a: 'dem' } }), null);
   assert.equal(renderCaseLesson(), null);
 });
 
+const prepMiss = (sentence, blank, overrides = {}) => ({
+  item: { s: sentence },
+  index: 0,
+  blank,
+  given: { caseKey: blank.c, form: 'dem' },
+  caseOk: true,
+  ...overrides,
+});
+
 test('the preposition lesson teaches the group, not the phrase again', () => {
-  const oneWay = renderPrepositionLesson({ expected: 'zum' });
-  assert.equal(oneWay.form, 'zum');
+  const oneWay = renderPrepositionLesson(prepMiss('Ich warte bei {0} Arzt.', { a: 'dem', c: 'dat' }));
+  assert.equal(oneWay.form, 'dem');
   assert.match(oneWay.note, /^Dativ: always this case, never a choice\./);
   assert.match(oneWay.note, /der → dem/, 'the article row comes from the tables');
 
   // The two-way group is the one that decides for itself, so it gets the rule
   // instead of a row of articles.
-  const twoWay = renderPrepositionLesson({ expected: 'in den' });
+  const twoWay = renderPrepositionLesson(prepMiss('Der Hund läuft in {0} Scheune.', { a: 'die', c: 'akk' }));
   assert.match(twoWay.note, /^Two-way preposition:/);
   assert.match(twoWay.note, /Dativ where something stays/);
 
-  const genitive = renderPrepositionLesson({ expected: 'hinsichtlich des' });
+  const genitive = renderPrepositionLesson(prepMiss('Wegen {0} Streiks.', { a: 'des', c: 'gen' }));
   assert.match(genitive.note, /^Genitiv:/);
   assert.match(genitive.note, /-s or -es/);
 
-  // No preposition, no rule: bad data teaches nothing rather than something wrong.
-  assert.equal(renderPrepositionLesson({ expected: 'Hund' }), null);
+  // No preposition in the sentence, no rule: bad data teaches nothing rather
+  // than something wrong.
+  assert.equal(renderPrepositionLesson(prepMiss('Der Hund schläft {0} Bank.', { a: 'der', c: 'dat' })), null);
   assert.equal(renderPrepositionLesson(), null);
+});
+
+test('a wrong preposition case names the group before the ending', () => {
+  const built = renderPrepositionLesson(prepMiss(
+    'Die Katze schläft in {0} Kammer.',
+    { a: 'der', c: 'dat' },
+    { given: { caseKey: 'akk', form: 'die' }, caseOk: false },
+  ));
+
+  assert.equal(built.form, 'der');
+  assert.match(built.note, /^Two-way preposition for "in"\./);
+  assert.match(built.note, /You named Akkusativ, but it is Dativ\./);
 });
 
 test('the noun lesson leads with the gender and its ending', () => {

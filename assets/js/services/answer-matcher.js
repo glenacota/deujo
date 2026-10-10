@@ -57,14 +57,3 @@ function isAnswerPlusOneWord(typed, answer) {
     const withoutLast = typedWords.slice(0, -1).join(' ');
     return withoutFirst === answer || withoutLast === answer;
 }
-
-/**
- * The accepted answers as one short string, for the note shown next to a wrong
- * control. Capped, because the note sits in a nowrap badge beside the input and
- * must not push the sentence apart on a phone.
- */
-export function formatAccepted(accepted, max = 3) {
-    const list = Array.isArray(accepted) ? accepted.filter(Boolean) : [];
-    if (list.length <= max) return list.join(' / ');
-    return `${list.slice(0, max).join(' / ')} / +${list.length - max}`;
-}

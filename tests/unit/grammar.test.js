@@ -7,9 +7,12 @@ import assert from 'node:assert/strict';
 
 import {
     BLANK_PLACEHOLDER,
+    CASE_KEYS,
     PREPOSITION_CONTRACTIONS,
+    PREPOSITION_GROUPS,
+    determinerBelongsTo,
     hasOrderedBlankPlaceholders,
-    isPrepositionPhraseInCase,
+    prepositionRection,
     splitBlanks,
 } from '../../assets/js/services/grammar.js';
 
@@ -51,45 +54,73 @@ test('hasOrderedBlankPlaceholders requires every blank once, in order', () => {
   assert.equal(hasOrderedBlankPlaceholders('{0}', 0), false, 'a dataset needs at least one blank');
 });
 
-test('a phrase is only in a case when its determiner is', () => {
-  assert.equal(isPrepositionPhraseInCase('zum', 'dat'), true, 'the fused Dativ');
-  assert.equal(isPrepositionPhraseInCase('zu dem', 'dat'), true, 'its written-out form');
-  assert.equal(isPrepositionPhraseInCase('in die', 'akk'), true);
-  assert.equal(isPrepositionPhraseInCase('in dem', 'dat'), true, 'the same preposition, the other case');
-  assert.equal(isPrepositionPhraseInCase('beim', 'akk'), false, '"beim" is Dativ');
-  assert.equal(isPrepositionPhraseInCase('dem', 'dat'), false, 'a determiner alone is not a phrase');
-  assert.equal(isPrepositionPhraseInCase('Hause', 'dat'), false, 'a noun is not a preposition');
-  assert.equal(isPrepositionPhraseInCase('zum', 'nom'), false, 'no preposition governs the nominative');
+test('a determiner is only in a case when the case really takes it', () => {
+  assert.equal(determinerBelongsTo('dem', 'dat'), true);
+  assert.equal(determinerBelongsTo('den', 'akk'), true);
+  assert.equal(determinerBelongsTo('des', 'gen'), true);
+  assert.equal(determinerBelongsTo('der', 'nom'), true, 'the picker katas check the Nominativ too');
+
+  assert.equal(determinerBelongsTo('dem', 'akk'), false, 'a form from another case');
+  assert.equal(determinerBelongsTo('einen', 'dat'), false);
+  assert.equal(determinerBelongsTo('Hause', 'dat'), false, 'a noun is not a determiner');
+  assert.equal(determinerBelongsTo('', 'dat'), false);
+  assert.equal(determinerBelongsTo('der', 'vocative'), false, 'an unknown case has no forms');
 });
 
 test('a determiner that serves two cases still passes in the right one', () => {
   // "den" is both the Akkusativ singular and the Dativ plural, so "mit den" is
-  // the correct Dativ answer even though the form is not Dativ-exclusive.
-  assert.equal(isPrepositionPhraseInCase('mit den', 'dat'), true);
-  assert.equal(isPrepositionPhraseInCase('mit den', 'akk'), true, 'the same form reads as Akkusativ');
-  assert.equal(isPrepositionPhraseInCase('mit den', 'gen'), false);
+  // the correct Dativ answer even though the form is not Dativ-exclusive. This
+  // is what membership rather than a derived single case buys.
+  assert.equal(determinerBelongsTo('den', 'dat'), true);
+  assert.equal(determinerBelongsTo('den', 'akk'), true, 'the same form reads as Akkusativ');
+  assert.equal(determinerBelongsTo('den', 'gen'), false);
 });
 
-test('a longer phrase is judged by its determiner, not by what follows', () => {
-  assert.equal(isPrepositionPhraseInCase('in die Tür', 'akk'), true);
-  assert.equal(isPrepositionPhraseInCase('zum Bahnhof', 'akk'), false, 'still Dativ, whatever follows');
-  // The determiner must sit directly after the preposition: an intervening
-  // adjective is not a determiner form this service models.
-  assert.equal(isPrepositionPhraseInCase('zum großen Arzt', 'dat'), false);
+test('every case has the determiner forms a picker offers buttons for', () => {
+  // The picker builds its step-two row out of these tables, so a case missing a
+  // whole determiner family would leave blanks the learner cannot answer.
+  const perCase = {
+    der: { nom: 'der', akk: 'den', dat: 'dem', gen: 'des' },
+    die: { nom: 'die', akk: 'die', dat: 'der', gen: 'der' },
+    ein: { nom: 'ein', akk: 'einen', dat: 'einem', gen: 'eines' },
+    mein: { nom: 'mein', akk: 'meinen', dat: 'meinem', gen: 'meines' },
+  };
+
+  for (const [stem, byCase] of Object.entries(perCase)) {
+    for (const caseKey of CASE_KEYS) {
+      assert.ok(
+        determinerBelongsTo(byCase[caseKey], caseKey),
+        `${stem} has no ${caseKey} form the picker could offer`,
+      );
+    }
+  }
 });
 
-test('a phrase built from an unknown preposition belongs to no case', () => {
-  assert.equal(isPrepositionPhraseInCase('hinsichtlich des', 'gen'), true, 'a known genitive preposition');
-  assert.equal(isPrepositionPhraseInCase('zwischens dem', 'dat'), false, 'a preposition we do not model');
-  assert.equal(isPrepositionPhraseInCase('', 'dat'), false);
+test('a preposition word is traced back to its rection group', () => {
+  // The picker asks step one about the preposition standing in the sentence, so
+  // the rection has to be readable from that one word.
+  assert.equal(prepositionRection('bei'), 'dat');
+  assert.equal(prepositionRection('durch'), 'akk');
+  assert.equal(prepositionRection('Wegen'), 'gen', 'a sentence-initial preposition keeps its capital');
+  assert.equal(prepositionRection('auf'), 'two');
+  assert.equal(prepositionRection('der'), null, 'a determiner is not a preposition');
+  assert.equal(prepositionRection('Hund'), null);
+  assert.equal(prepositionRection(''), null);
 });
 
-test('every standard contraction is accepted in the case its article takes', () => {
-  // Guards the round trip the dataset relies on: only "das" is Akkusativ, so
-  // that is the only case those phrases can carry.
-  for (const [fused, { preposition, article }] of Object.entries(PREPOSITION_CONTRACTIONS)) {
-    const caseKey = article === 'das' ? 'akk' : 'dat';
-    assert.equal(isPrepositionPhraseInCase(fused, caseKey), true, fused);
-    assert.equal(isPrepositionPhraseInCase(`${preposition} ${article}`, caseKey), true, fused);
+test('every listed preposition is traceable to a rection group', () => {
+  // Guards the round trip the dataset relies on: the prompt names a preposition
+  // and the lesson names its group, so both must resolve from the same table.
+  for (const [group, list] of Object.entries(PREPOSITION_GROUPS)) {
+    for (const preposition of list) {
+      assert.equal(prepositionRection(preposition), group, preposition);
+    }
+  }
+});
+
+test('every standard contraction is recognised as its preposition', () => {
+  // Only "das" is Akkusativ, so those are the only contractions a movement takes.
+  for (const [fused, { preposition }] of Object.entries(PREPOSITION_CONTRACTIONS)) {
+    assert.ok(prepositionRection(preposition), `${fused} has no group via ${preposition}`);
   }
 });

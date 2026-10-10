@@ -103,6 +103,95 @@ html.dark .blank-input::placeholder { color: rgb(71 85 105); }
     .blank-input--narrow { width: 6rem; }
 }
 
+/* ---- Picker kata -------------------------------------------------------- */
+/* A blank in a two-stage picker is a slot in the sentence, not a field: the
+   learner picks a form, so nothing here is typed or focusable. */
+.pick-slot {
+    display: inline-block;
+    min-width: 3.5rem;
+    padding: 0 0.35rem;
+    margin: 0 0.1rem;
+    border-bottom: 2px solid rgb(203 213 225);
+    color: rgb(67 56 202);
+    font-weight: 700;
+    text-align: center;
+}
+.pick-slot--open { border-bottom-color: rgb(168 85 247); }
+html.dark .pick-slot { border-bottom-color: rgb(51 65 85); color: rgb(165 180 252); }
+html.dark .pick-slot--open { border-bottom-color: rgb(168 85 247); }
+
+/* One picker option. The button element carries its own border, so the
+   correct/wrong palette from `[data-answer-state]` above reaches it unchanged. */
+.pick-option {
+    min-height: 44px;
+    padding: 0.4rem 0.5rem;
+    border: 1px solid rgb(203 213 225);
+    border-radius: 0.6rem;
+    background: rgb(241 245 249);
+    color: rgb(67 56 202);
+    font-weight: 700;
+    font-size: 0.95rem;
+    line-height: 1.2;
+    transition: background-color 120ms ease, border-color 120ms ease;
+}
+.pick-option:hover:not(:disabled) { border-color: rgb(168 85 247); }
+.pick-option[aria-pressed="true"] {
+    border-color: rgb(168 85 247);
+    background: rgb(250 245 255);
+    box-shadow: 0 0 0 1px rgb(168 85 247);
+}
+.pick-option:focus-visible { outline: 2px solid rgb(168 85 247); outline-offset: 2px; }
+.pick-option--compact { min-height: 36px; font-size: 0.85rem; padding: 0.25rem 0.5rem; }
+.pick-option:disabled { opacity: 1; cursor: default; }
+html.dark .pick-option {
+    background: rgb(2 6 23);
+    border-color: rgb(51 65 85);
+    color: rgb(165 180 252);
+}
+html.dark .pick-option[aria-pressed="true"] { background: rgb(59 7 100); }
+@media (min-width: 1024px) {
+    .pick-option { font-size: 1.05rem; padding: 0.55rem 0.75rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .pick-option { transition: none; }
+}
+/* Sentence case, not uppercase: the prompt quotes a German noun and a
+   preposition, and printing "FRAU" or "WÄHREND" as a shout reads as emphasis the
+   lesson never meant. The step number carries the structure instead. */
+.picker-step-label {
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: rgb(71 85 105);
+}
+.picker-step-label--form { margin-top: 1rem; }
+html.dark .picker-step-label { color: rgb(148 163 184); }
+/* One review row per blank: a label, the case cell, a label, the form cell.
+   Two columns so a label always sits beside its own cell, whatever the cells
+   wrap to: a label stranded on the far side of a wide cell reads as a heading
+   for the next blank rather than for the value above it. */
+.pick-review-row {
+    display: grid;
+    grid-template-columns: auto auto;
+    justify-content: start;
+    align-items: center;
+    gap: 0.4rem 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid rgb(226 232 240);
+    border-radius: 0.75rem;
+    background: rgb(248 250 252);
+}
+.pick-review-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: rgb(100 116 139);
+}
+.pick-review-cell { display: inline-flex; flex-wrap: wrap; gap: 0.35rem; }
+html.dark .pick-review-label { color: rgb(148 163 184); }
+html.dark .pick-review-row { background: rgb(15 23 42); border-color: rgb(30 41 59); }
+
 /* ---- Verdict panel ------------------------------------------------------ */
 
 .verdict {

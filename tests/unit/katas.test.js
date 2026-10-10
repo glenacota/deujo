@@ -16,6 +16,7 @@ const { PREPOSITION_CONTRACTIONS, PREPOSITION_GROUPS, PERSONS, POSSESSIVE_ENDING
 // The preposition kata grades straight through the shared matcher: both
 // spellings of a contractable phrase pass whichever one the dataset stored.
 const { matchAnswer } = await import('../../assets/js/services/answer-matcher.js');
+const { prepositionBefore } = await import('../../assets/js/katas/factories/trigger.js');
 const { escapeHtml } = await import('../../assets/js/services/escape-html.js');
 
 // One container for all six, exactly as app.js does at boot.
@@ -147,28 +148,34 @@ test('validateNounDataset accepts a plural with a second correct spelling', () =
   assert.throws(() => validateNounDataset([{ ...goodNoun, p: { a: 'Tage', alt: 'Tagen' } }]), /entry 0/);
 });
 
-const goodCase = { id: 'c_1', w: 'der Mann', m: 'the man', s: '{0} Mann', b: [{ a: 'der', c: 'nom' }] };
+const goodCase = { id: 'c_1', w: 'Der Mann liest.', m: 'the man reads', s: '{0} Mann liest.', b: [{ a: 'Der', c: 'nom' }] };
 
 test('validateCaseDataset requires ordered placeholders for every blank', () => {
   assert.doesNotThrow(() => validateCaseDataset([goodCase]));
-  assert.throws(() => validateCaseDataset([{ ...goodCase, s: 'Mann' }]), /entry 0/, 'missing placeholder');
-  assert.throws(() => validateCaseDataset([{ ...goodCase, s: '{0} und {1}' }]), /entry 0/, 'placeholder count mismatch');
-  assert.throws(() => validateCaseDataset([{ ...goodCase, s: '{1} Mann' }]), /entry 0/, 'out-of-order index');
+  assert.throws(() => validateCaseDataset([{ ...goodCase, s: 'Mann liest.' }]), /entry 0/, 'missing placeholder');
+  assert.throws(() => validateCaseDataset([{ ...goodCase, s: '{0} und {1} liest.' }]), /entry 0/, 'placeholder count mismatch');
+  assert.throws(() => validateCaseDataset([{ ...goodCase, s: '{1} liest.' }]), /entry 0/, 'out-of-order index');
   assert.throws(() => validateCaseDataset([{ ...goodCase, s: '{0} und {0}', b: [goodCase.b[0], goodCase.b[0]] }]), /entry 0/, 'repeated index');
   assert.throws(() => validateCaseDataset([{ ...goodCase, s: '{1} und {0}', b: [goodCase.b[0], goodCase.b[0]] }]), /entry 0/, 'reversed indices');
   // No placeholders AND no blanks, so the placeholder-count check cannot fire.
   // This isolates the "blanks must be a non-empty array" rule.
-  assert.throws(() => validateCaseDataset([{ ...goodCase, s: 'der Mann', b: [] }]), /entry 0/, 'no blanks');
-  assert.throws(() => validateCaseDataset([{ ...goodCase, b: [{ a: 'der', c: 'vocative' }] }]), /entry 0/);
+  assert.throws(() => validateCaseDataset([{ ...goodCase, s: 'Der Mann liest.', b: [] }]), /entry 0/, 'no blanks');
+  assert.throws(() => validateCaseDataset([{ ...goodCase, b: [{ a: 'Der', c: 'vocative' }] }]), /entry 0/);
 });
 
-test('validateCaseDataset accepts an alt list and rejects a malformed one', () => {
-  assert.doesNotThrow(() => validateCaseDataset([{ ...goodCase, b: [{ a: 'der', c: 'nom', alt: ['der Mann'] }] }]));
-  assert.throws(() => validateCaseDataset([{ ...goodCase, b: [{ a: 'der', c: 'nom', alt: [''] }] }]), /entry 0/);
-  assert.throws(() => validateCaseDataset([{ ...goodCase, b: [{ a: 'der', c: 'nom', alt: 'der Mann' }] }]), /entry 0/);
+// A picker can only offer a form the case really takes, so an answer the
+// sentence could never carry has to fail here rather than as a missing button.
+test('validateCaseDataset rejects an answer the claimed case cannot take', () => {
+  assert.throws(() => validateCaseDataset([{ ...goodCase, b: [{ a: 'den', c: 'nom' }] }]), /entry 0/, 'a wrong case');
+  assert.throws(() => validateCaseDataset([{ ...goodCase, b: [{ a: 'dem', c: 'nom' }] }]), /entry 0/, 'a form from another case');
+  assert.throws(() => validateCaseDataset([{ ...goodCase, b: [{ a: 'Mann', c: 'nom' }] }]), /entry 0/, 'a noun is not a determiner');
+  // A Nominativ the case kata does allow, so the rule is not "reject every nom".
+  assert.doesNotThrow(() => validateCaseDataset([{ ...goodCase, b: [{ a: 'ein', c: 'nom' }] }]));
+  assert.doesNotThrow(() => validateCaseDataset([{ ...goodCase, b: [{ a: 'mein', c: 'nom' }] }]));
 });
 
-const goodPreposition = { id: 'p_1', w: 'Ich warte beim Arzt.', m: 'I am waiting at the doctor.', s: 'Ich warte {0} Arzt.', b: [{ a: 'beim', c: 'dat' }] };
+// The preposition is in the sentence, so the blank holds the article on its own.
+const goodPreposition = { id: 'p_1', w: 'Ich warte bei dem Arzt.', m: 'I am waiting at the doctor.', s: 'Ich warte bei {0} Arzt.', b: [{ a: 'dem', c: 'dat' }] };
 
 /** Puts the answers back into a blanked sentence, so it can be compared to `w`. */
 const refill = (item) => {
@@ -181,8 +188,8 @@ const refill = (item) => {
 
 // `w` is the finished sentence and `s` the blanked one, so filling the blanks
 // has to reproduce `w` exactly. A sentence-initial answer is the easy thing to
-// get wrong: German capitalises it, and a lowercase preposition there is
-// rejected as the correction shown to the learner.
+// get wrong: German capitalises it, and a lowercase article there is rejected as
+// the correction shown to the learner.
 for (const id of ['cases', 'prepositions']) {
   test(`the shipped ${id} dataset keeps its sentences and answers consistent`, async () => {
     const dataset = await loadDataset(katas.find((k) => k.id === id).datasetUrl);
@@ -203,29 +210,62 @@ for (const id of ['cases', 'prepositions']) {
   });
 }
 
-test('validatePrepositionDataset requires a real preposition plus a case-correct determiner', () => {
+// The picker asks step one about the preposition standing in the sentence, so
+// every preposition entry has to actually have one in front of its blank.
+test('every shipped preposition entry puts a known preposition in front of each blank', async () => {
+  const dataset = await loadDataset(katas.find((k) => k.id === 'prepositions').datasetUrl);
+
+  for (const item of dataset) {
+    for (const index of item.b.map((_, i) => i)) {
+      assert.ok(
+        prepositionBefore(item.s, index),
+        `entry ${item.id} blank ${index} has no preposition to ask step one about`,
+      );
+    }
+  }
+});
+
+// Step one offers no Nominativ for the preposition kata: a preposition governs no
+// Nominativ, so a button that could never be right would only teach a wrong one.
+test('the preposition kata offers no Nominativ, and the shipped dataset claims none', async () => {
+  const dataset = await loadDataset(katas.find((k) => k.id === 'prepositions').datasetUrl);
+
+  for (const item of dataset) {
+    for (const blank of item.b) {
+      assert.notEqual(blank.c, 'nom', `entry ${item.id} claims a Nominativ a preposition cannot govern`);
+    }
+  }
+});
+
+test('validatePrepositionDataset requires a determiner the claimed case takes', () => {
   assert.doesNotThrow(() => validatePrepositionDataset([goodPreposition]));
   assert.throws(() => validatePrepositionDataset([]), /non-empty array/);
   // The determiner must belong to the case the entry declares.
-  assert.throws(() => validatePrepositionDataset([{ ...goodPreposition, b: [{ a: 'beim', c: 'akk' }] }]), /entry 0/);
-  assert.throws(() => validatePrepositionDataset([{ ...goodPreposition, b: [{ a: 'beim', c: 'nom' }] }]), /entry 0/);
-  // A bare determiner is not an answer, and a noun is not a preposition.
-  assert.throws(() => validatePrepositionDataset([{ ...goodPreposition, b: [{ a: 'dem', c: 'dat' }] }]), /entry 0/);
+  assert.throws(() => validatePrepositionDataset([{ ...goodPreposition, b: [{ a: 'einen', c: 'dat' }] }]), /entry 0/);
+  assert.throws(() => validatePrepositionDataset([{ ...goodPreposition, b: [{ a: 'dem', c: 'akk' }] }]), /entry 0/);
+  assert.throws(() => validatePrepositionDataset([{ ...goodPreposition, b: [{ a: 'dem', c: 'nom' }] }]), /entry 0/);
+  // "den" is the Dativ of the plural as well as the Akkusativ of the singular,
+  // so membership rather than a derived single case keeps that legitimate
+  // ambiguity from failing a correct entry.
+  assert.doesNotThrow(() => validatePrepositionDataset([{ ...goodPreposition, b: [{ a: 'den', c: 'dat' }] }]));
+  // A noun is not a determiner, so the picker would have no button for it.
   assert.throws(() => validatePrepositionDataset([{ ...goodPreposition, b: [{ a: 'Hause', c: 'dat' }] }]), /entry 0/);
-  // The written-out contraction is equally valid.
-  assert.doesNotThrow(() => validatePrepositionDataset([{ ...goodPreposition, b: [{ a: 'bei dem', c: 'dat' }] }]));
-  assert.throws(() => validatePrepositionDataset([{ ...goodPreposition, s: 'Ich warte beim Arzt.', b: [] }]), /entry 0/);
-  assert.throws(() => validatePrepositionDataset([{ ...goodPreposition, s: '{0} Arzt {1}' }]), /entry 0/);
+  assert.throws(() => validatePrepositionDataset([{ ...goodPreposition, s: 'Ich warte bei dem Arzt.', b: [] }]), /entry 0/);
+  assert.throws(() => validatePrepositionDataset([{ ...goodPreposition, s: 'Ich warte bei {0} Arzt {1}' }]), /entry 0/);
   // A repeated placeholder would send both blanks to the same answer.
-  assert.throws(() => validatePrepositionDataset([{ ...goodPreposition, s: '{0} Arzt und {0}' }]), /entry 0/);
+  assert.throws(() => validatePrepositionDataset([{ ...goodPreposition, s: 'Ich warte bei {0} Arzt und {0} Bahnhof.' }]), /entry 0/);
   // ...and a placeholder with no matching blank must be rejected too.
   assert.throws(
-    () => validatePrepositionDataset([{ ...goodPreposition, s: '{0} Arzt und {1} Bahnhof.' }]),
+    () => validatePrepositionDataset([{ ...goodPreposition, s: 'Ich warte bei {0} Arzt und {1} Bahnhof.' }]),
     /entry 0/,
     'two placeholders but only one blank',
   );
   assert.doesNotThrow(
-    () => validatePrepositionDataset([{ ...goodPreposition, s: '{0} Arzt und {1} Bahnhof.', b: [goodPreposition.b[0], { a: 'zum', c: 'dat' }] }]),
+    () => validatePrepositionDataset([{
+      ...goodPreposition,
+      s: 'Ich warte bei {0} Arzt und gehe zu {1} Bahnhof.',
+      b: [goodPreposition.b[0], { a: 'dem', c: 'dat' }],
+    }]),
     'two blanks numbered 0 and 1 are valid',
   );
 });
@@ -270,28 +310,23 @@ test('matchAnswer accepts both spellings whichever one the dataset stored', () =
   }
 });
 
-test('matchAnswer honours an explicit alt list, and a bad one fails validation', () => {
+// `alt` belongs to the matcher, not to a picker blank: the two picker katas
+// offer buttons, so there is nothing for a second spelling to widen. The verb
+// katas still grade typed answers and still use it.
+test('matchAnswer honours an explicit alt list without licensing a wrong case', () => {
   const blank = { a: 'in die', c: 'akk', alt: ['in die Tür'] };
   assert.equal(matchAnswer('in die Tür', blank).ok, true);
   assert.equal(matchAnswer('ins', blank).ok, false, 'an alt list must not license a wrong case');
   assert.deepEqual(matchAnswer('in die', blank).accepted, ['in die', 'in die tür']);
+});
 
-  // The alt list itself is held to the same rules as the main answer.
-  assert.doesNotThrow(() => validatePrepositionDataset([{ ...goodPreposition, b: [{ a: 'in die', c: 'akk', alt: ['in die Tür'] }] }]));
+// The picker cannot show a second spelling as a button, so a shipped blank with
+// one is a silent dead end rather than a valid alternative.
+test('the picker katas reject a blank that still carries an alt list', () => {
   assert.throws(
-    () => validatePrepositionDataset([{ ...goodPreposition, b: [{ a: 'in die', c: 'akk', alt: ['in dem'] }] }]),
+    () => validatePrepositionDataset([{ ...goodPreposition, b: [{ a: 'dem', c: 'dat', alt: ['dem Arzt'] }] }]),
     /entry 0/,
-    'an alt in the wrong case must be rejected',
-  );
-  assert.throws(
-    () => validatePrepositionDataset([{ ...goodPreposition, b: [{ a: 'in die', c: 'akk', alt: [''] }] }]),
-    /entry 0/,
-    'an empty alt must be rejected',
-  );
-  assert.throws(
-    () => validatePrepositionDataset([{ ...goodPreposition, b: [{ a: 'in die', c: 'akk', alt: 'in der' }] }]),
-    /entry 0/,
-    'a non-array alt must be rejected',
+    'an alt cannot be offered as a button',
   );
 });
 

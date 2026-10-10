@@ -32,10 +32,25 @@ class StubElement {
     this.classList = new StubClassList();
     this.dataset = {};
     this.attributes = {};
-    this.textContent = '';
+    this.#text = '';
     this.value = '';
     this.disabled = false;
     this.listeners = {};
+  }
+
+  #text;
+
+  /**
+   * Writing textContent replaces the element's children, as the real DOM does.
+   * Renderers rely on that to clear a row before rebuilding it, so a stub that
+   * only stored the string would let the old buttons pile up and every later
+   * query would find both rows.
+   */
+  get textContent() { return this.#text; }
+  set textContent(value) {
+    this.children.forEach((child) => { child.parentElement = null; });
+    this.children = [];
+    this.#text = String(value ?? '');
   }
 
   get className() { return [...this.classList].join(' '); }
@@ -97,23 +112,29 @@ class StubElement {
 
   descendants() { return this.children.flatMap((child) => [child, ...child.descendants()]); }
 
-  /** Handles the tag lists, single classes, and `.class > [attr]` shapes used here. */
+  /**
+   * Handles the tag lists, single classes, `[attr="x"]` and `A > B` shapes used
+   * here.
+   *
+   * `A > B` is a direct-child relation, resolved the way a browser resolves it:
+   * B is looked for among the children of every element matching A, and the
+   * scope element itself counts as a candidate for A. That last part matters —
+   * `wrapper.querySelector('.answer-field > [data-answer-state]')` really does
+   * match the wrapper's own control in a browser, and answer-marking.js relies on
+   * it to find the control it has to unwrap.
+   */
   querySelectorAll(selector) {
-    const [combinator, rest] = selector.trim().includes('>')
-      ? selector.split('>').map((part) => part.trim())
-      : [null, selector.trim()];
-    // An unsupported shape must fail loudly rather than quietly match nothing.
-    if (combinator && !combinator.startsWith('.')) {
-      throw new Error(`StubElement.querySelectorAll only handles a leading class before ">", got "${combinator}"`);
-    }
-    const scope = combinator ? this.children : this.descendants();
-    return scope.filter((el) => rest.split(',').map((part) => part.trim()).some((part) => {
-      if (part.startsWith('.')) return el.classList.has(part.slice(1));
-      // `[data-answer-state]` is a presence test; `[data-role="x"]` is a match.
-      if (part === '[data-answer-state]') return 'answerState' in el.dataset;
-      if (part.startsWith('[')) return el.dataset.role === part.match(/="([^"]+)"/)?.[1];
-      return el.matchesTag(part);
-    }));
+    return selector.split(',')
+      .map((part) => part.trim())
+      .filter(Boolean)
+      .flatMap((part) => {
+        const [ancestor, descendant] = part.split('>').map((piece) => piece?.trim());
+
+        if (!descendant) return this.descendants().filter((el) => matchesSimple(el, ancestor));
+
+        const candidates = [...this.descendants(), this].filter((el) => matchesSimple(el, ancestor));
+        return candidates.flatMap((el) => el.children.filter((child) => matchesSimple(child, descendant)));
+      });
   }
 
   querySelector(selector) { return this.querySelectorAll(selector)[0] ?? null; }
@@ -122,18 +143,53 @@ class StubElement {
 class StubFragment extends StubElement {}
 
 /**
- * A template only has to hand back the one `[data-role="section"]` element its
- * markup contains, so the parser tracks only that tag and its nesting. Anything
- * else is skipped, which is enough for a kata to mount and find its own nodes.
+ * One simple selector: a tag name, a single class, or one `[data-*]` attribute.
+ * An unsupported shape must fail loudly rather than quietly match nothing.
+ */
+function matchesSimple(element, selector) {
+  const parts = selector.split(/\s+/).filter(Boolean);
+  if (!parts.length) return false;
+
+  return parts.every((part) => {
+    if (part.startsWith('.')) return element.classList.has(part.slice(1));
+    if (part === '*') return true;
+    // `[data-answer-state]` is a presence test; `[data-role="x"]` is a match.
+    if (part.startsWith('[')) {
+      const name = part.slice(1, -1);
+      const [key, value] = name.split('=');
+      const camel = key.startsWith('data-')
+        ? key.slice(5).replace(/-(\w)/g, (_, letter) => letter.toUpperCase())
+        : key;
+      if (value === undefined) return camel in element.dataset || element.attributes[camel] !== undefined;
+      return element.dataset[camel] === value.replace(/^"|"$/g, '');
+    }
+    return element.matchesTag(part);
+  });
+}
+
+/**
+ * A template only has to hand back the `[data-role]` elements its markup
+ * contains, at the right nesting, so the parser tracks tags, nesting and
+ * closing. Anything else is skipped, which is enough for a kata to mount and
+ * find its own nodes.
  */
 class StubTemplate extends StubElement {
   set innerHTML(html) {
-    const open = /<([a-zA-Z][\w-]*)(\s[^>]*?)?>/g;
+    const TAG = /<(\/)?([a-zA-Z][\w-]*)(\s[^>]*?)?(\/)?>/g;
     const stack = [];
     let match;
-    while ((match = open.exec(html)) !== null) {
-      const [tag, name, attrs = ''] = match;
-      const selfClosing = tag.endsWith('/>');
+    while ((match = TAG.exec(html)) !== null) {
+      const [, closing, name, attrs = '', selfClosing] = match;
+
+      if (closing) {
+        // Pop to the matching open tag, so siblings are siblings again. An
+        // unbalanced document must not leave the stack pinned open, or every
+        // later element would land inside the wrong parent.
+        const depth = stack.map((el) => el.tagName).lastIndexOf(name.toUpperCase());
+        if (depth !== -1) stack.length = depth;
+        continue;
+      }
+
       const element = new StubElement(name);
       for (const attr of attrs.matchAll(/([\w-]+)="([^"]*)"/g)) {
         // `data-*` attributes land in `dataset`, camelCased, as in the real DOM.

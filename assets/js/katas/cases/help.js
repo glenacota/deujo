@@ -154,8 +154,8 @@ function roleHelp() {
 export function renderCaseHelp() {
     return [
         banner(
-            'The noun is already in the sentence',
-            'Every blank here is an article, a possessive or a numeral, and the noun it belongs to is still there to read. The gender is never the question. Only the case is.',
+            'Two steps, and the noun is already in the sentence',
+            'Every blank here is an article, a possessive or a numeral, and the noun it belongs to is still there to read. The gender is never the question. Only the case is. Name the case first, then pick the form it calls for.',
         ),
         roleHelp(),
     ].join('');

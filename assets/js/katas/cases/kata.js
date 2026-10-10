@@ -1,44 +1,46 @@
 // katas/cases/kata.js
-// Case declension: fill in the article each blank needs, so the case is part of
-// the answer. Mounting, rendering and grading are the shared sentence path; only
-// what makes an answer legal and what a mistake teaches are declared here.
+// Case declension: name the case the blank takes, then pick the determiner that case and gender produce.
 
 import { CASE_LABELS } from '../../services/grammar.js';
-import { createSentenceKata, validateSentenceDataset } from '../factories/sentence-kata.js';
+import { createPickerKata, validatePickerDataset } from '../factories/picker-kata.js';
+import { pickerTemplate } from '../factories/picker-template.js';
+import { nounAfter } from '../factories/trigger.js';
 import { casesManifest } from './manifest.js';
 import { renderCaseHelp } from './help.js';
 import { renderCaseLesson } from './lesson.js';
-import { casesTemplate } from './template.js';
 
-const VALID_CASE_NAMES = Object.keys(CASE_LABELS);
+const CASES = Object.keys(CASE_LABELS);
 
-/** A blank is usable when it names one of the four cases. */
-const isUsableAnswer = (blank) => VALID_CASE_NAMES.includes(blank?.c);
+const describeProblem = (index) =>
+    `entry ${index} has an invalid sentence, translation, or determiner answers`;
 
-const describeProblem = (index) => `entry ${index} has invalid sentence, translation, or blank answers`;
+/**
+ * Step one, asked about the noun standing behind the blank.
+ *
+ * @param item the dataset entry, for its `s`
+ * @param blank the blank being answered
+ * @param index which blank this is, so the right noun is found
+ */
+function askCase(item, blank, index) {
+    const noun = nounAfter(item?.s, index);
+    return noun
+        ? `Step 1 · which case does "${noun}" take here?`
+        : 'Step 1 · which case does this blank take?';
+}
 
 export function validateCaseDataset(dataset) {
-    validateSentenceDataset(dataset, isUsableAnswer, describeProblem);
+    return validatePickerDataset(dataset, describeProblem, CASES);
 }
 
 /** Mounts the case kata's section, so `el` is populated for the caller. */
-export const createCaseKata = (container) => createSentenceKata({
+export const createCaseKata = (container) => createPickerKata({
     manifest: casesManifest,
-    template: casesTemplate,
+    template: pickerTemplate('Try it — two steps'),
     // Answer-blind: the body takes no item, so it cannot print the sentence on
     // screen or the case the blank expects.
     help: renderCaseHelp,
-    input: {
-        maxLength: 20,
-        size: 6,
-        className: 'blank-input blank-input--inline blank-input--narrow',
-    },
-    // The learner may type the article with the noun that follows it
-    // ("der Mann"), which is the same answer, not a different one.
-    matchOptions: { allowExtraWords: true },
-    // The dataset spelling, not the whole answer object, goes on show.
-    expectedFor: (blank, accepted) => accepted[0] ?? blank.a,
+    prompt: askCase,
+    cases: CASES,
     lessonFor: renderCaseLesson,
-    isUsableAnswer,
     describeProblem,
 })(container);

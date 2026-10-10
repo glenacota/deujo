@@ -7,7 +7,6 @@ import assert from 'node:assert/strict';
 
 import {
   acceptedAnswers,
-  formatAccepted,
   matchAnswer,
 } from '../../assets/js/services/answer-matcher.js';
 
@@ -68,12 +67,4 @@ test('a malformed alt is ignored rather than crashing the grading', () => {
 
 test('the accepted list is deduplicated, with the dataset spelling first', () => {
   assert.deepEqual(acceptedAnswers({ a: 'zum', alt: ['zum', 'zu dem'] }), ['zum', 'zu dem']);
-});
-
-test('formatAccepted stays short enough for a badge beside an input', () => {
-  assert.equal(formatAccepted(['zum', 'zu dem']), 'zum / zu dem');
-  assert.equal(formatAccepted([]), '');
-  assert.equal(formatAccepted(['a', 'b', 'c']), 'a / b / c');
-  assert.equal(formatAccepted(['a', 'b', 'c', 'd', 'e']), 'a / b / c / +2');
-  assert.equal(formatAccepted(null), '');
 });

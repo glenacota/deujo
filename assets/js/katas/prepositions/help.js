@@ -1,18 +1,6 @@
 // katas/prepositions/help.js
 // The preposition kata's help modal, as pure markup. Pure string work, so it
 // stays unit-testable and never touches the DOM.
-//
-// Answer-blind: the body takes no item, so it cannot print the sentence on screen
-// or the phrase the blank expects. It will also not quote a shipped sentence, nor
-// a determiner with the noun the dataset puts behind it, so no example here can
-// coincide with the item on screen.
-//
-// What this kata actually asks: the answer is the preposition *and* the article it
-// governs, so the case is part of the answer. Three of the four rection groups
-// come straight from the `PREPOSITION_GROUPS` table, which is generated into the
-// second block. The real work is the nine two-way prepositions, and the second
-// real trap is that a Genitiv preposition almost always arrives with a noun in
-// `-s` or `-es`.
 
 import { escapeHtml } from '../../services/escape-html.js';
 import { PREPOSITION_CONTRACTIONS, PREPOSITION_GROUP_LABELS, PREPOSITION_GROUPS } from '../../services/grammar.js';
@@ -77,14 +65,14 @@ function contractionList() {
                 <span>${escapeHtml(form)} = ${escapeHtml(`${preposition} ${article}`)}</span>
             `).join('')}
         </div>
-        <p class="mt-3 text-xs text-slate-500 dark:text-slate-400">Both spellings count as correct, so "zum" and "zu dem" are equally right. Only a definite article fuses; with <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">ein</code> the phrase stays written out, as in "mit einer".</p>`;
+        <p class="mt-3 text-xs text-slate-500 dark:text-slate-400">Written in one word in running German, and this kata's sentences spell them out, so you can see the article. Only a definite article fuses; with <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">ein</code> the phrase stays written out, as in "mit einer".</p>`;
 }
 
 export function renderPrepositionHelp() {
     return [
         banner(
             'The preposition decides the case for you',
-            'Almost none of this is a choice. Learn each group and the article follows. Only the nine two-way prepositions need real thought: Dativ for a place, Akkusativ for a movement towards it.',
+            'Two steps: name the case this preposition governs, then pick the article that case takes. Almost none of the case is a choice. Learn each group and the article follows. Only the nine two-way prepositions need real thought: Dativ for a place, Akkusativ for a movement towards it.',
         ),
         disclosure('Where, or towards where', `
             <p class="px-1 text-slate-700 dark:text-slate-300">These nine take both cases, and they are the only part of the kata you cannot look up. Read the verb, not the preposition.</p>

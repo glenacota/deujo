@@ -1,50 +1,59 @@
 // katas/prepositions/kata.js
-// Prepositions: fill in the preposition together with the article it governs,
-// so the case is part of the answer. Mounting, rendering and grading are the
-// shared sentence path; only what makes an answer legal and what a mistake
-// teaches are declared here.
+// Prepositions: name the case the preposition governs, then pick the article that
+// case takes.
 
-import {
-    CASE_LABELS,
-    isPrepositionPhraseInCase,
-    normalizePhrase,
-} from '../../services/grammar.js';
-import { createSentenceKata, validateSentenceDataset } from '../factories/sentence-kata.js';
+import { CASE_LABELS, prepositionRection } from '../../services/grammar.js';
+import { createPickerKata, validatePickerDataset } from '../factories/picker-kata.js';
+import { pickerTemplate } from '../factories/picker-template.js';
+import { nounAfter, prepositionBefore } from '../factories/trigger.js';
 import { prepositionsManifest } from './manifest.js';
 import { renderPrepositionHelp } from './help.js';
 import { renderPrepositionLesson } from './lesson.js';
-import { prepositionsTemplate } from './template.js';
 
-// A preposition governs no Nominativ, so an answer may never claim it.
-const VALID_CASE_NAMES = Object.keys(CASE_LABELS).filter((c) => c !== 'nom');
+// A preposition governs no Nominativ, so step one offers no Nominativ: a button
+// that could never be right is a button that only teaches a wrong answer.
+const CASES = Object.keys(CASE_LABELS).filter((caseKey) => caseKey !== 'nom');
+
+const describeProblem = (index) =>
+    `entry ${index} has an invalid sentence, translation, or determiner answers`;
 
 /**
- * A phrase is a usable answer only if it starts with a real preposition whose
- * determiner belongs to the case the entry claims. Whether that phrase is
- * correct German is the grammar service's judgement, not this kata's.
+ * Step one, keyed to the preposition already sitting in the sentence.
+ *
+ * @param item the dataset entry, for its `s`
+ * @param blank the blank being answered, for its position only
+ * @param index which blank this is, so the right preposition is found
  */
-const isUsableAnswer = ({ a, c } = {}) =>
-    VALID_CASE_NAMES.includes(c) && isPrepositionPhraseInCase(normalizePhrase(a), c);
+function askCase(item, blank, index) {
+    const preposition = prepositionBefore(item?.s, index);
 
-const describeProblem = (index) => `entry ${index} has an invalid sentence, translation, or preposition answers`;
+    if (prepositionRection(preposition ?? '') === 'two') {
+        return `Step 1 · "${preposition}" takes two cases. Which one here?`;
+    }
+    if (preposition) {
+        return `Step 1 · "${preposition}" always takes which case?`;
+    }
+
+    // No preposition governs this blank, so there is no table to name: ask about
+    // the noun instead, which is the case kata's question and is just as
+    // answerable from German.
+    const noun = nounAfter(item?.s, index);
+    return noun
+        ? `Step 1 · which case does "${noun}" take here?`
+        : 'Step 1 · which case does this blank take?';
+}
 
 export function validatePrepositionDataset(dataset) {
-    validateSentenceDataset(dataset, isUsableAnswer, describeProblem);
+    return validatePickerDataset(dataset, describeProblem, CASES);
 }
 
 /** Mounts the preposition kata's section, so `el` is populated for the caller. */
-export const createPrepositionKata = (container) => createSentenceKata({
+export const createPrepositionKata = (container) => createPickerKata({
     manifest: prepositionsManifest,
-    template: prepositionsTemplate,
+    template: pickerTemplate('Try it — two steps'),
     help: renderPrepositionHelp,
-    input: {
-        // "hinsichtlich des" is the longest answer, so allow for it.
-        maxLength: 18,
-        size: 12,
-        placeholder: 'e.g. zum',
-        className: 'blank-input blank-input--inline',
-    },
-    lessonFor: (miss) => renderPrepositionLesson({ expected: miss?.expected }),
-    isUsableAnswer,
+    prompt: askCase,
+    cases: CASES,
+    lessonFor: renderPrepositionLesson,
     describeProblem,
 })(container);

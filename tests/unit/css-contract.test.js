@@ -158,6 +158,30 @@ test('the settings panel is a bottom sheet on a phone and 44px everywhere', () =
   assert.equal(app.get('.settings-row')?.['min-height'], '44px');
 });
 
+// A picker option is a <button>, so the correct/wrong palette above reaches it
+// through the same `[data-answer-state]` rules. What app.css owns is the geometry:
+// a tap target a thumb can hit, and a pressed state a learner can see.
+test('the picker paints a 44px tap target, a pressed state, and a visible open slot', () => {
+    const option = app.get('.pick-option') ?? {};
+    assert.equal(option['min-height'], '44px', 'a phone tap target');
+    // Without a pressed background the chosen case is invisible, and step one
+    // reads as unanswered while the learner is halfway through it.
+    assert.ok(app.get('.pick-option[aria-pressed="true"]'), 'the pressed state has no rule');
+
+  // The open slot is the one blank being answered, so it needs a colour of its
+  // own rather than inheriting the closed one.
+  assert.ok(app.get('.pick-slot--open')?.['border-bottom-color'], 'the open blank has no underline');
+  assert.ok(app.get('html.dark .pick-slot--open'), 'the open blank has no dark-mode rule');
+});
+
+test('the picker stands still when the learner asked for less motion', () => {
+  assert.match(
+    app.get('@media (prefers-reduced-motion: reduce) .pick-option')?.transition ?? '',
+    /none/,
+    'the option transition must switch off',
+  );
+});
+
 test('the shared kata input class carries the values the katas depend on', () => {
   // P5 consolidated nine copies of this into app.css; if a declaration is dropped
   // here the blanks silently lose their size or their focus ring.

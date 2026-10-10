@@ -41,12 +41,25 @@ no backend, no login.
   against that kata's shipped JSON (see `tests/unit/katas.test.js`). A new
   kata or dataset without this is incomplete.
 - A fill-in-the-blank kata (dataset sentences using `{n}` placeholders) builds
-  on `katas/factories/sentence-kata.js` and `sentenceTemplate()`, and declares
-  only what differs: `isUsableAnswer`, `describeProblem`, `lessonFor`, `input`.
+  on `katas/factories/picker-kata.js` and `pickerTemplate()`, and declares only
+  what differs: `cases` (which cases step one offers), `prompt` (what it asks),
+  `lessonFor`, `describeProblem`.
   Do not copy a grader or a section template out of `cases/` or
   `prepositions/` — that duplication is what the factory exists to remove, and
-  `tests/unit/sentence-kata.test.js` covers the shared path. Note `lessonFor`
-  runs on every verdict, so read `miss?.expected`, not `miss.expected`.
+  `tests/unit/picker-kata.test.js` covers the shared path. Note `lessonFor`
+  runs on every verdict, so read `miss?.given`, not `miss.given`.
+- A picker grades its two stages **separately**, and that is the point: a learner
+  who names Dativ and then reaches for "seinen" has two separate mistakes. So
+  `check()` compares the picked `caseKey` against `blank.c` *and* the picked form
+  against `blank.a`; never collapse the two into one string match. `blank.c` is
+  off limits to `prompt` too, or step one would print the answer it asks for.
+- A picker blank holds a **determiner**, never a whole prepositional phrase: the
+  preposition sits in the sentence where the learner can read it, which is what
+  makes step one answerable from German alone. `determinerOptions()` in
+  `services/` generates the step-two buttons from the grammar tables, so no
+  distractor is hand-authored per item — and `validatePickerDataset` refuses any
+  answer the picker could not put on a button: a form from the wrong case, a
+  noun, or an `alt` list, which widens a typed answer and has no button to widen.
 - A kata's help body lives in `<id>/help.js` as a pure function and is built from
   the helpers in `katas/help-kit.js`. Help must be **answer-blind**: it takes no
   item, or ignores it, so the modal cannot print the answer to the question on

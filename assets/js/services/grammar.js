@@ -2,6 +2,9 @@
 
 export const CASE_LABELS = { nom: 'Nominativ', akk: 'Akkusativ', dat: 'Dativ', gen: 'Genitiv' };
 
+/** The four case keys, in the order every table in this file lists them. */
+export const CASE_KEYS = Object.keys(CASE_LABELS);
+
 export const DEFINITE = {
     der: { nom: 'der', akk: 'den', dat: 'dem', gen: 'des' },
     die: { nom: 'die', akk: 'die', dat: 'der', gen: 'der' },
@@ -106,7 +109,7 @@ const CONTRACTED_FORMS = Object.fromEntries(
 );
 
 /** The five possessive stems that take an ending; `euer` is listed apart below. */
-const POSSESSIVE_STEMS = ['mein', 'dein', 'sein', 'ihr', 'unser'];
+export const POSSESSIVE_STEMS = ['mein', 'dein', 'sein', 'ihr', 'unser'];
 
 /**
  * What a possessive stem takes, per case. Gendered, because that is where the
@@ -126,48 +129,52 @@ export const POSSESSIVE_ENDINGS = {
  * listed rather than derived, and the short spellings Duden also allows (euerm,
  * eurer) come with them.
  */
-const POSSESSIVE_EUER = {
+export const POSSESSIVE_EUER = {
+    nom: ['euer', 'eure'],
     akk: ['euer', 'eure', 'euren'],
     dat: ['eurem', 'euerm', 'euerem', 'euerer', 'euren'],
     gen: ['eures', 'euerer', 'eurer'],
 };
 
-/** Every possessive form a case allows, deduplicated: "meine" serves three genders. */
+/**
+ * Every possessive form a case allows, deduplicated: "meine" serves three
+ * genders. The Nominativ is here as well as the object cases, because a
+ * possessive introduces the subject as often as anything else ("Mein Freund
+ * kommt") and a determiner table that cannot name it cannot check it.
+ */
 const POSSESSIVE = Object.fromEntries(
-    Object.keys(CASE_LABELS)
-        .filter((caseKey) => caseKey !== 'nom')
-        .map((caseKey) => [
-            caseKey,
-            [...new Set([
-                ...POSSESSIVE_STEMS.flatMap((stem) =>
-                    Object.values(POSSESSIVE_ENDINGS).map((byCase) => stem + byCase[caseKey])),
-                ...POSSESSIVE_EUER[caseKey],
-            ])],
-        ]),
+    CASE_KEYS.map((caseKey) => [
+        caseKey,
+        [...new Set([
+            ...POSSESSIVE_STEMS.flatMap((stem) =>
+                Object.values(POSSESSIVE_ENDINGS).map((byCase) => stem + byCase[caseKey])),
+            ...POSSESSIVE_EUER[caseKey],
+        ])],
+    ]),
 );
 
 /** Personal pronouns in the object cases ("ohne mich", "mit mir"). */
-const PERSONAL = {
+export const PERSONAL = {
     akk: ['mich', 'dich', 'ihn', 'sie', 'es', 'uns', 'euch'],
     dat: ['mir', 'dir', 'ihm', 'ihr', 'uns', 'ihnen'],
 };
 
 /** Cardinals and "all/both": "zwei Bücher", "beiden Kindern", "alle Höhe". */
-const NUMERALS = {
+export const NUMERALS = {
     akk: ['eins', 'zwei', 'drei', 'vier', 'fünf', 'sechs', 'beide', 'alle'],
     dat: ['einem', 'zwei', 'drei', 'vier', 'fünf', 'sechs', 'beiden', 'allen'],
     gen: ['eines', 'zweier', 'dreier', 'vierer', 'fünfer', 'sechser', 'beider', 'aller', 'allem', 'alledem'],
 };
 
 /** Demonstratives; note that the dative plural is "diesen", not "diese". */
-const DEMONSTRATIVE = {
+export const DEMONSTRATIVE = {
     akk: ['diesen', 'diese', 'dieses'],
     dat: ['diesem', 'dieser', 'diesen'],
     gen: ['dieses', 'dieser'],
 };
 
 /** Negated determiners ("für keinen Kunden"). */
-const NEGATIVE = {
+export const NEGATIVE = {
     akk: ['kein', 'keinen', 'keine'],
     dat: ['kein', 'keinem', 'keiner', 'keinen'],
     gen: ['kein', 'keines', 'keiner', 'keinen'],
@@ -186,18 +193,43 @@ const determinersFor = (caseKey) => new Set([
     ...formsInCase(DEFINITE, caseKey),
     ...formsInCase(INDEFINITE, caseKey),
     PLURAL_DEFINITE[caseKey],
-    ...POSSESSIVE[caseKey],
+    ...(POSSESSIVE[caseKey] ?? []),
     ...(PERSONAL[caseKey] ?? []),
-    ...NUMERALS[caseKey],
-    ...DEMONSTRATIVE[caseKey],
-    ...NEGATIVE[caseKey],
+    ...(NUMERALS[caseKey] ?? []),
+    ...(DEMONSTRATIVE[caseKey] ?? []),
+    ...(NEGATIVE[caseKey] ?? []),
 ]);
 
-const DETERMINERS = Object.freeze({
+/** Determiner forms per case, the Nominativ included, for checking a dataset's own answers. */
+const DETERMINERS_BY_CASE = Object.freeze({
+    nom: determinersFor('nom'),
     akk: determinersFor('akk'),
     dat: determinersFor('dat'),
     gen: determinersFor('gen'),
 });
+
+/**
+ * The three object cases only, because `determinerCases` below has to answer
+ * "which case can this word belong to", and a definite article belongs to the
+ * Nominativ of one noun as readily as to the Dativ of another.
+ */
+const DETERMINERS = Object.freeze({
+    akk: DETERMINERS_BY_CASE.akk,
+    dat: DETERMINERS_BY_CASE.dat,
+    gen: DETERMINERS_BY_CASE.gen,
+});
+
+/**
+ * True when `form` is a determiner the case really takes, Nominativ included.
+ * Membership rather than a derived single case, because "den" is the Akkusativ
+ * of `der` and the Dativ of the plural, so only the claimed case settles it.
+ * @param form a single determiner word, already normalised
+ * @param caseKey one of the `CASE_LABELS` keys
+ */
+export function determinerBelongsTo(form, caseKey) {
+    const word = normalizePhrase(form);
+    return Boolean(word) && Boolean(DETERMINERS_BY_CASE[caseKey]?.has(word));
+}
 
 /**
  * Every object case a determiner form can belong to, so a correction can name
@@ -213,17 +245,6 @@ export function determinerCases(form) {
 /** Normalises typed input so `Im` / `im ` / `in  dem` all compare cleanly. */
 export function normalizePhrase(value) {
     return String(value ?? '').trim().toLowerCase().replace(/\s+/g, ' ');
-}
-
-/**
- * Splits "zum" / "in den" into its determiner, but only when the preposition is
- * the expected one. Returns null when the answer does not belong to it.
- */
-function decomposePrepositionPhrase(answer, preposition) {
-    const contracted = PREPOSITION_CONTRACTIONS[answer];
-    if (contracted) return contracted.preposition === preposition ? contracted.article : null;
-    if (!answer.startsWith(`${preposition} `)) return null;
-    return answer.slice(preposition.length + 1);
 }
 
 /**
@@ -247,45 +268,15 @@ export function prepositionSpellings(answer) {
     return [...new Set(variants)];
 }
 
-function prepositionOf(answer) {
-    const contracted = PREPOSITION_CONTRACTIONS[answer];
-    if (contracted) return contracted.preposition;
-    const head = answer.split(' ')[0];
-    return PREPOSITION_GROUP_OF.has(head) ? head : null;
-}
-
 /**
- * The rection group of a phrase, so a correction can name the rule that decides
- * the case. Reads the fused form too: "zum" is `zu`, not a word of its own.
- * @returns a `PREPOSITION_GROUPS` key, or null when the phrase has no real preposition
- */
-export function prepositionGroup(phrase) {
-    const answer = normalizePhrase(phrase);
-    if (!answer) return null;
-    if (!PREPOSITION_CONTRACTIONS[answer] && !answer.includes(' ')) return null;
-    return PREPOSITION_GROUP_OF.get(prepositionOf(answer)) ?? null;
-}
-
-/**
- * True when a phrase is a real preposition plus a determiner, and that
- * determiner belongs to `caseKey`. "zum" with `dat` and "in die" with `akk`
- * pass; "beim" with `akk` and a bare "dem" do not.
+ * The rection group of a single preposition, for a sentence that already names
+ * one. The picker kata asks about the preposition standing in the sentence, so
+ * the rection has to be readable from the word alone.
  *
- * Membership rather than a derived single case, because a determiner form can
- * serve two cases: "mit den" is the correct Dativ answer even though "den" is
- * also the Akkusativ singular. Checking the claimed case keeps that legitimate
- * ambiguity from failing a correct entry.
- * @param answer a phrase, already normalised
- * @param caseKey one of the `CASE_LABELS` keys
+ * @param word one word, a preposition if it is one
+ * @returns a `PREPOSITION_GROUPS` key, or null when the word is not a preposition
  */
-export function isPrepositionPhraseInCase(answer, caseKey) {
-    const preposition = prepositionOf(answer);
-    if (!preposition) return false;
-
-    const rest = decomposePrepositionPhrase(answer, preposition);
-    if (!rest) return false;
-
-    // The determiner is the first word, so a longer phrase like "in die Tür"
-    // is still usable as an answer.
-    return DETERMINERS[caseKey]?.has(rest.split(' ')[0]) ?? false;
+export function prepositionRection(word) {
+    const head = normalizePhrase(word).split(' ')[0];
+    return PREPOSITION_GROUP_OF.get(head) ?? null;
 }

@@ -1,10 +1,9 @@
 // katas/prepositions/lesson.js
-// Why a preposition blank was wrong: the rection group the phrase belongs to,
-// read from `grammar.js`, and the one rule that decides it. A pure function, so
-// it stays unit testable and never touches the DOM.
+// Why a preposition blank was wrong.
 
-import { CASE_LABELS, prepositionGroup } from '../../services/grammar.js';
+import { CASE_LABELS, prepositionRection } from '../../services/grammar.js';
 import { articleRow, lesson } from '../../services/lesson.js';
+import { prepositionBefore } from '../factories/trigger.js';
 
 // One rule per group, and the article rows are generated, so a correction cannot
 // quote a form `grammar.js` does not already hold.
@@ -16,14 +15,26 @@ const GROUP_RULES = {
 };
 
 /**
- * @param expected the answer the blank wanted, dataset spelling first
- * @returns {import('../../services/lesson.js').Lesson|null} null when the phrase
- *   has no real preposition, so a kata with bad data teaches nothing
+ * @param blank the dataset blank that was missed
+ * @param given what the learner picked, `{caseKey, form}`
+ * @param caseOk whether step one was right, which decides which rule applies
+ * @param index which blank this is, so the right preposition is found in `item.s`
+ * @param item the dataset entry, for its sentence
+ * @returns {import('../../services/lesson.js').Lesson|null}
  */
-export function renderPrepositionLesson({ expected } = {}) {
-    const group = prepositionGroup(expected);
-    if (!group) return null;
+export function renderPrepositionLesson({ blank, given, caseOk, index, item } = {}) {
+    const preposition = prepositionBefore(item?.s, index);
+    const group = prepositionRection(preposition ?? '');
+    if (!group || !blank?.c) return null;
+
+    // A wrong case is the finding: the article follows from it, so correcting
+    // the ending alone would leave the learner where they started.
+    if (caseOk === false) {
+        const named = CASE_LABELS[given?.caseKey] ?? 'another case';
+        const label = CASE_LABELS[group] ?? (group === 'two' ? 'Two-way preposition' : '');
+        return lesson(blank.a, `${label} for "${preposition}". You named ${named}, but it is ${CASE_LABELS[blank.c]}.`);
+    }
 
     const label = CASE_LABELS[group] ?? (group === 'two' ? 'Two-way preposition' : '');
-    return lesson(expected, `${label}: ${GROUP_RULES[group]}`);
+    return lesson(blank.a, `${label}: ${GROUP_RULES[group]}`);
 }

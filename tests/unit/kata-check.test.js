@@ -1,6 +1,7 @@
 // tests/unit/kata-check.test.js
 // End-to-end grading through a kata's own `check()`, using the existing browser
-// stub. This is where a multi-answer blank has to behave, not just the matcher.
+// stub. This is where a kata has to behave on real interaction, not just through
+// its pure parts.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -10,157 +11,177 @@ const { createPrepositionKata } = await import('../../assets/js/katas/prepositio
 const { createCaseKata } = await import('../../assets/js/katas/cases/kata.js');
 const { createVerbKata } = await import('../../assets/js/katas/verbs/kata.js');
 
+/** Step one shows case labels, so a test has to name cases the way the DOM does. */
+const CASE_LABELS = { nom: 'Nominativ', akk: 'Akkusativ', dat: 'Dativ', gen: 'Genitiv' };
+
 /**
- * Builds a kata on a fresh container, renders once, then grades the same
- * rendered inputs with different values. Each kata gets its own container so
- * the mounted sections never clash.
+ * Builds a picker kata on a fresh container, renders one item, and returns a
+ * function that answers it and grades it. A fresh container per run, so picks
+ * can never leak from one answer into the next.
  */
 const graderFor = (createKata, item) => {
-  const container = document.createElement('div');
-  const kata = createKata(container);
-  kata.render(item);
-  const answer = (values) => {
-    container.querySelectorAll('input').forEach((input, i) => { input.value = values[i]; });
-    return kata.check(item);
-  };
-  answer.container = container;
-  return answer;
+    const container = document.createElement('div');
+    const kata = createKata(container);
+    kata.render(item);
+
+    /** The button in a stage row carrying this exact label, or null. */
+    const buttonIn = (stage, value) => container
+        .querySelectorAll(`[data-role="${stage}"] > *`)
+        .find((candidate) => candidate.dataset.value === value);
+
+    /**
+     * @param picks one `[case, form]` per blank. A bare string accepts the
+     *   blank's own case, and a null form answers step one only.
+     */
+    const answer = (picks) => {
+        picks.forEach((pick, index) => {
+            if (!pick) return;
+            const [caseKey, form] = Array.isArray(pick) ? pick : [item.b[index].c, pick];
+            buttonIn('stage-case', CASE_LABELS[caseKey])?.click();
+            if (form) buttonIn('stage-form', form)?.click();
+        });
+        return kata.check(item);
+    };
+
+    answer.container = container;
+    return answer;
 };
 
-/** Builds, renders, and grades in one step, for a single-shot check. */
-const grade = (createKata, item, values) => graderFor(createKata, item)(values);
+/** Builds, renders, answers and grades in one step, for a single-shot check. */
+const grade = (createKata, item, picks) => graderFor(createKata, item)(picks);
 
 /**
- * The correction note beside the nth input, which is where the expected
- * answers actually reach the learner. `.answer-note` is what `markControl`
- * writes, so this asserts the rendered text rather than the check() payload.
- * Notes are looked up per input rather than by index, because a right-hand
- * blank has no note at all and would shift every later one.
+ * The review list the picker shows once every blank is answered: one row per
+ * blank, each holding the picked case and the picked form, with the wanted value
+ * beside it on a miss. Read from the rendered DOM rather than the `check()`
+ * payload, because the correction reaching the learner is the thing worth
+ * pinning. Cells are found by class, not by position, so adding a label to a
+ * review row cannot silently shift what a test is asserting about.
  */
-const noteFor = (grader, index) => {
-  const input = grader.container.querySelectorAll('input')[index];
-  const wrapper = input?.parentElement;
-  const note = wrapper?.querySelectorAll?.('.answer-note')[0];
-  return note?.textContent ?? null;
-};
+const reviewOf = (container) => container
+    .querySelectorAll('[data-role="review"] > *')
+    .map((row) => Array.from(row.children)
+        .filter((node) => node.classList.contains('pick-review-cell'))
+        .map((cell) => Array.from(cell.children).map((button) => button.textContent)));
 
-test('the preposition kata accepts the fused form for a written-out answer', () => {
-  const item = {
-    id: 'p_test', w: 'Ich warte auf den Zug.', m: 'I am waiting for the train.',
-    s: 'Ich warte {0} Zug.', b: [{ a: 'auf den', c: 'akk' }],
-  };
+test('the preposition kata grades the case, then the form that case calls for', () => {
+    const item = {
+        id: 'p_test', w: 'Ich warte auf den Zug.', m: 'I am waiting for the train.',
+        s: 'Ich warte auf {0} Zug.', b: [{ a: 'den', c: 'akk' }],
+    };
 
-  const answer = graderFor(createPrepositionKata, item);
+    const answer = graderFor(createPrepositionKata, item);
 
-  // "auf" + Akkusativ cannot contract, so exactly one spelling is right.
-  assert.equal(answer(['auf den']).correct, true);
-  assert.equal(answer(['auf dem']).correct, false);
+    assert.equal(answer([['akk', 'den']]).correct, true);
+    assert.equal(answer([['akk', 'dem']]).correct, false);
 });
 
-test('a wrong blank names every accepted spelling beside the input', () => {
-  const item = {
-    id: 'p_test2', w: 'Ich gehe zum Arzt.', m: 'I am going to the doctor.',
-    s: 'Ich gehe {0} Arzt.', b: [{ a: 'zum', c: 'dat' }],
-  };
+test('a wrong pick shows the wanted form beside the one taken', () => {
+    const item = {
+        id: 'p_test2', w: 'Ich gehe zu dem Arzt.', m: 'I am going to the doctor.',
+        s: 'Ich gehe zu {0} Arzt.', b: [{ a: 'dem', c: 'dat' }],
+    };
 
-  const grade = graderFor(createPrepositionKata, item);
+    const wrongGrader = graderFor(createPrepositionKata, item);
+    const wrong = wrongGrader([['dat', 'der']]);
+    assert.equal(wrong.correct, false);
+    // Dativ named and correct, so only the form is corrected beside it.
+    assert.deepEqual(reviewOf(wrongGrader.container), [[['Dativ'], ['der', 'dem']]]);
 
-  assert.equal(grade(['zu der']).correct, false);
-  // The correction lives in the note, not in the field object, so this reads
-  // what the learner actually sees: both spellings side by side.
-  assert.equal(noteFor(grade, 0), 'zum / zu dem');
-
-  // The same blank answered right carries the badge only, no repeated text.
-  assert.equal(noteFor(graderFor(createPrepositionKata, item), 0), null);
+    // Answered right, the row carries the badge only, with no repeated text.
+    const cleanGrader = graderFor(createPrepositionKata, item);
+    assert.equal(cleanGrader([['dat', 'dem']]).correct, true);
+    assert.deepEqual(reviewOf(cleanGrader.container), [[['Dativ'], ['dem']]]);
 });
 
-test('the preposition kata honours a dataset alt list', () => {
-  const item = {
-    id: 'p_test3', w: 'Ich fahre ins Büro.', m: 'I drive to the office.',
-    s: 'Ich fahre {0} Büro.', b: [{ a: 'in das', c: 'akk', alt: ['ins Büro'] }],
-  };
+test('a wrong case is a miss even when the form is right for another case', () => {
+    const item = {
+        id: 'p_test3', w: 'Die Katze schläft in der Kammer.', m: 'The cat sleeps in the room.',
+        s: 'Die Katze schläft in {0} Kammer.', b: [{ a: 'der', c: 'dat' }],
+    };
 
-  const answer = graderFor(createPrepositionKata, item);
-
-  assert.equal(answer(['ins']).correct, true, 'the fused form of a written-out answer');
-  assert.equal(answer(['in das']).correct, true);
-  assert.equal(answer(['ins Büro']).correct, true, 'an explicit alternative');
-  assert.equal(answer(['im']).correct, false, 'a wrong case is still wrong');
-  assert.equal(answer(['in der']).correct, false);
-  // The correction reaches the learner beside the input: the dataset spelling,
-  // the fused form the matcher derives, and the explicit alt.
-  assert.equal(noteFor(answer, 0), 'in das / ins / ins büro');
+    // "die" is the Akkusativ answer to a Dativ blank. Accepting it would make step
+    // one free and teach the two-way prepositions nothing, so both stages are
+    // graded and both are corrected.
+    const grader = graderFor(createPrepositionKata, item);
+    assert.equal(grader([['akk', 'die']]).correct, false);
+    assert.deepEqual(reviewOf(grader.container), [[['Akkusativ', 'Dativ'], ['die', 'der']]]);
 });
 
 test('the case kata names its correction beside the wrong blank only', () => {
-  const item = {
-    id: 'c_test3', w: 'Der Mann liest den Roman.', m: 'The man reads the novel.',
-    s: '{0} Mann liest {1} Roman.', b: [{ a: 'der', c: 'nom' }, { a: 'den', c: 'akk' }],
-  };
-
-  const answer = graderFor(createCaseKata, item);
-
-  assert.equal(answer(['der', 'das']).correct, false);
-  // Blank 1 is right and carries no note; only the miss explains itself.
-  assert.equal(noteFor(answer, 0), null);
-  assert.equal(noteFor(answer, 1), 'den');
-});
-
-test('the case kata accepts the noun typed with its article', () => {
-  const item = {
-    id: 'c_test', w: 'Der Mann liest den Roman.', m: 'The man reads the novel.',
-    s: '{0} Mann liest {1} Roman.', b: [{ a: 'der', c: 'nom' }, { a: 'den', c: 'akk' }],
-  };
-
-  const answer = graderFor(createCaseKata, item);
-
-  assert.equal(answer(['der', 'den']).correct, true);
-  // The article plus its noun is the same answer, not a wrong one.
-  assert.equal(answer(['der Mann', 'den Roman']).correct, true);
-  // A different article, or an extra word in the middle, is still wrong.
-  assert.equal(answer(['den', 'den']).correct, false);
-  assert.equal(answer(['der', 'das']).correct, false);
-  assert.equal(answer(['der große Mann', 'den Roman']).correct, false);
-});
-
-test('the case kata accepts an explicit alt list', () => {
-  const item = {
-    id: 'c_test2', w: 'Das Kind sieht die Katze.', m: 'The child sees the cat.',
-    s: 'Das Kind sieht {0} Katze.', b: [{ a: 'die', c: 'akk', alt: ['jede'] }],
-  };
-
-  const answer = graderFor(createCaseKata, item);
-
-  assert.equal(answer(['die']).correct, true);
-  assert.equal(answer(['jede']).correct, true);
-  assert.equal(answer(['das']).correct, false);
-});
-
-test('a kata checked before it has rendered reports instead of returning null', () => {
-  // check() has two result shapes: a verdict or a complaint. app.js reads
-  // result.warning with no null guard, so this must not be null.
-  for (const createKata of [createPrepositionKata, createCaseKata]) {
-    const kata = createKata(document.createElement('div'));
     const item = {
-      id: 'x', w: 'Der Mann.', m: 'the man', s: '{0} Mann.', b: [{ a: 'der', c: 'nom' }],
+        id: 'c_test3', w: 'Der Mann liest den Roman.', m: 'The man reads the novel.',
+        s: '{0} Mann liest {1} Roman.', b: [{ a: 'Der', c: 'nom' }, { a: 'den', c: 'akk' }],
     };
 
-    const result = kata.check(item);
-    assert.notEqual(result, null, 'a pre-render check must still return something');
-    assert.equal(typeof result.warning, 'string');
-    assert.equal(result.correct, undefined, 'and it must not grade');
-  }
+    const grader = graderFor(createCaseKata, item);
+    // "der" beside "den" is the gender trap: the sentence says "Roman", and the
+    // masculine article is a real button, so the pick has to be a miss.
+    assert.equal(grader([['nom', 'Der'], ['akk', 'der']]).correct, false);
+    assert.deepEqual(reviewOf(grader.container), [
+        [['Nominativ'], ['Der']],
+        [['Akkusativ'], ['der', 'den']],
+    ]);
 });
 
-test('an unfilled blank still blocks the check with a warning', () => {
-  const item = {
-    id: 'p_test4', w: 'Ich warte auf dich.', m: 'I am waiting for you.',
-    s: 'Ich warte {0}.', b: [{ a: 'auf dich', c: 'akk' }],
-  };
+test('a two-blank case sentence is answered one blank at a time', () => {
+    const item = {
+        id: 'c_test', w: 'Der Kellner bringt dem Gast seine kalten Getränke.',
+        m: 'The waiter brings the guest his cold drinks.',
+        s: 'Der Kellner bringt {0} Gast jetzt {1} kalten Getränke.',
+        b: [{ a: 'dem', c: 'dat' }, { a: 'seine', c: 'akk' }],
+    };
 
-  const result = grade(createPrepositionKata, item, ['  ']);
-  assert.equal(result.warning, 'Please fill in all blanks before checking.');
-  assert.equal(result.correct, undefined, 'a warning is not a verdict');
+    const answer = graderFor(createCaseKata, item);
+
+    // The sentence this kata exists for: the two objects are the two cases.
+    const cleanGrader = graderFor(createCaseKata, item);
+    const clean = cleanGrader([['dat', 'dem'], ['akk', 'seine']]);
+    assert.equal(clean.correct, true);
+    assert.deepEqual(reviewOf(cleanGrader.container), [[['Dativ'], ['dem']], [['Akkusativ'], ['seine']]]);
+
+    // The same sentence with the two objects swapped fails, because the Dativ
+    // person and the Akkusativ thing are not interchangeable.
+    assert.equal(answer([['akk', 'den'], ['dat', 'seinen']]).correct, false);
+});
+
+test('the two stages are graded apart, so a shared form cannot pass on its own', () => {
+    const item = {
+        id: 'c_test4', w: 'Das Kind sieht die Katze.', m: 'The child sees the cat.',
+        s: 'Das Kind sieht {0} Katze.', b: [{ a: 'die', c: 'akk' }],
+    };
+
+    assert.equal(grade(createCaseKata, item, [['akk', 'die']]).correct, true);
+    // "die" is both the Nominativ and the Akkusativ of a woman, so only naming
+    // the case can tell the two apart. Naming the wrong one is the miss.
+    assert.equal(grade(createCaseKata, item, [['nom', 'die']]).correct, false);
+});
+
+test('a picker reports rather than grading when it has not rendered', () => {
+    // check() has two result shapes: a verdict or a complaint. kata-flow reads
+    // result.warning with no null guard, so this must not be null.
+    for (const createKata of [createPrepositionKata, createCaseKata]) {
+        const kata = createKata(document.createElement('div'));
+        const result = kata.check({ id: 'x', w: 'Der Mann.', m: 'the man', s: 'Der {0} liest.', b: [] });
+
+        assert.notEqual(result, null, 'a pre-render check must still return something');
+        assert.equal(typeof result.warning, 'string');
+        assert.equal(result.correct, undefined, 'and it must not grade');
+    }
+});
+
+test('a half-answered blank blocks the check with a warning', () => {
+    const item = {
+        id: 'p_test4', w: 'Ich warte auf dich.', m: 'I am waiting for you.',
+        s: 'Ich warte auf {0}.', b: [{ a: 'dich', c: 'akk' }],
+    };
+
+    // A case named and no form picked is unfinished, not wrong: choosing again is
+    // cheaper than guessing which of the two the learner meant.
+    const answer = graderFor(createPrepositionKata, item);
+    assert.equal(answer([['akk', null]]).warning, 'Answer every blank before checking.');
+    assert.equal(answer([['akk', null]]).correct, undefined, 'a warning is not a verdict');
+    assert.equal(answer([['akk', 'dich']]).correct, true);
 });
 
 /** Perfekt kata mounted on its own container, with its choice buttons clickable. */
