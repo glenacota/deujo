@@ -287,19 +287,6 @@ html.dark .option-key { background: rgb(51 65 85); color: rgb(203 213 225); }
 html.dark .pick-review-label { color: rgb(148 163 184); }
 html.dark .pick-review-row { background: rgb(15 23 42); border-color: rgb(30 41 59); }
 
-/* The progress line under the control stack: a caption that is neither a
-   heading for a control nor one of the controls. */
-.kata-note {
-    margin-top: 1rem;
-    color: rgb(148 163 184);
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.075em;
-    text-align: center;
-    text-transform: uppercase;
-}
-html.dark .kata-note { color: rgb(100 116 139); }
-
 /* ---- Verdict panel ------------------------------------------------------ */
 
 .verdict {

@@ -29,8 +29,6 @@ import { assertDataset, hasCoreFields } from '../dataset-rules.js';
  */
 const NOT_READY = 'Finish every blank before checking.';
 
-const CHANGE_HINT = 'Tap any blank to answer or change it.';
-
 /** The two steps of one blank, in the order they are taken. */
 const Step = Object.freeze({ CASE: 'case', FORM: 'form', DONE: 'done' });
 
@@ -142,7 +140,6 @@ export function createPickerKata({
             steps: section.querySelector('[data-role="steps"]'),
             prompt: section.querySelector('[data-role="prompt"]'),
             promptForm: section.querySelector('[data-role="prompt-form"]'),
-            progress: section.querySelector('[data-role="progress"]'),
             stageCase: section.querySelector('[data-role="stage-case"]'),
             caseChip: section.querySelector('[data-role="case-chip"]'),
             stageForm: section.querySelector('[data-role="stage-form"]'),
@@ -232,7 +229,7 @@ export function createPickerKata({
             goTo(index);
         }
 
-        /** Paints the sentence slots, the prompt and the progress line. */
+        /** Paints the sentence slots and the prompt. */
         function paint() {
             slots.forEach((slot, index) => setSlot(slot, answers[index]?.form, index === open));
 
@@ -250,10 +247,6 @@ export function createPickerKata({
             const chosen = CASE_LABELS[answers[open]?.caseKey];
             dom.caseChip.textContent = chosen ? `${chosen} ✎` : '';
             dom.caseChip.setAttribute('aria-label', chosen ? `Case: ${chosen}. Change.` : '');
-
-            const where = item.b.length > 1 ? `Blank ${open + 1} of ${item.b.length}` : '';
-            const hint = answers.some((a) => a.form) ? CHANGE_HINT : '';
-            dom.progress.textContent = [where, hint].filter(Boolean).join(' · ');
         }
 
         /**
@@ -268,7 +261,6 @@ export function createPickerKata({
             step = Step.DONE;
             dom.steps.hidden = true;
             dom.review.hidden = true;
-            dom.progress.textContent = CHANGE_HINT;
             slots.forEach((slot, index) => setSlot(slot, answers[index].form, false));
         }
 
@@ -281,7 +273,6 @@ export function createPickerKata({
             step = Step.DONE;
             dom.steps.hidden = true;
             dom.review.hidden = false;
-            dom.progress.textContent = '';
 
             dom.review.textContent = '';
             const fragment = document.createDocumentFragment();

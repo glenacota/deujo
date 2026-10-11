@@ -259,16 +259,6 @@ test('an empty slot is tappable and opens its blank out of order', () => {
     assert.equal(slotsOf(container)[0].classList.contains('pick-slot--open'), true);
 });
 
-test('the change hint appears once a blank is filled, not before', () => {
-    const { kata, container } = build();
-    kata.render(ITEM);
-    assert.doesNotMatch(part(container, 'progress').textContent, /change/i);
-
-    buttonIn(container, 'stage-case', 'Dativ').click();
-    buttonIn(container, 'stage-form', 'dem').click();
-    assert.match(part(container, 'progress').textContent, /Blank 2 of 2.*change it/);
-});
-
 test('a filled slot names its form and offers the change to a screen reader', () => {
     const { kata, container } = build();
     kata.render(ITEM);
@@ -650,7 +640,7 @@ test('the failure message is the kata\'s own wording, with the offending index',
 test('the shared template carries the instruction and every render target', () => {
     const html = pickerTemplate();
 
-    for (const role of ['section', 'sentence', 'translation', 'prompt', 'progress', 'stage-case', 'stage-form', 'review']) {
+    for (const role of ['section', 'sentence', 'translation', 'prompt', 'stage-case', 'stage-form', 'review']) {
         assert.match(html, new RegExp(`data-role="${role}"`), `the template has no ${role}`);
     }
 });
