@@ -122,6 +122,8 @@ export function createPickerKata({
         let slots = [];
         let open = 0;
         let step = Step.CASE;
+        // Set once checked: answers are final from then on.
+        let checked = false;
 
         const section = createSectionFromTemplate(template);
         container.appendChild(section);
@@ -183,13 +185,41 @@ export function createPickerKata({
         const pressCase = (chosen) => Array.from(dom.stageCase.children)
             .forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.value === chosen)));
 
-        /** Fills the step-two row for one blank. */
-        const showFormsFor = (index) => buildRow(
-            dom.stageForm,
-            determinerOptions(item.b[index]),
-            (form) => pickForm(form),
-            DIGITS[Step.FORM],
-        );
+        /** Fills the step-two row for one blank, with an earlier pick shown pressed. */
+        const showFormsFor = (index) => {
+            const buttons = buildRow(
+                dom.stageForm,
+                determinerOptions(item.b[index]),
+                (form) => pickForm(form),
+                DIGITS[Step.FORM],
+            );
+            buttons.forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.value === answers[index].form)));
+        };
+
+        /**
+         * Opens one blank at whichever step it still needs, so a blank answered
+         * earlier comes back with its pick intact and a half-answered one resumes.
+         */
+        function goTo(index) {
+            open = index;
+            dom.steps.hidden = false;
+            dom.review.hidden = true;
+            dom.review.textContent = '';
+            if (answers[index].caseKey) {
+                step = Step.FORM;
+                showFormsFor(index);
+            } else {
+                step = Step.CASE;
+                buildRow(dom.stageForm, [], () => {}, DIGITS[Step.FORM]);
+            }
+            paint();
+        }
+
+        /** A tap on a filled slot: change that blank's answer before checking. */
+        function reopen(index) {
+            if (!item || checked || !answers[index]?.form) return;
+            goTo(index);
+        }
 
         /** Paints the sentence slots, the prompt and the progress line. */
         function paint() {
@@ -210,19 +240,28 @@ export function createPickerKata({
         }
 
         /**
-         * Every blank answered: the buttons step aside for a review list, one row
-         * per blank, so a two-blank sentence can be graded without the case row
-         * for the last blank standing in for the first.
+         * Every blank answered: the buttons step aside and the sentence stands
+         * alone until Check. The review list waits for the verdict, so it cannot
+         * be read as feedback before there is any.
          */
-        function showReview() {
+        function settle() {
             // DONE, so a digit that arrives after the last pick finds nothing to
             // press. The buttons are still in the DOM behind the hidden step
-            // block, and without this a stray key would re-answer a graded blank.
+            // block, and without this a stray key would re-answer a blank.
             step = Step.DONE;
             dom.steps.hidden = true;
+            dom.review.hidden = true;
+            dom.progress.textContent = 'Tap a blank to change it.';
+            slots.forEach((slot, index) => setSlot(slot, answers[index].form, false));
+        }
+
+        /**
+         * The review list, one row per blank, so a two-blank sentence can be
+         * graded without the case row for the last blank standing in for the first.
+         */
+        function showReview() {
             dom.review.hidden = false;
             dom.progress.textContent = '';
-            slots.forEach((slot, index) => setSlot(slot, answers[index].form, false));
 
             dom.review.textContent = '';
             const fragment = document.createDocumentFragment();
@@ -292,6 +331,8 @@ export function createPickerKata({
         function pickCase(label) {
             const caseKey = cases.find((key) => CASE_LABELS[key] === label);
             if (!caseKey) return;
+            // A form picked under the old case is no longer an answer to this one.
+            if (answers[open].caseKey !== caseKey) answers[open].form = null;
             answers[open].caseKey = caseKey;
             step = Step.FORM;
             showFormsFor(open);
@@ -299,20 +340,18 @@ export function createPickerKata({
         }
 
         /**
-         * Step two. A pick closes the blank and opens the next; the last one
-         * ends on the review list, so the learner never has to track which blank
-         * the buttons belong to.
+         * Step two. A pick closes the blank and opens the next unanswered one; with
+         * none left the sentence settles until Check, so the learner never has to
+         * track which blank the buttons belong to.
          */
         function pickForm(form) {
             answers[open].form = form;
-            if (open < answers.length - 1) {
-                open += 1;
-                step = Step.CASE;
-                buildRow(dom.stageForm, [], () => {}, DIGITS[Step.FORM]);
-                paint();
+            const next = answers.findIndex((a) => !a.form);
+            if (next === -1) {
+                settle();
                 return;
             }
-            showReview();
+            goTo(next);
         }
 
         return {
@@ -357,9 +396,10 @@ export function createPickerKata({
             render(next) {
                 item = next;
                 answers = (next?.b ?? []).map(() => ({ caseKey: null, form: null }));
-                slots = renderPickSentence(dom, next);
+                slots = renderPickSentence(dom, next, reopen);
                 open = 0;
                 step = Step.CASE;
+                checked = false;
                 dom.steps.hidden = false;
                 dom.review.hidden = true;
                 dom.review.textContent = '';
@@ -377,6 +417,8 @@ export function createPickerKata({
                 }
 
                 const graded = grade();
+                checked = true;
+                showReview();
                 markReview(graded);
 
                 return {

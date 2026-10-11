@@ -10,16 +10,18 @@ import { splitBlanks } from '../../services/grammar.js';
  * `el.sentence`. Returns the slots in blank order, which is the order the
  * factory answers them in.
  *
- * A slot is a `<span>`, not an `<input>`, because nothing is typed here: it
+ * A slot is a `<button>`, not an `<input>`, because nothing is typed here: it
  * holds the form the learner picked, or an underscore while the blank is still
- * open. `aria-live` is on the slot rather than the sentence, so a screen reader
- * announces "seinem" as the answer to the blank and not the whole line again.
+ * open, and tapping a filled one reopens that blank. `aria-live` is on the slot
+ * rather than the sentence, so a screen reader announces "seinem" as the answer
+ * to the blank and not the whole line again.
  *
  * @param {{sentence: HTMLElement, translation: HTMLElement}} el
  * @param {{s: string, m?: string}} item
+ * @param {(position: number) => void} onSlot called when a filled slot is tapped
  * @returns {HTMLElement[]} the slots, in blank order
  */
-export function renderPickSentence(el, item) {
+export function renderPickSentence(el, item, onSlot = () => {}) {
     el.sentence.textContent = '';
     el.translation.textContent = item.m ? `🇬🇧 ${item.m}` : '';
 
@@ -32,6 +34,8 @@ export function renderPickSentence(el, item) {
             return;
         }
         const slot = createSlot(part, slots.length);
+        const position = slots.length;
+        slot.addEventListener('click', () => onSlot(position));
         slots.push(slot);
         fragment.appendChild(slot);
     });
@@ -46,7 +50,8 @@ export function renderPickSentence(el, item) {
  * the CSS can underline exactly that one.
  */
 function createSlot(index, position) {
-    const slot = document.createElement('span');
+    const slot = document.createElement('button');
+    slot.type = 'button';
     slot.className = 'pick-slot';
     slot.dataset.index = index;
     slot.setAttribute('aria-label', `Blank ${position + 1}`);
@@ -66,6 +71,8 @@ function createSlot(index, position) {
  */
 export function setSlot(slot, form, open) {
     slot.textContent = form || '___';
+    // An empty blank has nothing to reopen.
+    slot.disabled = !form;
     slot.classList.toggle('pick-slot--open', Boolean(open));
     slot.dataset.open = String(Boolean(open));
 }

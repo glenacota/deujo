@@ -202,9 +202,13 @@ html.dark .kata-option:hover, html.dark .kata-option[aria-pressed="true"] { back
 @media (prefers-reduced-motion: reduce) { .kata-option { transition: none; } }
 
 /* The picker only. A blank here is a slot in the sentence, not a field: the
-   learner picks a form, so nothing is typed or focusable. */
+   learner picks a form, so nothing is typed. A filled slot is a button that
+   reopens its blank. */
 .pick-slot {
     display: inline-block;
+    background: none;
+    font: inherit;
+    cursor: pointer;
     min-width: 3.5rem;
     padding: 0 0.35rem;
     margin: 0 0.1rem;
@@ -213,6 +217,7 @@ html.dark .kata-option:hover, html.dark .kata-option[aria-pressed="true"] { back
     font-weight: 700;
     text-align: center;
 }
+.pick-slot:disabled { color: rgb(67 56 202); cursor: default; }
 .pick-slot--open { border-bottom-color: rgb(99 102 241); }
 html.dark .pick-slot { border-bottom-color: rgb(51 65 85); color: rgb(165 180 252); }
 html.dark .pick-slot--open { border-bottom-color: rgb(99 102 241); }

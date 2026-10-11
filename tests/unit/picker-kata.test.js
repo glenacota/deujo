@@ -194,6 +194,73 @@ test('a two-blank sentence walks the blanks in order', () => {
     assert.equal(part(container, 'prompt').textContent, 'Step 1 · blank 1?');
 });
 
+const slotsOf = (container) => container.querySelectorAll('.pick-slot');
+
+test('a filled slot reopens its blank with the earlier pick kept', () => {
+    const { kata, container } = build();
+    kata.render(ITEM);
+    buttonIn(container, 'stage-case', 'Dativ').click();
+    buttonIn(container, 'stage-form', 'dem').click();
+
+    slotsOf(container)[0].click();
+
+    assert.equal(slotsOf(container)[0].classList.contains('pick-slot--open'), true);
+    assert.equal(buttonIn(container, 'stage-case', 'Dativ').getAttribute('aria-pressed'), 'true');
+    assert.equal(buttonIn(container, 'stage-form', 'dem').getAttribute('aria-pressed'), 'true');
+});
+
+test('an empty slot is not tappable', () => {
+    const { kata, container } = build();
+    kata.render(ITEM);
+    assert.equal(slotsOf(container)[0].disabled, true);
+});
+
+test('changing the case of a reopened blank clears its form', () => {
+    const { kata, container } = build();
+    kata.render(ITEM);
+    buttonIn(container, 'stage-case', 'Dativ').click();
+    buttonIn(container, 'stage-form', 'dem').click();
+
+    slotsOf(container)[0].click();
+    buttonIn(container, 'stage-case', 'Akkusativ').click();
+
+    assert.equal(slotsOf(container)[0].textContent, '___');
+    assert.deepEqual(kata.check(ITEM), { warning: 'Finish every blank before checking.' });
+});
+
+test('re-picking a form after the last pick settles again without re-walking later blanks', () => {
+    const { kata, container } = build();
+    kata.render(ITEM);
+    buttonIn(container, 'stage-case', 'Dativ').click();
+    buttonIn(container, 'stage-form', 'dem').click();
+    buttonIn(container, 'stage-case', 'Akkusativ').click();
+    buttonIn(container, 'stage-form', 'seine').click();
+    assert.equal(part(container, 'review').hidden, true, 'the review waits for Check');
+    assert.equal(part(container, 'steps').hidden, true);
+
+    slotsOf(container)[0].click();
+    assert.equal(part(container, 'steps').hidden, false);
+
+    const other = container.querySelectorAll('[data-role="stage-form"] > *')
+        .map((b) => b.dataset.value).find((value) => value !== 'dem');
+    buttonIn(container, 'stage-form', other).click();
+
+    assert.equal(part(container, 'steps').hidden, true);
+    assert.equal(part(container, 'review').hidden, true);
+    assert.equal(slotsOf(container)[0].textContent, other);
+    assert.equal(slotsOf(container)[1].textContent, 'seine');
+
+    kata.check(ITEM);
+    assert.equal(part(container, 'review').hidden, false);
+});
+
+test('a graded answer cannot be reopened', () => {
+    const { kata, container } = answer([['dat', 'dem'], ['akk', 'seine']]);
+    slotsOf(container)[0].click();
+    assert.equal(part(container, 'review').hidden, false);
+    assert.equal(kata.pickOption(1), false);
+});
+
 /**
  * The cells of one review row: the picked case and the picked form, each with
  * the wanted value beside it on a miss. Selected by class rather than by
@@ -427,8 +494,8 @@ test('a digit after the last pick does not re-answer a graded blank', () => {
     answerOpen();
 
     // The buttons are still in the DOM behind the hidden step block, so without
-    // a DONE step a stray key would re-answer an item that is already graded.
-    assert.equal(container.querySelectorAll('[data-role="review"] > *').length, 2);
+    // a DONE step a stray key would re-answer a blank.
+    assert.equal(part(container, 'review').hidden, true, 'no review before Check');
     assert.equal(kata.pickOption(1), false);
     assert.equal(kata.pickOption(5), false);
 });
