@@ -29,19 +29,19 @@ export const verbsTemplate = (perfekt) => `
 
 const CONJUGATION_BLOCK = `
         <div class="kata-field">
-            <p class="kata-label" id="verbs-conjugation-label">Fill in the Conjugations</p>
+            <p class="kata-label" id="verbs-conjugation-label">Fill in the conjugations</p>
             <div class="kata-rows" role="group" aria-labelledby="verbs-conjugation-label">${PERSONS.map(conjugationRow).join('')}</div>
         </div>`;
 
 const PERFEKT_BLOCK = `
         <div class="kata-field">
-            <p class="kata-label" id="verbs-aux-label">Select the Auxiliary</p>
+            <p class="kata-label" id="verbs-aux-label">Select the auxiliary</p>
             <div class="kata-options kata-options--2" role="group" aria-labelledby="verbs-aux-label">
                 <button type="button" data-role="aux" data-aux="sein" class="kata-option" aria-pressed="false">sein</button>
                 <button type="button" data-role="aux" data-aux="haben" class="kata-option" aria-pressed="false">haben</button>
             </div>
         </div>
         <div class="kata-field">
-            <label class="kata-label" for="verb-participle">Type the Participle</label>
+            <label class="kata-label" for="verb-participle">Type the participle</label>
             <input id="verb-participle" type="text" data-role="participle" placeholder="e.g. gegangen" autocomplete="off" maxlength="40" autocapitalize="none" autocorrect="off" spellcheck="false" lang="de" enterkeyhint="done" class="blank-input">
         </div>`;

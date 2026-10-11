@@ -4,6 +4,7 @@
 import { createSectionFromTemplate } from '../../platform/dom/template.js';
 import { acceptedAnswers, matchAnswer } from '../../services/answer-matcher.js';
 import { markControl } from '../../platform/dom/answer-marking.js';
+import { digitiseOptions, optionForDigit } from '../../platform/dom/option-digits.js';
 import { PERSONS, TENSES, normalizePhrase } from '../../services/grammar.js';
 import { assertDataset, hasAltList, hasCoreFields } from '../dataset-rules.js';
 import { getVerbManifest } from './manifest.js';
@@ -87,6 +88,9 @@ export function createVerbKata(tenseKey, container) {
         auxiliary = btn.dataset.aux;
         el.auxButtons.forEach((b) => markSelected(b, b.dataset.aux === auxiliary));
     }));
+    // The same rule as a picker's row: tap the auxiliary, or press its digit.
+    // A tense with no option buttons of its own simply has none to print.
+    digitiseOptions(el.auxButtons);
 
     /**
      * Perfekt grading: the auxiliary is a choice, the participle the only typed
@@ -135,6 +139,22 @@ export function createVerbKata(tenseKey, container) {
          */
         getHelpContent() {
             return renderVerbHelp(tenseKey);
+        },
+
+        /**
+         * Picks the auxiliary whose digit was pressed, for the keyboard funnel.
+         *
+         * Only the Perfekt has option buttons, so a tense with none claims no
+         * digit at all: `false` leaves the key to the page rather than binding
+         * one that would do nothing.
+         *
+         * @returns {boolean}
+         */
+        pickOption(digit) {
+            const button = optionForDigit(el.auxButtons, digit);
+            if (!button) return false;
+            button.click();
+            return true;
         },
 
         render(verb) {

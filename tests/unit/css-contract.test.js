@@ -21,6 +21,15 @@ const app = parseCss(readFileSync(new URL('../../assets/css/app.css', import.met
 
 const RANKS = CONFIG.belts.icons.length;
 
+/** Every kata's own markup, keyed by kata. The picker builds its buttons in JS. */
+const TEMPLATES = Object.fromEntries(
+    Object.entries({
+        nouns: '../../assets/js/katas/nouns/template.js',
+        verbs: '../../assets/js/katas/verbs/template.js',
+        picker: '../../assets/js/katas/factories/picker-template.js',
+    }).map(([kata, path]) => [kata, readFileSync(new URL(path, import.meta.url), 'utf8')]),
+);
+
 function escapeCssIdentifier(value) {
   return value.replace(/[^a-zA-Z0-9_-]/g, (character) => `\\${character}`);
 }
@@ -184,12 +193,13 @@ test('an option stands still when the learner asked for less motion', () => {
 });
 
 // The digit on an option is how a learner finds the hotkey, so it has to be
-// legible in both themes rather than a dark smudge on a dark button.
-test('the picker hotkey badge is legible in both themes, and sits left of the form', () => {
-    const key = app.get('.pick-key') ?? {};
+// legible in both themes rather than a dark smudge on a dark button. Every kata
+// that offers options prints one, so the class is not picker-specific any more.
+test('an option digit is legible in both themes, and sits left of the form', () => {
+    const key = app.get('.option-key') ?? {};
     assert.ok(key.background, 'the digit has no background of its own');
     assert.ok(key.color, 'and no colour to sit on it');
-    assert.ok(app.get('html.dark .pick-key')?.color, 'the digit is unreadable in dark mode');
+    assert.ok(app.get('html.dark .option-key')?.color, 'the digit is unreadable in dark mode');
 
     // It is printed before the form, so the gap belongs on its right. A left
     // margin here would push the digit away from the word it picks.
@@ -203,19 +213,17 @@ test('the picker hotkey badge is legible in both themes, and sits left of the fo
 // exactly one place. Before this, each kata carried its own Tailwind string and
 // the three treatments drifted apart with nothing failing.
 test('every kata renders its options through the one shared class', () => {
-    const sources = {
-        nouns: readFileSync(new URL('../../assets/js/katas/nouns/template.js', import.meta.url), 'utf8'),
-        verbs: readFileSync(new URL('../../assets/js/katas/verbs/template.js', import.meta.url), 'utf8'),
-        picker: readFileSync(new URL('../../assets/js/katas/factories/picker-kata.js', import.meta.url), 'utf8'),
-    };
+    // The picker builds its buttons rather than declaring them, so its class
+    // assignment counts as its declaration and its source is read too.
+    const built = readFileSync(new URL('../../assets/js/katas/factories/picker-kata.js', import.meta.url), 'utf8');
 
-    for (const [kata, source] of Object.entries(sources)) {
+    for (const [kata, source] of Object.entries(TEMPLATES)) {
         // Every option button, not just one of them: a kata with a hand-styled
         // button beside a shared one is exactly the drift this removes.
-        const declared = (source.match(/<button[^>]*>/g) ?? []).filter((tag) => /data-role="(gender|aux)"/.test(tag));
-        // The picker builds its buttons rather than declaring them, so an
-        // assignment to a `button` counts as its declaration.
-        const assigned = [...source.matchAll(/button\.className = '([^']*)'/g)].map(([, name]) => name);
+        const source2 = kata === 'picker' ? built : source;
+        const declared = (source2.match(/<button[^>]*>/g) ?? []).filter((tag) => /data-role="(gender|aux)"/.test(tag));
+        // An assignment to a `button` counts as its declaration.
+        const assigned = [...source2.matchAll(/button\.className = '([^']*)'/g)].map(([, name]) => name);
         assert.ok(
             declared.length + assigned.length > 0,
             `${kata} renders no option buttons`,
@@ -247,13 +255,7 @@ test('every kata renders its options through the one shared class', () => {
 // headline, the gloss and the caption come from the shared classes, so moving
 // between katas cannot change the padding or the type scale under the learner.
 test('every kata builds its shell from the shared classes', () => {
-    const sources = [
-        ['nouns', '../../assets/js/katas/nouns/template.js'],
-        ['verbs', '../../assets/js/katas/verbs/template.js'],
-        ['picker', '../../assets/js/katas/factories/picker-template.js'],
-    ].map(([kata, path]) => [kata, readFileSync(new URL(path, import.meta.url), 'utf8')]);
-
-    for (const [kata, source] of sources) {
+    for (const [kata, source] of Object.entries(TEMPLATES)) {
         assert.match(source, /class="kata-section[^"]*"/, `${kata} does not use the shared section`);
         assert.match(source, /class="kata-head"/, `${kata} does not use the shared headline block`);
         assert.match(source, /class="kata-prompt kata-prompt--/, `${kata} does not use the shared prompt`);
@@ -273,7 +275,7 @@ test('every kata builds its shell from the shared classes', () => {
 
     // A label bound to its control, not floating beside it: `for` on the caption
     // and `id` on the blank, so a tap on the caption focuses the field.
-    for (const [kata, source] of sources) {
+    for (const [kata, source] of Object.entries(TEMPLATES)) {
         const fors = [...source.matchAll(/<label[^>]*\sfor="([^"]+)"/g)].map(([, id]) => id);
         const ids = new Set([...source.matchAll(/\sid="([^"]+)"/g)].map(([, id]) => id));
         for (const id of fors) {
@@ -297,24 +299,42 @@ test('a review chip is sized as a value, not as a tappable option', () => {
     assert.equal(app.get('.kata-option--compact'), undefined, 'a chip is not a small option');
 });
 
-// Every other kata's caption is uppercase. The picker's is not, and that is the
-// point: its prompt quotes a German noun and a preposition, and "FRAU" or
-// "WÄHREND" reads as a shout the lesson never meant. The step number carries the
-// structure instead. The two differ in case alone -- size, weight and colour are
-// the shared `.kata-label`, so a caption that drifts is still one edit away.
-test('the picker step label shares the caption, minus the uppercase', () => {
+// Every kata has one caption style and no variants. Uppercase micro-labels at
+// 12px are the least legible thing in the UI and read no faster, and the old
+// sentence-case exception for the picker is gone with them: nothing shouts a
+// German noun now, because nothing shouts at all.
+test('the caption is one style, in sentence case, for every kata', () => {
     const caption = app.get('.kata-label') ?? {};
-    const step = app.get('.kata-label--step') ?? {};
 
-    assert.equal(caption['text-transform'], 'uppercase');
+    assert.equal(caption['text-transform'], undefined, 'a caption is not shouted');
     assert.equal(caption.color, 'rgb(100 116 139)', 'a caption is slate-500');
-    assert.equal(step.color, undefined, 'the step variant carries no colour of its own');
-    assert.equal(step['font-weight'], undefined, 'and no weight either');
+    assert.equal(caption['font-size'], '0.75rem');
 
-    // Only the case differs. `text-transform: uppercase` here would be a shout,
-    // so the variant has to actively cancel the caption's rather than inherit it.
-    assert.equal(step['letter-spacing'], '0');
-    assert.equal(step['text-transform'], 'none');
+    // No variant survives. A second caption class would put the katas back into
+    // two groups, which is what the shared surface exists to prevent.
+    assert.equal(app.get('.kata-label--step'), undefined);
+    for (const [kata, source] of Object.entries(TEMPLATES)) {
+        const variants = [...source.matchAll(/class="([^"]*\bkata-label\b[^"]*)"/g)];
+        assert.ok(variants.length > 0, `${kata} carries no caption`);
+        for (const [, classes] of variants) {
+            // `--` here is only ever the column modifier (`kata-options--4`), so
+            // the check is on the caption's own token list.
+            const tokens = classes.split(/\s+/).filter((name) => name.startsWith('kata-label'));
+            assert.deepEqual(tokens, ['kata-label'], `${kata} stacks caption variants: ${tokens}`);
+        }
+    }
+
+    // And the stylesheet is not relied on to lower anything: no caption in a
+    // template is written in caps, so the sentence case is the source text.
+    for (const [kata, source] of Object.entries(TEMPLATES)) {
+        for (const [, label] of source.matchAll(/class="kata-label"[^>]*>([^<]+)</g)) {
+            assert.doesNotMatch(
+                label.trim(),
+                /^[^a-z]*[A-Z]{2,}/,
+                `${kata} has a shouted caption: ${label.trim()}`,
+            );
+        }
+    }
 });
 
 // The katas sit in one column, so their vertical rhythm has to be one rhythm:

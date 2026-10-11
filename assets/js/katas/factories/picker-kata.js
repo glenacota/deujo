@@ -16,6 +16,7 @@
 import { createSectionFromTemplate } from '../../platform/dom/template.js';
 import { renderPickSentence, setSlot } from '../../platform/dom/pick-sentence.js';
 import { markControl } from '../../platform/dom/answer-marking.js';
+import { digitiseOptions, optionForDigit } from '../../platform/dom/option-digits.js';
 import { CASE_LABELS, determinerBelongsTo, hasOrderedBlankPlaceholders, normalizePhrase } from '../../services/grammar.js';
 import { determinerOptions, OPTION_ROW_SIZE } from '../../services/determiner-options.js';
 import { assertDataset, hasCoreFields } from '../dataset-rules.js';
@@ -157,54 +158,26 @@ export function createPickerKata({
          * because the option set is per blank, and a stale button left over from
          * the previous blank would offer a form this sentence cannot take.
          *
-         * Each button carries its digit, so the hotkey is visible rather than a
-         * trick to memorise, and `aria-keyshortcuts` names it to a screen reader.
-         *
          * @param firstDigit the digit on the first button, so step one and step
          *   two each print the range the keyboard actually listens for
          */
         const buildRow = (host, values, onPick, firstDigit) => {
             host.textContent = '';
             const fragment = document.createDocumentFragment();
-            values.forEach((value, position) => {
-                const digit = firstDigit + position;
+            values.forEach((value) => {
                 const button = document.createElement('button');
                 button.type = 'button';
                 button.dataset.value = String(value);
                 button.className = 'kata-option';
                 button.setAttribute('aria-pressed', 'false');
-                button.setAttribute('aria-keyshortcuts', String(digit));
-                // Digit before the word, so the key reads as the key to press
-                // beside the thing it picks rather than as a footnote after it.
-                button.appendChild(hotkey(digit));
-                button.appendChild(optionLabel(String(value)));
+                button.textContent = String(value);
                 button.addEventListener('click', () => onPick(String(value)));
                 fragment.appendChild(button);
             });
             host.appendChild(fragment);
+            digitiseOptions(host.children, firstDigit);
             return Array.from(host.children);
         };
-
-        /**
-         * The digit printed on an option. Hidden from assistive tech, because
-         * `aria-keyshortcuts` already carries it and the button's own name is the
-         * German form, which is what a learner wants read aloud.
-         */
-        function hotkey(digit) {
-            const key = document.createElement('kbd');
-            key.className = 'pick-key';
-            key.textContent = String(digit);
-            key.setAttribute('aria-hidden', 'true');
-            return key;
-        }
-
-        /** The German form on an option, in its own element so the digit can precede it. */
-        function optionLabel(text) {
-            const label = document.createElement('span');
-            label.className = 'pick-option-label';
-            label.textContent = text;
-            return label;
-        }
 
         /** Step one's chosen case stays pressed while step two is open. */
         const pressCase = (chosen) => Array.from(dom.stageCase.children)
@@ -373,12 +346,8 @@ export function createPickerKata({
 
                 // A digit from the other stage is refused rather than guessed at:
                 // both rows are on screen, and `3` must mean one button only.
-                const first = DIGITS[step];
-                const position = digit - first;
-                if (!Number.isInteger(position) || position < 0 || position >= OPTION_ROW_SIZE) return false;
-
                 const host = step === Step.FORM ? dom.stageForm : dom.stageCase;
-                const button = host.children[position];
+                const button = optionForDigit(host.children, digit, DIGITS[step]);
                 if (!button) return false;
 
                 button.click();

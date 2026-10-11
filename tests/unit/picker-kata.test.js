@@ -339,7 +339,7 @@ test('every option prints the digit that picks it, and names it to assistive tec
     caseButtons.forEach((button, index) => {
         const digit = index + 1;
         // Printed, so the hotkey is read off the screen rather than memorised...
-        assert.equal(button.querySelectorAll('.pick-key')[0]?.textContent, String(digit));
+        assert.equal(button.querySelectorAll('.option-key')[0]?.textContent, String(digit));
         // ...and named, so a screen reader hears it too rather than as button text.
         assert.equal(button.getAttribute('aria-keyshortcuts'), String(digit));
     });
@@ -348,7 +348,7 @@ test('every option prints the digit that picks it, and names it to assistive tec
     // at once and a shared range would make a digit ambiguous between them.
     buttonIn(container, 'stage-case', 'Dativ').click();
     container.querySelectorAll('[data-role="stage-form"] > *').forEach((button, index) => {
-        assert.equal(button.querySelectorAll('.pick-key')[0]?.textContent, String(index + 5));
+        assert.equal(button.querySelectorAll('.option-key')[0]?.textContent, String(index + 5));
         assert.equal(button.getAttribute('aria-keyshortcuts'), String(index + 5));
     });
 });
@@ -358,12 +358,17 @@ test('the digit is printed before the form it picks', () => {
     kata.render(ITEM);
 
     const [button] = container.querySelectorAll('[data-role="stage-case"] > *');
-    // Read as the key to press beside the word, not as a footnote after it.
+    // Read as the key to press beside the word, not as a footnote after it. The
+    // digit is the button's first element child; the form is the button's own
+    // text, with no wrapper element to find or style separately.
     assert.deepEqual(
         Array.from(button.children).map((child) => child.className),
-        ['pick-key', 'pick-option-label'],
+        ['option-key'],
+        'the digit leads the button and nothing else wraps the form',
     );
-    assert.equal(button.querySelectorAll('.pick-option-label')[0].textContent, 'Nominativ');
+    assert.equal(button.querySelector('.option-key').textContent, '1');
+    assert.equal(button.querySelector('.option-key').getAttribute('aria-hidden'), 'true');
+    assert.match(button.textContent, /Nominativ/, 'the form is still on the button');
 });
 
 test('a digit picks the option in that position on whichever stage is open', () => {

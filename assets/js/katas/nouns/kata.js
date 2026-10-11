@@ -4,6 +4,7 @@
 import { createSectionFromTemplate } from '../../platform/dom/template.js';
 import { acceptedAnswers, matchAnswer } from '../../services/answer-matcher.js';
 import { markControl } from '../../platform/dom/answer-marking.js';
+import { digitiseOptions, optionForDigit } from '../../platform/dom/option-digits.js';
 import { assertDataset, hasAltList, hasCoreFields } from '../dataset-rules.js';
 import { nounsManifest } from './manifest.js';
 import { renderNounHelp } from './help.js';
@@ -52,6 +53,8 @@ export function createNounKata(container) {
         gender = btn.dataset.gender;
         el.genderButtons.forEach((b) => setGenderActive(b, b.dataset.gender === gender));
     }));
+    // The same rule as a picker's row: tap the gender, or press its digit.
+    digitiseOptions(el.genderButtons);
 
     return {
         ...nounsManifest,
@@ -64,6 +67,20 @@ export function createNounKata(container) {
          */
         getHelpContent() {
             return renderNounHelp();
+        },
+
+        /**
+         * Picks the gender whose digit was pressed, for the keyboard funnel.
+         *
+         * @returns {boolean} false when no gender carries that digit, so the key
+         *   is left to the page rather than swallowed by a binding that would do
+         *   nothing
+         */
+        pickOption(digit) {
+            const button = optionForDigit(el.genderButtons, digit);
+            if (!button) return false;
+            button.click();
+            return true;
         },
 
         render(noun) {

@@ -116,10 +116,8 @@ html.dark .blank-input::placeholder { color: rgb(71 85 105); }
 .kata-head { margin: 1rem 0 1.5rem; text-align: center; }
 
 .kata-prompt { color: rgb(15 23 42); font-weight: 700; }
-/* Two sizes, because the prompts differ in length: a single noun or verb gets
-   the display size, a whole sentence gets the prose size. */
 .kata-prompt--word { font-size: 2.25rem; font-weight: 800; line-height: 1.2; }
-.kata-prompt--sentence { font-size: 1.25rem; line-height: 1.6; }
+.kata-prompt--sentence { font-size: 1.5rem; line-height: 1.6; }
 .kata-gloss {
     margin-top: 0.5rem;
     color: rgb(100 116 139);
@@ -129,25 +127,21 @@ html.dark .blank-input::placeholder { color: rgb(71 85 105); }
 }
 html.dark .kata-prompt { color: white; }
 html.dark .kata-gloss { color: rgb(148 163 184); }
-@media (min-width: 640px) { .kata-prompt--word { font-size: 3rem; } }
+@media (min-width: 640px) { .kata-prompt--word { font-size: 2.75rem; } }
 @media (min-width: 1024px) {
     .kata-head { margin-bottom: 2rem; }
     .kata-prompt--sentence { font-size: 1.75rem; }
     .kata-gloss { font-size: 1.125rem; }
 }
 
-/* One caption style. `--step` is the picker's question: it quotes a German
-   noun, and "STUDENT" would read as a shout the lesson never meant. */
 .kata-label {
     display: block;
     margin-bottom: 0.5rem;
     color: rgb(100 116 139);
     font-size: 0.75rem;
     font-weight: 600;
-    letter-spacing: 0.075em;
-    text-transform: uppercase;
+    letter-spacing: 0.02em;
 }
-.kata-label--step { letter-spacing: 0; text-transform: none; }
 html.dark .kata-label { color: rgb(148 163 184); }
 
 /* The measure every answerable control shares, and the stacks inside it. */
@@ -236,10 +230,7 @@ html.dark .pick-slot--open { border-bottom-color: rgb(99 102 241); }
 }
 html.dark .pick-value { background: rgb(2 6 23); border-color: rgb(51 65 85); color: rgb(165 180 252); }
 
-/* The digit the hotkey uses, printed on the left of the option so it reads as
-   the key to press beside the word it picks. The margin is on the right
-   because the form is what follows it. */
-.pick-key {
+.option-key {
     margin-right: 0.4rem;
     padding: 0.05rem 0.3rem;
     border-radius: 0.25rem;
@@ -251,7 +242,7 @@ html.dark .pick-value { background: rgb(2 6 23); border-color: rgb(51 65 85); co
     line-height: 1.4;
     vertical-align: middle;
 }
-html.dark .pick-key { background: rgb(51 65 85); color: rgb(203 213 225); }
+html.dark .option-key { background: rgb(51 65 85); color: rgb(203 213 225); }
 
 .pick-review-row {
     display: grid;

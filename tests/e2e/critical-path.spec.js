@@ -173,6 +173,37 @@ test('a picker answer is given by its digit alone, with no typing', async ({ pag
     expect(errors).toEqual([]);
 });
 
+// The same rule everywhere: a noun's gender is picked by its printed digit, with
+// no typing and no mouse. Driven through the real key listener, because the
+// wiring from keypress to the active kata is what the unit tests fake.
+for (const [id, role] of [['nouns', 'gender'], ['verbs-perf', 'aux']]) {
+    test(`a ${id} option is picked by its digit alone, with no typing`, async ({ page }) => {
+        const errors = collectPageErrors(page);
+        await gotoDashboard(page);
+        await page.locator(`#kata-${id}`).click();
+
+        const section = page.locator(ACTIVE_SECTION);
+        const buttons = section.locator(`[data-role="${role}"]`);
+        await expect(buttons).toHaveCount(id === 'nouns' ? 3 : 2);
+
+        // The digit printed beside the first button, so the assertion is about
+        // the key picking *that* button rather than about its position.
+        const digit = await buttons.first().locator('.option-key').textContent();
+        expect(digit, 'the button prints no digit').toBeTruthy();
+
+        await page.keyboard.press(digit);
+        await expect(buttons.first()).toHaveAttribute('aria-pressed', 'true');
+        await expect(buttons.nth(1)).toHaveAttribute('aria-pressed', 'false');
+
+        // A digit past the end of the row is left to the page, not swallowed by a
+        // binding that would do nothing: nothing else becomes pressed.
+        await page.keyboard.press('9');
+        await expect(buttons.nth(1)).toHaveAttribute('aria-pressed', 'false');
+
+        expect(errors).toEqual([]);
+    });
+}
+
 test('375px viewport: dashboard and kata never scroll sideways', async ({ page }) => {
     const errors = collectPageErrors(page);
     await gotoDashboard(page);

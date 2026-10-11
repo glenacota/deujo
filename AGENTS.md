@@ -66,15 +66,16 @@ no backend, no login.
   distractor is hand-authored per item — and `validatePickerDataset` refuses any
   answer the picker could not put on a button: a form from the wrong case, a
   noun, or an `alt` list, which widens a typed answer and has no button to widen.
-- A picker option is picked by mouse or by the digit printed on its left. Step
-  one is 1–4 and step two 5–8, disjoint on purpose: both rows are on screen at
+- An option is picked by mouse or by the digit printed on its left, in every kata.
+  Step one is 1–4 and step two 5–8, disjoint on purpose: both rows are on screen at
   once, so a shared range would make `3` mean Nominativ or a determiner
   depending on which row the eye had drifted to. The width of a row is
   `OPTION_ROW_SIZE` in `services/determiner-options.js`, and step two's range
   starts one row further on, so the two cannot overlap by accident. The digit is
-  bound in `ui/keyboard-shortcut.js` (the one funnel for every binding) and routed
-  through `KataFlow.pickOption` to the kata's own `pickOption`, because `ui/` and
-  `katas/` are peers and may not import each other. A picker answering by digit
+  printed by `platform/dom/option-digits.js`, bound in `ui/keyboard-shortcut.js`
+  (the one funnel for every binding) and routed through `KataFlow.pickOption` to
+  the kata's own `pickOption`, because `ui/` and `katas/` are peers and may not
+  import each other. A kata answering by digit
   **must** return false when no option carries that digit — a digit belonging to
   the other stage, or one past the end of the row: the binding claims the key
   only when the kata used it, so an unusable digit stays with the page instead of
@@ -99,9 +100,20 @@ no backend, no login.
   and nothing else. A kata that hand-styles a button with a Tailwind utility does
   not render visibly wrong — it renders slightly different, which is worse, so
   `css-contract.test.js` reads the templates and fails on any option outside
-  `.kata-option`. The picker's prompt is the one deliberate exception to the
-  caption (`.kata-label--step`, sentence case, because it quotes a German noun),
-  so a new variant must justify itself against the caption it departs from.
+  `.kata-option`.
+- The prompt is one type system at two sizes, not one size at two extremes. A
+  word takes the display size and a sentence the prose size, one step apart. It
+  cannot be one size: at 303px the longest shipped sentence is 87 characters,
+  which at word size wraps to seven lines and eats half a phone screen. The
+  caption is one sentence-case class with **no variants** — uppercase micro-labels
+  at 12px were the least legible thing in the UI, and dropping them deleted the
+  special case the picker had needed for the German noun its prompt quotes.
+- Every option button is picked the same two ways in every kata: tap it, or press
+  the digit printed on its left. `platform/dom/option-digits.js` owns the pairing,
+  so a kata with buttons gets the digits and the hotkey by asking for them rather
+  than by reimplementing the range arithmetic, and two rows open at once are still
+  given disjoint ranges. `OPTION_ROW_SIZE` stays in `services/` — the widest row a
+  picker can build is a fact about the grammar, not about printing digits.
 - A kata's help body lives in `<id>/help.js` as a pure function and is built from
   the helpers in `katas/help-kit.js`. Help must be **answer-blind**: it takes no
   item, or ignores it, so the modal cannot print the answer to the question on
