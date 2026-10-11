@@ -24,8 +24,8 @@ const describeProblem = (index) =>
 function askCase(item, blank, index) {
     const noun = nounAfter(item?.s, index);
     return noun
-        ? `Which case does "${noun}" take here?`
-        : 'Which case does this blank take?';
+        ? `Select the case of "${noun}"`
+        : 'Select the case of this blank';
 }
 
 export function validateCaseDataset(dataset) {

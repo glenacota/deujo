@@ -22,9 +22,9 @@ export function pickerTemplate() {
             <div class="kata-stack" data-role="steps" hidden>
                 <p data-role="prompt" class="kata-label"></p>
                 <button type="button" data-role="case-chip" class="kata-option pick-chip" hidden></button>
-                <div data-role="stage-case" class="kata-options kata-options--4" role="group" aria-label="Which case?"></div>
-                <p data-role="prompt-form" class="kata-label" hidden>Which form?</p>
-                <div data-role="stage-form" class="kata-options kata-options--4" role="group" aria-label="Which form?" hidden></div>
+                <div data-role="stage-case" class="kata-options kata-options--4" role="group" aria-label="Select the case"></div>
+                <p data-role="prompt-form" class="kata-label" hidden>Select the form</p>
+                <div data-role="stage-form" class="kata-options kata-options--4" role="group" aria-label="Select the form" hidden></div>
             </div>
             <div data-role="review" class="kata-stack" hidden></div>
         </div>
