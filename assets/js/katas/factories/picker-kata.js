@@ -144,6 +144,7 @@ export function createPickerKata({
             promptForm: section.querySelector('[data-role="prompt-form"]'),
             progress: section.querySelector('[data-role="progress"]'),
             stageCase: section.querySelector('[data-role="stage-case"]'),
+            caseChip: section.querySelector('[data-role="case-chip"]'),
             stageForm: section.querySelector('[data-role="stage-form"]'),
             review: section.querySelector('[data-role="review"]'),
         };
@@ -218,6 +219,13 @@ export function createPickerKata({
             paint();
         }
 
+        /** A tap on the case chip: back to step one, with the earlier pick kept. */
+        dom.caseChip.addEventListener('click', () => {
+            if (!item || checked) return;
+            step = Step.CASE;
+            paint();
+        });
+
         /** A tap on any slot, filled or not: answer or change that blank before checking. */
         function reopen(index) {
             if (!item || checked || !answers[index]) return;
@@ -236,6 +244,12 @@ export function createPickerKata({
             dom.stageForm.hidden = step !== Step.FORM;
             dom.promptForm.hidden = step !== Step.FORM;
             pressCase(CASE_LABELS[answers[open]?.caseKey] ?? '');
+            // On a phone the chosen case folds into a chip, freeing a row for the forms.
+            dom.stageCase.dataset.collapsed = String(step === Step.FORM);
+            dom.caseChip.hidden = step !== Step.FORM;
+            const chosen = CASE_LABELS[answers[open]?.caseKey];
+            dom.caseChip.textContent = chosen ? `${chosen} ✎` : '';
+            dom.caseChip.setAttribute('aria-label', chosen ? `Case: ${chosen}. Change.` : '');
 
             const where = item.b.length > 1 ? `Blank ${open + 1} of ${item.b.length}` : '';
             const hint = answers.some((a) => a.form) ? CHANGE_HINT : '';

@@ -39,7 +39,7 @@ function build(overrides = {}) {
         manifest: MANIFEST,
         template: pickerTemplate(),
         help: () => '<p>help body</p>',
-        prompt: (item, blank, index) => `Step 1 · blank ${index}?`,
+        prompt: (item, blank, index) => `Blank ${index}?`,
         cases: CASES,
         isUsableAnswer: (blank) => CASES.includes(blank?.c),
         describeProblem: (index) => `entry ${index} is bad`,
@@ -191,7 +191,7 @@ test('a two-blank sentence walks the blanks in order', () => {
             .filter((b) => b.getAttribute('aria-pressed') === 'true'),
         [],
     );
-    assert.equal(part(container, 'prompt').textContent, 'Step 1 · blank 1?');
+    assert.equal(part(container, 'prompt').textContent, 'Blank 1?');
 });
 
 const slotsOf = (container) => container.querySelectorAll('.pick-slot');
@@ -226,6 +226,23 @@ test('checking from a reopened blank hides the step rows behind the results', ()
     assert.equal(kata.pickOption(5), false);
 });
 
+test('the chosen case folds into a chip that reopens step one', () => {
+    const { kata, container } = build();
+    kata.render(ITEM);
+    assert.equal(part(container, 'case-chip').hidden, true);
+    assert.equal(part(container, 'stage-case').dataset.collapsed, 'false');
+
+    buttonIn(container, 'stage-case', 'Dativ').click();
+    assert.equal(part(container, 'case-chip').hidden, false);
+    assert.match(part(container, 'case-chip').textContent, /^Dativ/);
+    assert.equal(part(container, 'stage-case').dataset.collapsed, 'true');
+
+    part(container, 'case-chip').click();
+    assert.equal(part(container, 'case-chip').hidden, true);
+    assert.equal(part(container, 'stage-form').hidden, true);
+    assert.equal(buttonIn(container, 'stage-case', 'Dativ').getAttribute('aria-pressed'), 'true');
+});
+
 test('an empty slot is tappable and opens its blank out of order', () => {
     const { kata, container } = build();
     kata.render(ITEM);
@@ -233,7 +250,7 @@ test('an empty slot is tappable and opens its blank out of order', () => {
 
     slotsOf(container)[1].click();
     assert.equal(slotsOf(container)[1].classList.contains('pick-slot--open'), true);
-    assert.equal(part(container, 'prompt').textContent, 'Step 1 · blank 1?');
+    assert.equal(part(container, 'prompt').textContent, 'Blank 1?');
 
     buttonIn(container, 'stage-case', 'Akkusativ').click();
     buttonIn(container, 'stage-form', 'seine').click();

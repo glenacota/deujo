@@ -39,8 +39,8 @@ function askCase(item, blank, index) {
     const preposition = prepositionBefore(item?.s, index);
 
     return prepositionRection(preposition ?? '') === 'two'
-        ? `Step 1 · "${preposition}" takes two cases. Which one here?`
-        : `Step 1 · "${preposition}" always takes which case?`;
+        ? `"${preposition}" takes two cases. Which one here?`
+        : `"${preposition}" always takes which case?`;
 }
 
 export function validatePrepositionDataset(dataset) {

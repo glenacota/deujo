@@ -202,6 +202,11 @@ html.dark .kata-option:hover, html.dark .kata-option[aria-pressed="true"] { back
 }
 @media (prefers-reduced-motion: reduce) { .kata-option { transition: none; } }
 
+/* Phones only: the chosen case folds into a chip so the form row gets the space. */
+.pick-chip { justify-self: start; padding-left: 1rem; padding-right: 1rem; }
+@media (max-width: 639px) { .kata-options[data-collapsed="true"] { display: none; } }
+@media (min-width: 640px) { .pick-chip { display: none; } }
+
 /* The picker only. A slot is a button that opens its blank, drawn like the
    inline text input the other katas use so the two read as the same control. */
 .pick-slot {
