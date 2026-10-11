@@ -260,6 +260,9 @@ html.dark .pick-value { background: rgb(2 6 23); border-color: rgb(51 65 85); co
     vertical-align: middle;
 }
 html.dark .option-key { background: rgb(51 65 85); color: rgb(203 213 225); }
+@media (max-width: 639px) {
+    .option-key { display: none}
+}
 
 .pick-review-row {
     display: grid;
