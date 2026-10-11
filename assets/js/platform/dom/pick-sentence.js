@@ -12,13 +12,13 @@ import { splitBlanks } from '../../services/grammar.js';
  *
  * A slot is a `<button>`, not an `<input>`, because nothing is typed here: it
  * holds the form the learner picked, or an underscore while the blank is still
- * open, and tapping a filled one reopens that blank. `aria-live` is on the slot
+ * open, and tapping any slot opens that blank. `aria-live` is on the slot
  * rather than the sentence, so a screen reader announces "seinem" as the answer
  * to the blank and not the whole line again.
  *
  * @param {{sentence: HTMLElement, translation: HTMLElement}} el
  * @param {{s: string, m?: string}} item
- * @param {(position: number) => void} onSlot called when a filled slot is tapped
+ * @param {(position: number) => void} onSlot called when a slot is tapped
  * @returns {HTMLElement[]} the slots, in blank order
  */
 export function renderPickSentence(el, item, onSlot = () => {}) {
@@ -72,8 +72,6 @@ function createSlot(index, position) {
  */
 export function setSlot(slot, form, open) {
     slot.textContent = form || '___';
-    // An empty blank has nothing to reopen.
-    slot.disabled = !form;
     // The label carries the form, or a screen reader hears only "Blank 1".
     slot.setAttribute('aria-label', form ? `${slot.dataset.label}: ${form}. Change.` : slot.dataset.label);
     slot.classList.toggle('pick-slot--open', Boolean(open));

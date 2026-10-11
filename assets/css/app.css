@@ -202,37 +202,33 @@ html.dark .kata-option:hover, html.dark .kata-option[aria-pressed="true"] { back
 }
 @media (prefers-reduced-motion: reduce) { .kata-option { transition: none; } }
 
-/* The picker only. A blank here is a slot in the sentence, not a field: the
-   learner picks a form, so nothing is typed. A filled slot is a button that
-   reopens its blank. */
+/* The picker only. A slot is a button that opens its blank, drawn like the
+   inline text input the other katas use so the two read as the same control. */
 .pick-slot {
     display: inline-block;
-    background: none;
-    font: inherit;
-    cursor: pointer;
-    min-width: 3.5rem;
-    padding: 0 0.35rem;
+    min-width: 4rem;
     margin: 0 0.1rem;
-    border-bottom: 2px solid rgb(203 213 225);
+    padding: 0.25rem 0.5rem;
+    border: 1px solid rgb(203 213 225);
+    border-radius: 0.5rem;
+    background: white;
     color: rgb(67 56 202);
-    font-weight: 700;
+    font: inherit;
+    font-size: 1rem;
+    line-height: 1.5rem;
     text-align: center;
+    cursor: pointer;
 }
-.pick-slot:disabled { color: rgb(67 56 202); cursor: default; }
-/* A filled slot is editable, so it reads as a control rather than as text. */
-.pick-slot:not(:disabled) {
-    background: rgb(238 242 255);
-    border-radius: 0.5rem 0.5rem 0 0;
+.pick-slot:hover { border-color: rgb(165 180 252); }
+.pick-slot:focus-visible,
+.pick-slot--open { outline: 2px solid transparent; outline-offset: 2px; border-color: rgb(99 102 241); box-shadow: 0 0 0 1px rgb(99 102 241); }
+html.dark .pick-slot { background: rgb(2 6 23); border-color: rgb(51 65 85); color: rgb(165 180 252); }
+html.dark .pick-slot:hover { border-color: rgb(99 102 241); }
+html.dark .pick-slot:focus-visible,
+html.dark .pick-slot--open { border-color: rgb(99 102 241); }
+@media (min-width: 1024px) {
+    .pick-slot { padding: 0.375rem 0.75rem; font-size: 1.25rem; line-height: 2rem; }
 }
-.pick-slot:not(:disabled):hover,
-.pick-slot:not(:disabled):focus-visible { background: rgb(224 231 255); }
-.pick-slot:focus-visible { outline: 2px solid rgb(99 102 241); outline-offset: 2px; }
-html.dark .pick-slot:not(:disabled) { background: rgb(30 27 75); }
-html.dark .pick-slot:not(:disabled):hover,
-html.dark .pick-slot:not(:disabled):focus-visible { background: rgb(49 46 129); }
-.pick-slot--open { border-bottom-color: rgb(99 102 241); }
-html.dark .pick-slot { border-bottom-color: rgb(51 65 85); color: rgb(165 180 252); }
-html.dark .pick-slot--open { border-bottom-color: rgb(99 102 241); }
 
 .pick-value {
     display: inline-block;

@@ -8,8 +8,9 @@
 // learner who names Dativ correctly and then reaches for "seinen" has two
 // separate things to correct, and the panel can say which.
 //
-// The state machine walks the blanks in order, one open at a time, because 215
-// of the 246 case entries carry two blanks and a phone has one column.
+// One blank is open at a time, because 215 of the 246 case entries carry two
+// blanks and a phone has one column. It starts on the first, advances to the
+// next unanswered one, and any blank can be tapped to open it out of order.
 //
 // Katas differ only in what step one asks and how a miss is taught.
 
@@ -28,7 +29,7 @@ import { assertDataset, hasCoreFields } from '../dataset-rules.js';
  */
 const NOT_READY = 'Finish every blank before checking.';
 
-const CHANGE_HINT = 'Tap a filled blank to change it.';
+const CHANGE_HINT = 'Tap any blank to answer or change it.';
 
 /** The two steps of one blank, in the order they are taken. */
 const Step = Object.freeze({ CASE: 'case', FORM: 'form', DONE: 'done' });
@@ -217,9 +218,9 @@ export function createPickerKata({
             paint();
         }
 
-        /** A tap on a filled slot: change that blank's answer before checking. */
+        /** A tap on any slot, filled or not: answer or change that blank before checking. */
         function reopen(index) {
-            if (!item || checked || !answers[index]?.form) return;
+            if (!item || checked || !answers[index]) return;
             goTo(index);
         }
 

@@ -180,7 +180,7 @@ test('an option paints a 44px tap target and a visible pressed state', () => {
 
     // The open slot is the one blank being answered, so it needs a colour of its
     // own rather than inheriting the closed one.
-    assert.ok(app.get('.pick-slot--open')?.['border-bottom-color'], 'the open blank has no underline');
+    assert.ok(app.get('.pick-slot--open')?.['border-color'], 'the open blank has no highlight');
     assert.ok(app.get('html.dark .pick-slot--open'), 'the open blank has no dark-mode rule');
 });
 

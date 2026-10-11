@@ -226,10 +226,20 @@ test('checking from a reopened blank hides the step rows behind the results', ()
     assert.equal(kata.pickOption(5), false);
 });
 
-test('an empty slot is not tappable', () => {
+test('an empty slot is tappable and opens its blank out of order', () => {
     const { kata, container } = build();
     kata.render(ITEM);
-    assert.equal(slotsOf(container)[0].disabled, true);
+    assert.equal(slotsOf(container)[1].disabled, false);
+
+    slotsOf(container)[1].click();
+    assert.equal(slotsOf(container)[1].classList.contains('pick-slot--open'), true);
+    assert.equal(part(container, 'prompt').textContent, 'Step 1 · blank 1?');
+
+    buttonIn(container, 'stage-case', 'Akkusativ').click();
+    buttonIn(container, 'stage-form', 'seine').click();
+    // The next unanswered blank is the first one, which was skipped.
+    assert.equal(slotsOf(container)[1].textContent, 'seine');
+    assert.equal(slotsOf(container)[0].classList.contains('pick-slot--open'), true);
 });
 
 test('the change hint appears once a blank is filled, not before', () => {
