@@ -209,10 +209,47 @@ test('a filled slot reopens its blank with the earlier pick kept', () => {
     assert.equal(buttonIn(container, 'stage-form', 'dem').getAttribute('aria-pressed'), 'true');
 });
 
+test('checking from a reopened blank hides the step rows behind the results', () => {
+    const { kata, container } = build();
+    kata.render(ITEM);
+    buttonIn(container, 'stage-case', 'Dativ').click();
+    buttonIn(container, 'stage-form', 'dem').click();
+    buttonIn(container, 'stage-case', 'Akkusativ').click();
+    buttonIn(container, 'stage-form', 'seine').click();
+
+    slotsOf(container)[0].click();
+    assert.equal(part(container, 'steps').hidden, false);
+
+    kata.check(ITEM);
+    assert.equal(part(container, 'steps').hidden, true);
+    assert.equal(part(container, 'review').hidden, false);
+    assert.equal(kata.pickOption(5), false);
+});
+
 test('an empty slot is not tappable', () => {
     const { kata, container } = build();
     kata.render(ITEM);
     assert.equal(slotsOf(container)[0].disabled, true);
+});
+
+test('the change hint appears once a blank is filled, not before', () => {
+    const { kata, container } = build();
+    kata.render(ITEM);
+    assert.doesNotMatch(part(container, 'progress').textContent, /change/i);
+
+    buttonIn(container, 'stage-case', 'Dativ').click();
+    buttonIn(container, 'stage-form', 'dem').click();
+    assert.match(part(container, 'progress').textContent, /Blank 2 of 2.*change it/);
+});
+
+test('a filled slot names its form and offers the change to a screen reader', () => {
+    const { kata, container } = build();
+    kata.render(ITEM);
+    assert.equal(slotsOf(container)[0].getAttribute('aria-label'), 'Blank 1');
+
+    buttonIn(container, 'stage-case', 'Dativ').click();
+    buttonIn(container, 'stage-form', 'dem').click();
+    assert.equal(slotsOf(container)[0].getAttribute('aria-label'), 'Blank 1: dem. Change.');
 });
 
 test('changing the case of a reopened blank clears its form', () => {

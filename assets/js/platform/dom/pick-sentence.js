@@ -54,7 +54,8 @@ function createSlot(index, position) {
     slot.type = 'button';
     slot.className = 'pick-slot';
     slot.dataset.index = index;
-    slot.setAttribute('aria-label', `Blank ${position + 1}`);
+    slot.dataset.label = `Blank ${position + 1}`;
+    slot.setAttribute('aria-label', slot.dataset.label);
     slot.setAttribute('aria-live', 'polite');
     return slot;
 }
@@ -73,6 +74,8 @@ export function setSlot(slot, form, open) {
     slot.textContent = form || '___';
     // An empty blank has nothing to reopen.
     slot.disabled = !form;
+    // The label carries the form, or a screen reader hears only "Blank 1".
+    slot.setAttribute('aria-label', form ? `${slot.dataset.label}: ${form}. Change.` : slot.dataset.label);
     slot.classList.toggle('pick-slot--open', Boolean(open));
     slot.dataset.open = String(Boolean(open));
 }

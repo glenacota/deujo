@@ -28,6 +28,8 @@ import { assertDataset, hasCoreFields } from '../dataset-rules.js';
  */
 const NOT_READY = 'Finish every blank before checking.';
 
+const CHANGE_HINT = 'Tap a filled blank to change it.';
+
 /** The two steps of one blank, in the order they are taken. */
 const Step = Object.freeze({ CASE: 'case', FORM: 'form', DONE: 'done' });
 
@@ -234,9 +236,9 @@ export function createPickerKata({
             dom.promptForm.hidden = step !== Step.FORM;
             pressCase(CASE_LABELS[answers[open]?.caseKey] ?? '');
 
-            dom.progress.textContent = item.b.length > 1
-                ? `Blank ${open + 1} of ${item.b.length}`
-                : '';
+            const where = item.b.length > 1 ? `Blank ${open + 1} of ${item.b.length}` : '';
+            const hint = answers.some((a) => a.form) ? CHANGE_HINT : '';
+            dom.progress.textContent = [where, hint].filter(Boolean).join(' · ');
         }
 
         /**
@@ -251,7 +253,7 @@ export function createPickerKata({
             step = Step.DONE;
             dom.steps.hidden = true;
             dom.review.hidden = true;
-            dom.progress.textContent = 'Tap a blank to change it.';
+            dom.progress.textContent = CHANGE_HINT;
             slots.forEach((slot, index) => setSlot(slot, answers[index].form, false));
         }
 
@@ -260,6 +262,9 @@ export function createPickerKata({
          * graded without the case row for the last blank standing in for the first.
          */
         function showReview() {
+            // Checking from a reopened blank leaves the step rows up otherwise.
+            step = Step.DONE;
+            dom.steps.hidden = true;
             dom.review.hidden = false;
             dom.progress.textContent = '';
 
