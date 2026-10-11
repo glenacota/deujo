@@ -86,7 +86,7 @@ html.dark [data-answer-state="wrong"] {
     line-height: 2rem;
 }
 .blank-input::placeholder { color: rgb(148 163 184); }
-.blank-input:focus { outline: 2px solid transparent; outline-offset: 2px; border-color: rgb(168 85 247); }
+.blank-input:focus { outline: 2px solid transparent; outline-offset: 2px; box-shadow: 0 0 0 1px rgb(99 102 241); }
 .blank-input--inline {
     display: inline-block;
     width: auto;
