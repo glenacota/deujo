@@ -4,7 +4,8 @@
 // Kept in a factory rather than in each kata's template.js because a kata that
 // copied this markup would copy its Tailwind classes too, and Tailwind only
 // emits what it finds in a scanned source file: a kata with a stale copy would
-// render unstyled, with nothing to fail a test.
+// render unstyled, with nothing to fail a test. With the shared look in
+// app.css instead, a copy could not drift visually at all.
 //
 // Three blocks rather than one that swaps its contents, so the learner never
 // loses their place: step one's row of case buttons stays on show with the
@@ -12,20 +13,20 @@
 // takes over once every blank is answered.
 export function pickerTemplate() {
     return `
-    <section class="hidden p-6" data-role="section">
-        <div class="text-center mt-4 mb-6 lg:mb-8">
-            <p data-role="sentence" class="lg:text-3xl text-xlfont-bold text-slate-900 dark:text-white leading-relaxed mx-auto"></p>
-            <p data-role="translation" class="text-slate-500 dark:text-slate-400 text-base lg:text-lg mt-2 lg:mt-3 font-medium italic"></p>
+    <section class="kata-section hidden" data-role="section">
+        <div class="kata-head">
+            <p data-role="sentence" class="kata-prompt kata-prompt--sentence"></p>
+            <p data-role="translation" class="kata-gloss"></p>
         </div>
-        <div class="max-w-xl mx-auto" data-role="picker">
-            <div data-role="steps" hidden>
-                <p data-role="prompt" class="picker-step-label picker-step-label--case"></p>
-                <div data-role="stage-case" class="grid grid-cols-2 sm:grid-cols-4 gap-2 lg:gap-3" role="group" aria-label="Which case?"></div>
-                <p data-role="prompt-form" class="picker-step-label picker-step-label--form" hidden>Step 2 · which form fits?</p>
-                <div data-role="stage-form" class="grid grid-cols-2 sm:grid-cols-4 gap-2 lg:gap-3" role="group" aria-label="Which form?" hidden></div>
+        <div class="kata-field" data-role="picker">
+            <div class="kata-stack" data-role="steps" hidden>
+                <p data-role="prompt" class="kata-label kata-label--step"></p>
+                <div data-role="stage-case" class="kata-options kata-options--4" role="group" aria-label="Which case?"></div>
+                <p data-role="prompt-form" class="kata-label kata-label--step" hidden>Step 2 · which form fits?</p>
+                <div data-role="stage-form" class="kata-options kata-options--4" role="group" aria-label="Which form?" hidden></div>
             </div>
-            <div data-role="review" class="space-y-3" hidden></div>
-            <p data-role="progress" class="mt-4 text-center text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500"></p>
+            <div data-role="review" class="kata-stack" hidden></div>
+            <p data-role="progress" class="kata-note"></p>
         </div>
     </section>
 `;

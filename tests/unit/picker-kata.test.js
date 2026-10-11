@@ -433,15 +433,17 @@ test('a digit before anything is rendered is refused', () => {
     assert.equal(kata.pickOption(0), false, 'no item, no options, nothing to pick');
 });
 
-test('the options carry the noun kata\'s hover treatment', () => {
+test('every option is the shared control, not a picker-only one', () => {
+    // A gender button, an auxiliary and a picker option are the same control,
+    // so they carry the same class. If the picker ever went back to naming its
+    // own Tailwind utilities, the three would drift apart again invisibly.
     const { kata, container } = build();
     kata.render(ITEM);
 
-    const [button] = container.querySelectorAll('[data-role="stage-case"] > *');
-    // The gender buttons hover to a tinted background and a brighter border; a
-    // picker option that did not would feel like a different control entirely.
-    for (const hover of ['hover:border-blue-500', 'hover:bg-blue-50', 'dark:hover:bg-blue-950/40']) {
-        assert.ok(button.classList.contains(hover), `a picker option is missing ${hover}`);
+    const buttons = container.querySelectorAll('[data-role="stage-case"] > *');
+    assert.ok(buttons.length > 0);
+    for (const button of buttons) {
+        assert.equal(button.className, 'kata-option');
     }
 });
 

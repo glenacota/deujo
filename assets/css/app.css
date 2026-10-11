@@ -12,6 +12,7 @@
 #logo img { transition: transform 80ms ease-out; }
 #logo:active img { transform: scale(0.9); }
 /* ---- Answer marking ---------------------------------------------------- */
+[hidden] { display: none !important; }
 .answer-field {
     display: inline-flex;
     flex-wrap: wrap;
@@ -103,9 +104,111 @@ html.dark .blank-input::placeholder { color: rgb(71 85 105); }
     .blank-input--narrow { width: 6rem; }
 }
 
-/* ---- Picker kata -------------------------------------------------------- */
-/* A blank in a two-stage picker is a slot in the sentence, not a field: the
-   learner picks a form, so nothing here is typed or focusable. */
+/* ---- Kata surface ------------------------------------------------------- */
+/* Every kata renders the same shell: a headline with its gloss beneath it, a
+   caption, and a control. These classes own that shared geometry, so a kata's
+   template carries only what is actually different about it, and a change here
+   lands in all six katas at once. */
+
+.kata-section { padding: 1.5rem; }
+
+/* One vertical rhythm under the headline, whatever the kata is asking. */
+.kata-head { margin: 1rem 0 1.5rem; text-align: center; }
+
+.kata-prompt { color: rgb(15 23 42); font-weight: 700; }
+/* Two sizes, because the prompts differ in length: a single noun or verb gets
+   the display size, a whole sentence gets the prose size. */
+.kata-prompt--word { font-size: 2.25rem; font-weight: 800; line-height: 1.2; }
+.kata-prompt--sentence { font-size: 1.25rem; line-height: 1.6; }
+.kata-gloss {
+    margin-top: 0.5rem;
+    color: rgb(100 116 139);
+    font-size: 1rem;
+    font-style: italic;
+    font-weight: 500;
+}
+html.dark .kata-prompt { color: white; }
+html.dark .kata-gloss { color: rgb(148 163 184); }
+@media (min-width: 640px) { .kata-prompt--word { font-size: 3rem; } }
+@media (min-width: 1024px) {
+    .kata-head { margin-bottom: 2rem; }
+    .kata-prompt--sentence { font-size: 1.75rem; }
+    .kata-gloss { font-size: 1.125rem; }
+}
+
+/* One caption style. `--step` is the picker's question: it quotes a German
+   noun, and "STUDENT" would read as a shout the lesson never meant. */
+.kata-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: rgb(100 116 139);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.075em;
+    text-transform: uppercase;
+}
+.kata-label--step { letter-spacing: 0; text-transform: none; }
+html.dark .kata-label { color: rgb(148 163 184); }
+
+/* The measure every answerable control shares, and the stacks inside it. */
+.kata-field { max-width: 36rem; margin: 0 auto 1.5rem; }
+.kata-stack { display: grid; gap: 0.75rem; }
+.kata-rows { display: grid; gap: 0.25rem; }
+
+/* A labelled blank. The label keeps its own column so the inputs line up, and
+   the input column cannot push the row wider than the screen. */
+.kata-row {
+    display: grid;
+    grid-template-columns: 4.5rem minmax(0, 1fr);
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    background: rgb(248 250 252);
+}
+.kata-row-label { color: rgb(100 116 139); font-size: 0.875rem; font-weight: 600; }
+html.dark .kata-row { background: rgb(15 23 42 / 0.8); }
+html.dark .kata-row-label { color: rgb(148 163 184); }
+
+/* One option button for every kata: a gender, an auxiliary, a case, a
+   determiner. The button carries its own border, so the correct/wrong palette
+   from `[data-answer-state]` above reaches it unchanged. */
+.kata-options { display: grid; gap: 0.5rem; }
+.kata-options--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.kata-options--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+/* A picker's row holds up to four short forms, which only fit side by side
+   once there is room for them. */
+.kata-options--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.kata-option {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0.45rem 0.5rem;
+    border: 1px solid rgb(203 213 225);
+    border-radius: 0.75rem;
+    background: rgb(241 245 249);
+    color: rgb(67 56 202);
+    font-weight: 700;
+    font-size: 0.95rem;
+    line-height: 1.25;
+    transition: background-color 120ms ease, border-color 120ms ease;
+}
+/* Hover and pressed are the same tint: an option the learner can reach and an
+   option they have chosen read as one control in two states, not two controls. */
+.kata-option:hover, .kata-option[aria-pressed="true"] { border-color: rgb(99 102 241); background: rgb(238 242 255); }
+.kata-option[aria-pressed="true"] { box-shadow: 0 0 0 1px rgb(99 102 241); }
+.kata-option:focus-visible { outline: 2px solid rgb(99 102 241); outline-offset: 2px; }
+html.dark .kata-option { background: rgb(2 6 23); border-color: rgb(51 65 85); color: rgb(165 180 252); }
+html.dark .kata-option:hover, html.dark .kata-option[aria-pressed="true"] { background: rgb(30 27 75); }
+@media (min-width: 640px) { .kata-options--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 1024px) {
+    .kata-options { gap: 0.75rem; }
+    .kata-option { padding: 0.55rem 0.75rem; font-size: 1.05rem; }
+}
+@media (prefers-reduced-motion: reduce) { .kata-option { transition: none; } }
+
+/* The picker only. A blank here is a slot in the sentence, not a field: the
+   learner picks a form, so nothing is typed or focusable. */
 .pick-slot {
     display: inline-block;
     min-width: 3.5rem;
@@ -116,46 +219,26 @@ html.dark .blank-input::placeholder { color: rgb(71 85 105); }
     font-weight: 700;
     text-align: center;
 }
-.pick-slot--open { border-bottom-color: rgb(168 85 247); }
+.pick-slot--open { border-bottom-color: rgb(99 102 241); }
 html.dark .pick-slot { border-bottom-color: rgb(51 65 85); color: rgb(165 180 252); }
-html.dark .pick-slot--open { border-bottom-color: rgb(168 85 247); }
-
-/* One picker option. The button element carries its own border, so the
-   correct/wrong palette from `[data-answer-state]` above reaches it unchanged. */
-.pick-option {
-    min-height: 44px;
-    padding: 0.4rem 0.5rem;
-    border: 1px solid rgb(203 213 225);
-    border-radius: 0.6rem;
-    background: rgb(241 245 249);
-    color: rgb(67 56 202);
-    font-weight: 700;
-    font-size: 0.95rem;
-    line-height: 1.2;
-    transition: background-color 120ms ease, border-color 120ms ease;
-}
-.pick-option[aria-pressed="true"] {
-    border-color: rgb(168 85 247);
-    background: rgb(250 245 255);
-    box-shadow: 0 0 0 1px rgb(168 85 247);
-}
-.pick-option:focus-visible { outline: 2px solid rgb(168 85 247); outline-offset: 2px; }
+html.dark .pick-slot--open { border-bottom-color: rgb(99 102 241); }
 
 .pick-value {
     display: inline-block;
     padding: 0.25rem 0.5rem;
     border: 1px solid rgb(203 213 225);
-    border-radius: 0.6rem;
+    border-radius: 0.75rem;
     background: rgb(241 245 249);
     color: rgb(67 56 202);
     font-weight: 700;
     font-size: 0.85rem;
-    line-height: 1.2;
+    line-height: 1.25;
 }
 html.dark .pick-value { background: rgb(2 6 23); border-color: rgb(51 65 85); color: rgb(165 180 252); }
-/* The digit the hotkey uses, printed on the left of the option so it reads as the
-   key to press beside the word it picks. The margin is on the right because the
-   form is what follows it. */
+
+/* The digit the hotkey uses, printed on the left of the option so it reads as
+   the key to press beside the word it picks. The margin is on the right
+   because the form is what follows it. */
 .pick-key {
     margin-right: 0.4rem;
     padding: 0.05rem 0.3rem;
@@ -169,28 +252,6 @@ html.dark .pick-value { background: rgb(2 6 23); border-color: rgb(51 65 85); co
     vertical-align: middle;
 }
 html.dark .pick-key { background: rgb(51 65 85); color: rgb(203 213 225); }
-html.dark .pick-option {
-    background: rgb(2 6 23);
-    border-color: rgb(51 65 85);
-    color: rgb(165 180 252);
-}
-html.dark .pick-option[aria-pressed="true"] { background: rgb(59 7 100); }
-@media (min-width: 1024px) {
-    .pick-option { font-size: 1.05rem; padding: 0.55rem 0.75rem; }
-}
-@media (prefers-reduced-motion: reduce) {
-    .pick-option { transition: none; }
-}
-
-.picker-step-label {
-    margin-bottom: 0.5rem;
-    font-size: 0.75rem;
-    line-height: 1rem;
-    font-weight: 600;
-    color: rgb(71 85 105);
-}
-.picker-step-label--form { margin-top: 1rem; }
-html.dark .picker-step-label { color: rgb(148 163 184); }
 
 .pick-review-row {
     display: grid;
@@ -213,6 +274,19 @@ html.dark .picker-step-label { color: rgb(148 163 184); }
 .pick-review-cell { display: inline-flex; flex-wrap: wrap; gap: 0.35rem; }
 html.dark .pick-review-label { color: rgb(148 163 184); }
 html.dark .pick-review-row { background: rgb(15 23 42); border-color: rgb(30 41 59); }
+
+/* The progress line under the control stack: a caption that is neither a
+   heading for a control nor one of the controls. */
+.kata-note {
+    margin-top: 1rem;
+    color: rgb(148 163 184);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.075em;
+    text-align: center;
+    text-transform: uppercase;
+}
+html.dark .kata-note { color: rgb(100 116 139); }
 
 /* ---- Verdict panel ------------------------------------------------------ */
 

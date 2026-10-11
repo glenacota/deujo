@@ -89,10 +89,19 @@ no backend, no login.
   one that everything does.
 - A picker option and a review chip are different things. An option is a live
   control: a 44px tap target, a pressed state, a hover. A chip is what the
-  learner gave, already disabled, so it carries none of that furniture (`.pick-value`,
-  not `.pick-option`) and only keeps the classless `[data-answer-state]` palette.
-  Anything reachable by hover is reachable by keyboard and by tap, and a chip is
-  neither.
+  learner gave, already disabled, so it carries none of that furniture
+  (`.pick-value`, not `.kata-option`) and only keeps the classless
+  `[data-answer-state]` palette. Anything reachable by hover is reachable by
+  keyboard and by tap, and a chip is neither.
+- One kata surface, in `app.css`, not one per kata. The section padding, the
+  headline block, the gloss, the caption, the control block and the option button
+  are `.kata-*` classes, so a kata's template says what is *different* about it
+  and nothing else. A kata that hand-styles a button with a Tailwind utility does
+  not render visibly wrong — it renders slightly different, which is worse, so
+  `css-contract.test.js` reads the templates and fails on any option outside
+  `.kata-option`. The picker's prompt is the one deliberate exception to the
+  caption (`.kata-label--step`, sentence case, because it quotes a German noun),
+  so a new variant must justify itself against the caption it departs from.
 - A kata's help body lives in `<id>/help.js` as a pure function and is built from
   the helpers in `katas/help-kit.js`. Help must be **answer-blind**: it takes no
   item, or ignores it, so the modal cannot print the answer to the question on

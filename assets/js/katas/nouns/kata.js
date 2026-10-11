@@ -28,12 +28,9 @@ export function validateNounDataset(dataset) {
     });
 }
 
+/** The chosen gender is the pressed one; app.css paints the state from the attribute. */
 function setGenderActive(btn, active) {
     btn.setAttribute('aria-pressed', String(active));
-    btn.classList.toggle('ring-2', active);
-    btn.classList.toggle('ring-indigo-500', active);
-    btn.classList.toggle('bg-indigo-100', active);
-    btn.classList.toggle('dark:bg-indigo-950/60', active);
 }
 
 /** Mounts the noun kata's section, so `el` is populated for the caller. `el` is read-only afterwards: only `gender` changes between items. */

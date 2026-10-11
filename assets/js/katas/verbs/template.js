@@ -1,53 +1,47 @@
 // katas/verbs/template.js
-export const verbsTemplate = `
-    <section class="hidden p-6" data-role="section">
-        <div class="text-center mt-4 mb-8 lg:mb-10">
-            <h2 data-role="word" class="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight">gehen</h2>
-            <p data-role="meaning" class="text-slate-500 dark:text-slate-400 text-base lg:text-lg mt-0 lg:mt-2 font-medium italic">to go</p>
+// The verb kata's markup, built from PERSONS so the six rows cannot drift apart
+// and a seventh person needs no second copy of the same markup. Which of the two
+// forms ships is the only thing that differs between the three verb katas, so it
+// is the template's argument rather than a class the kata toggles afterwards.
+// Every colour, padding and label here is shared through `.kata-*` in app.css.
+import { PERSONS } from '../../services/grammar.js';
+
+/** One `person -> form` row: a label naming the person, and its blank. */
+const conjugationRow = ({ key, label }, last) => `
+            <div class="kata-row">
+                <label class="kata-row-label" for="conj-${key}">${label}</label>
+                <input id="conj-${key}" type="text" autocomplete="off" maxlength="40" data-role="conj_${key}" enterkeyhint="${last ? 'done' : 'next'}" class="blank-input">
+            </div>`;
+
+/**
+ * @param perfekt true to ask one auxiliary plus one participle, false to ask
+ *   the six conjugations.
+ */
+export const verbsTemplate = (perfekt) => `
+    <section class="kata-section hidden" data-role="section">
+        <div class="kata-head">
+            <h2 data-role="word" class="kata-prompt kata-prompt--word">gehen</h2>
+            <p data-role="meaning" class="kata-gloss">to go</p>
         </div>
-        <div data-role="six">
-        <div class="max-w-xl mx-auto mb-2">
-            <span class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Fill in the Conjugations</span>
-        </div>
-        <div class="grid grid-cols-1 gap-1.5 lg:gap-3 max-w-xl mx-auto mb-6 font-bold">
-            <div class="bg-slate-50 dark:bg-slate-900/80 flex items-center space-x-5">
-                <span class="text-sm text-purple-600 dark:text-purple-400 w-20">ich</span>
-                <input type="text" autocomplete="off" maxlength="40" data-role="conj_ich" aria-label="ich conjugation" placeholder="e.g. gehe" autocapitalize="none" autocorrect="off" spellcheck="false" lang="de" enterkeyhint="next" class="blank-input">
-            </div>
-            <div class="bg-slate-50 dark:bg-slate-900/80 flex items-center space-x-5">
-                <span class="text-sm text-purple-600 dark:text-purple-400 w-20">du</span>
-                <input type="text" autocomplete="off" maxlength="40" data-role="conj_du" aria-label="du conjugation" placeholder="e.g. gehst" autocapitalize="none" autocorrect="off" spellcheck="false" lang="de" enterkeyhint="next" class="blank-input">
-            </div>
-            <div class="bg-slate-50 dark:bg-slate-900/80 flex items-center space-x-5">
-                <span class="text-sm text-purple-600 dark:text-purple-400 w-20">er/sie/es</span>
-                <input type="text" autocomplete="off" maxlength="40" data-role="conj_er" aria-label="er, sie, es conjugation" placeholder="e.g. geht" autocapitalize="none" autocorrect="off" spellcheck="false" lang="de" enterkeyhint="next" class="blank-input">
-            </div>
-            <div class="bg-slate-50 dark:bg-slate-900/80 flex items-center space-x-5">
-                <span class="text-sm text-purple-600 dark:text-purple-400 w-20">wir</span>
-                <input type="text" autocomplete="off" maxlength="40" data-role="conj_wir" aria-label="wir conjugation" placeholder="e.g. gehen" autocapitalize="none" autocorrect="off" spellcheck="false" lang="de" enterkeyhint="next" class="blank-input">
-            </div>
-            <div class="bg-slate-50 dark:bg-slate-900/80 flex items-center space-x-5">
-                <span class="text-sm text-purple-600 dark:text-purple-400 w-20">ihr</span>
-                <input type="text" autocomplete="off" maxlength="40" data-role="conj_ihr" aria-label="ihr conjugation" placeholder="e.g. geht" autocapitalize="none" autocorrect="off" spellcheck="false" lang="de" enterkeyhint="next" class="blank-input">
-            </div>
-            <div class="bg-slate-50 dark:bg-slate-900/80 flex items-center space-x-5">
-                <span class="text-sm text-purple-600 dark:text-purple-400 w-20">sie/Sie</span>
-                <input type="text" autocomplete="off" maxlength="40" data-role="conj_sie" aria-label="sie or Sie conjugation" placeholder="e.g. gehen" autocapitalize="none" autocorrect="off" spellcheck="false" lang="de" enterkeyhint="done" class="blank-input">
-            </div>
-        </div>
-        </div>
-        <div class="hidden" data-role="perf">
-            <div class="max-w-xl mx-auto mb-2">
-                <span class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Select the Auxiliary</span>
-            </div>
-            <div class="grid grid-cols-2 gap-3 max-w-xl mx-auto mb-6">
-                <button type="button" data-role="aux" data-aux="sein" class="py-1 lg:py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-200 dark:bg-slate-950/80 text-purple-600 dark:text-purple-400 font-bold text-base hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-950/40 transition-all focus:outline-none focus:ring-2 focus:ring-purple-500" aria-pressed="false">sein</button>
-                <button type="button" data-role="aux" data-aux="haben" class="py-1 lg:py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-200 dark:bg-slate-950/80 text-purple-600 dark:text-purple-400 font-bold text-base hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-950/40 transition-all focus:outline-none focus:ring-2 focus:ring-purple-500" aria-pressed="false">haben</button>
-            </div>
-            <div class="max-w-xl mx-auto mb-6">
-                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Type the Participle</label>
-                <input type="text" data-role="participle" placeholder="e.g. gegangen" autocomplete="off" maxlength="40" autocapitalize="none" autocorrect="off" spellcheck="false" lang="de" enterkeyhint="done" class="blank-input">
-            </div>
-        </div>
+        ${perfekt ? PERFEKT_BLOCK : CONJUGATION_BLOCK}
     </section>
 `;
+
+const CONJUGATION_BLOCK = `
+        <div class="kata-field">
+            <p class="kata-label" id="verbs-conjugation-label">Fill in the Conjugations</p>
+            <div class="kata-rows" role="group" aria-labelledby="verbs-conjugation-label">${PERSONS.map(conjugationRow).join('')}</div>
+        </div>`;
+
+const PERFEKT_BLOCK = `
+        <div class="kata-field">
+            <p class="kata-label" id="verbs-aux-label">Select the Auxiliary</p>
+            <div class="kata-options kata-options--2" role="group" aria-labelledby="verbs-aux-label">
+                <button type="button" data-role="aux" data-aux="sein" class="kata-option" aria-pressed="false">sein</button>
+                <button type="button" data-role="aux" data-aux="haben" class="kata-option" aria-pressed="false">haben</button>
+            </div>
+        </div>
+        <div class="kata-field">
+            <label class="kata-label" for="verb-participle">Type the Participle</label>
+            <input id="verb-participle" type="text" data-role="participle" placeholder="e.g. gegangen" autocomplete="off" maxlength="40" autocapitalize="none" autocorrect="off" spellcheck="false" lang="de" enterkeyhint="done" class="blank-input">
+        </div>`;

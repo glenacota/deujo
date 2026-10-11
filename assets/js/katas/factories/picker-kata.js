@@ -31,16 +31,8 @@ const NOT_READY = 'Finish every blank before checking.';
 const Step = Object.freeze({ CASE: 'case', FORM: 'form', DONE: 'done' });
 
 /**
- * The hover treatment of the noun kata's gender buttons, so a picker option and a
- * gender button answer a tap the same way. Tailwind only emits the classes it
- * finds in a scanned file, which is why they live on the string the factory
- * builds rather than in app.css.
- */
-const OPTION_CLASS = 'pick-option hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/40';
-
-/**
  * A review chip is a value the learner gave, not a control they can use. It is
- * its own class rather than a `.pick-option` variant because a disabled button
+ * its own class rather than a `.kata-option` variant because a disabled button
  * still needs none of a live option's furniture: no 44px tap target it can never
  * be tapped on, and no hover treatment. `[data-answer-state]` is class-agnostic,
  * so the correct/wrong palette still reaches it unchanged.
@@ -179,7 +171,7 @@ export function createPickerKata({
                 const button = document.createElement('button');
                 button.type = 'button';
                 button.dataset.value = String(value);
-                button.className = OPTION_CLASS;
+                button.className = 'kata-option';
                 button.setAttribute('aria-pressed', 'false');
                 button.setAttribute('aria-keyshortcuts', String(digit));
                 // Digit before the word, so the key reads as the key to press

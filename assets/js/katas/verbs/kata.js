@@ -32,11 +32,9 @@ function splitPerfekt(form) {
     };
 }
 
-/** Pressed-state styling for the Perfekt auxiliary buttons. */
+/** The chosen auxiliary is the pressed one; app.css paints the state from the attribute. */
 function markSelected(btn, active) {
     btn.setAttribute('aria-pressed', String(active));
-    ['ring-2', 'ring-purple-500', 'bg-purple-100', 'dark:bg-purple-950/60']
-        .forEach((cls) => btn.classList.toggle(cls, active));
 }
 
 /** A conjugated form is a string, or `{a, alt}` when two spellings are correct. */
@@ -72,13 +70,8 @@ export function createVerbKata(tenseKey, container) {
     // Perfekt asks for one auxiliary choice and one participle, not six forms.
     const isPerf = tenseKey === 'perf';
 
-    const section = createSectionFromTemplate(verbsTemplate);
+    const section = createSectionFromTemplate(verbsTemplate(isPerf));
     container.appendChild(section);
-
-    if (isPerf) {
-        section.querySelector('[data-role="six"]').classList.add('hidden');
-        section.querySelector('[data-role="perf"]').classList.remove('hidden');
-    }
 
     const el = {
         section,

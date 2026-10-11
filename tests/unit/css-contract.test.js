@@ -158,91 +158,187 @@ test('the settings panel is a bottom sheet on a phone and 44px everywhere', () =
   assert.equal(app.get('.settings-row')?.['min-height'], '44px');
 });
 
-// A picker option is a <button>, so the correct/wrong palette above reaches it
-// through the same `[data-answer-state]` rules. What app.css owns is the geometry:
-// a tap target a thumb can hit, and a pressed state a learner can see.
-test('the picker paints a 44px tap target, a pressed state, and a visible open slot', () => {
-    const option = app.get('.pick-option') ?? {};
+// An option is a <button>, so the correct/wrong palette above reaches it through
+// the same `[data-answer-state]` rules. What app.css owns is the geometry: a tap
+// target a thumb can hit, and a pressed state a learner can see.
+test('an option paints a 44px tap target and a visible pressed state', () => {
+    const option = app.get('.kata-option') ?? {};
     assert.equal(option['min-height'], '44px', 'a phone tap target');
     // Without a pressed background the chosen case is invisible, and step one
     // reads as unanswered while the learner is halfway through it.
-    assert.ok(app.get('.pick-option[aria-pressed="true"]'), 'the pressed state has no rule');
+    assert.ok(app.get('.kata-option[aria-pressed="true"]'), 'the pressed state has no rule');
+    assert.ok(app.get('html.dark .kata-option'), 'an option has no dark-mode rule');
 
-  // The open slot is the one blank being answered, so it needs a colour of its
-  // own rather than inheriting the closed one.
-  assert.ok(app.get('.pick-slot--open')?.['border-bottom-color'], 'the open blank has no underline');
-  assert.ok(app.get('html.dark .pick-slot--open'), 'the open blank has no dark-mode rule');
+    // The open slot is the one blank being answered, so it needs a colour of its
+    // own rather than inheriting the closed one.
+    assert.ok(app.get('.pick-slot--open')?.['border-bottom-color'], 'the open blank has no underline');
+    assert.ok(app.get('html.dark .pick-slot--open'), 'the open blank has no dark-mode rule');
 });
 
-test('the picker stands still when the learner asked for less motion', () => {
-  assert.match(
-    app.get('@media (prefers-reduced-motion: reduce) .pick-option')?.transition ?? '',
-    /none/,
-    'the option transition must switch off',
-  );
+test('an option stands still when the learner asked for less motion', () => {
+    assert.match(
+        app.get('@media (prefers-reduced-motion: reduce) .kata-option')?.transition ?? '',
+        /none/,
+        'the option transition must switch off',
+    );
 });
 
 // The digit on an option is how a learner finds the hotkey, so it has to be
 // legible in both themes rather than a dark smudge on a dark button.
 test('the picker hotkey badge is legible in both themes, and sits left of the form', () => {
-  const key = app.get('.pick-key') ?? {};
-  assert.ok(key.background, 'the digit has no background of its own');
-  assert.ok(key.color, 'and no colour to sit on it');
-  assert.ok(app.get('html.dark .pick-key')?.color, 'the digit is unreadable in dark mode');
+    const key = app.get('.pick-key') ?? {};
+    assert.ok(key.background, 'the digit has no background of its own');
+    assert.ok(key.color, 'and no colour to sit on it');
+    assert.ok(app.get('html.dark .pick-key')?.color, 'the digit is unreadable in dark mode');
 
-  // It is printed before the form, so the gap belongs on its right. A left
-  // margin here would push the digit away from the word it picks.
-  assert.equal(key['margin-right'], '0.4rem');
-  assert.equal(key['margin-left'], undefined, 'the digit leads, so it must not trail');
+    // It is printed before the form, so the gap belongs on its right. A left
+    // margin here would push the digit away from the word it picks.
+    assert.equal(key['margin-right'], '0.4rem');
+    assert.equal(key['margin-left'], undefined, 'the digit leads, so it must not trail');
 });
 
-// The options hover exactly as the noun kata's gender buttons do. Those classes
-// are named in picker-kata.js rather than app.css, so Tailwind has to have
-// emitted them from that string.
-test('a picker option hovers exactly like a noun gender button', () => {
-  const picker = readFileSync(new URL('../../assets/js/katas/factories/picker-kata.js', import.meta.url), 'utf8');
-  const nouns = readFileSync(new URL('../../assets/js/katas/nouns/template.js', import.meta.url), 'utf8');
+// One option class for every kata. This is the consistency the whole surface
+// rests on: the noun kata's gender buttons, the Perfekt auxiliaries and a
+// picker's cases and forms are one control, so a padding or a colour changes in
+// exactly one place. Before this, each kata carried its own Tailwind string and
+// the three treatments drifted apart with nothing failing.
+test('every kata renders its options through the one shared class', () => {
+    const sources = {
+        nouns: readFileSync(new URL('../../assets/js/katas/nouns/template.js', import.meta.url), 'utf8'),
+        verbs: readFileSync(new URL('../../assets/js/katas/verbs/template.js', import.meta.url), 'utf8'),
+        picker: readFileSync(new URL('../../assets/js/katas/factories/picker-kata.js', import.meta.url), 'utf8'),
+    };
 
-  const genderButton = nouns.match(/<button[^>]*data-role="gender"[^>]*>/)[0];
-  const hovers = [...new Set([...genderButton.matchAll(/(?:dark:)?hover:[a-z0-9]+(?:\/[0-9]+)?/g)].map((m) => m[0]))];
+    for (const [kata, source] of Object.entries(sources)) {
+        // Every option button, not just one of them: a kata with a hand-styled
+        // button beside a shared one is exactly the drift this removes.
+        const declared = (source.match(/<button[^>]*>/g) ?? []).filter((tag) => /data-role="(gender|aux)"/.test(tag));
+        // The picker builds its buttons rather than declaring them, so an
+        // assignment to a `button` counts as its declaration.
+        const assigned = [...source.matchAll(/button\.className = '([^']*)'/g)].map(([, name]) => name);
+        assert.ok(
+            declared.length + assigned.length > 0,
+            `${kata} renders no option buttons`,
+        );
 
-  assert.ok(hovers.length >= 3, `the gender button should carry a hover treatment, found ${hovers}`);
-  for (const hover of hovers) {
-    assert.ok(picker.includes(hover), `a picker option does not carry ${hover}`);
-    assertTailwindEmits([hover], 'picker option hover');
-  }
+        for (const tag of declared) {
+            assert.match(tag, /class="[^"]*\bkata-option\b/, `${kata} has an option outside the shared class: ${tag}`);
+            // A stray colour, radius or padding utility on the button would
+            // override app.css and put that kata back out of step with the rest.
+            assert.doesNotMatch(
+                tag,
+                /class="[^"]*\b(?:bg-|text-|rounded-|py-|px-|ring-|border-(?!slate))/,
+                `${kata} hand-styles an option instead of leaving it to app.css: ${tag}`,
+            );
+        }
+        for (const name of assigned) {
+            assert.equal(name, 'kata-option', `${kata} assigns an option class other than the shared one`);
+        }
+    }
 
-  // A hover rule in app.css would outrank those utilities and quietly win, so
-  // the two treatments would drift without anything failing. There must be one
-  // source for the hover, and it is the class string.
-  assert.equal(app.get('.pick-option:hover'), undefined, 'app.css must not also define the hover');
+    // The hover has one source, and it is the class: no per-button utility, and
+    // no leftover rule that could outrank the one that is there.
+    assert.ok(app.get('.kata-option:hover'), 'the shared option has no hover treatment');
+    assert.equal(app.get('.pick-option'), undefined, 'the old picker-only option class is gone');
+});
+
+// The same argument for the shell around the controls. A kata's template is
+// allowed to say what is different about it and nothing else: the section, the
+// headline, the gloss and the caption come from the shared classes, so moving
+// between katas cannot change the padding or the type scale under the learner.
+test('every kata builds its shell from the shared classes', () => {
+    const sources = [
+        ['nouns', '../../assets/js/katas/nouns/template.js'],
+        ['verbs', '../../assets/js/katas/verbs/template.js'],
+        ['picker', '../../assets/js/katas/factories/picker-template.js'],
+    ].map(([kata, path]) => [kata, readFileSync(new URL(path, import.meta.url), 'utf8')]);
+
+    for (const [kata, source] of sources) {
+        assert.match(source, /class="kata-section[^"]*"/, `${kata} does not use the shared section`);
+        assert.match(source, /class="kata-head"/, `${kata} does not use the shared headline block`);
+        assert.match(source, /class="kata-prompt kata-prompt--/, `${kata} does not use the shared prompt`);
+        assert.match(source, /class="kata-gloss"/, `${kata} does not use the shared gloss`);
+        assert.match(source, /class="kata-field/, `${kata} does not use the shared control block`);
+        assert.match(source, /class="kata-label/, `${kata} does not use the shared caption`);
+
+        // Nothing left over from the per-kata Tailwind: a stray `p-6`,
+        // `mt-4` or `mb-8` on the section would silently override the rhythm.
+        const section = source.match(/<section[^>]*>/)[0];
+        assert.doesNotMatch(
+            section,
+            /class="[^"]*\b(?:p-|px-|py-|m[trblxy]?-|max-w-|text-center|leading-|tracking-|font-(?:black|bold|extrabold))/,
+            `${kata} still hand-styles its section or headline: ${section}`,
+        );
+    }
+
+    // A label bound to its control, not floating beside it: `for` on the caption
+    // and `id` on the blank, so a tap on the caption focuses the field.
+    for (const [kata, source] of sources) {
+        const fors = [...source.matchAll(/<label[^>]*\sfor="([^"]+)"/g)].map(([, id]) => id);
+        const ids = new Set([...source.matchAll(/\sid="([^"]+)"/g)].map(([, id]) => id));
+        for (const id of fors) {
+            assert.ok(ids.has(id), `${kata} has a label pointing at no control: ${id}`);
+        }
+    }
 });
 
 // A review chip is a disabled button holding what the learner gave. It is not a
 // control they can use, so it must not be sized as one: the option's 44px tap
 // target on a chip nobody can tap makes the review list taller than the answers
-// it holds, and its hover utilities would do nothing at all. The correct/wrong
-// palette still reaches it, because `[data-answer-state]` names no class.
+// it holds, and a hover would do nothing at all. The correct/wrong palette still
+// reaches it, because `[data-answer-state]` names no class.
 test('a review chip is sized as a value, not as a tappable option', () => {
-  const chip = app.get('.pick-value') ?? {};
-  assert.ok(chip.padding, 'a chip has no padding of its own');
-  assert.equal(chip['min-height'], undefined, 'a disabled chip pays for a tap target it cannot be tapped on');
-  assert.equal(app.get('.pick-value:hover'), undefined, 'and for a hover it can never be hovered');
-  // A chip is its own thing rather than a smaller option, so the compact variant
-  // that used to bridge the two has nothing left to bridge.
-  assert.equal(app.get('.pick-option--compact'), undefined, 'a chip is not a small option');
+    const chip = app.get('.pick-value') ?? {};
+    assert.ok(chip.padding, 'a chip has no padding of its own');
+    assert.equal(chip['min-height'], undefined, 'a disabled chip pays for a tap target it cannot be tapped on');
+    assert.equal(app.get('.pick-value:hover'), undefined, 'and for a hover it can never be hovered');
+    // A chip is its own thing rather than a smaller option, so the compact variant
+    // that used to bridge the two has nothing left to bridge.
+    assert.equal(app.get('.kata-option--compact'), undefined, 'a chip is not a small option');
 });
 
-// Every other kata's section label is uppercase. This one is not, and that is the
-// point: the prompt quotes a German noun and a preposition, and "FRAU" or
+// Every other kata's caption is uppercase. The picker's is not, and that is the
+// point: its prompt quotes a German noun and a preposition, and "FRAU" or
 // "WÄHREND" reads as a shout the lesson never meant. The step number carries the
-// structure instead.
-test('the picker step label does not shout the German it quotes', () => {
-  assert.equal(
-    app.get('.picker-step-label')?.['text-transform'],
-    undefined,
-    'the step label must stay sentence case so the quoted noun reads as a word',
-  );
+// structure instead. The two differ in case alone -- size, weight and colour are
+// the shared `.kata-label`, so a caption that drifts is still one edit away.
+test('the picker step label shares the caption, minus the uppercase', () => {
+    const caption = app.get('.kata-label') ?? {};
+    const step = app.get('.kata-label--step') ?? {};
+
+    assert.equal(caption['text-transform'], 'uppercase');
+    assert.equal(caption.color, 'rgb(100 116 139)', 'a caption is slate-500');
+    assert.equal(step.color, undefined, 'the step variant carries no colour of its own');
+    assert.equal(step['font-weight'], undefined, 'and no weight either');
+
+    // Only the case differs. `text-transform: uppercase` here would be a shout,
+    // so the variant has to actively cancel the caption's rather than inherit it.
+    assert.equal(step['letter-spacing'], '0');
+    assert.equal(step['text-transform'], 'none');
+});
+
+// The katas sit in one column, so their vertical rhythm has to be one rhythm:
+// the same section padding, the same gap under the headline, the same caption
+// offset, and the same gap between control blocks. Three private rhythms meant
+// the action bar sat at a different height in each kata.
+test('every kata sits in the same measure and the same vertical rhythm', () => {
+    assert.equal(app.get('.kata-section')?.padding, '1.5rem');
+    assert.equal(app.get('.kata-field')?.['max-width'], '36rem');
+    assert.equal(app.get('.kata-field')?.margin, '0 auto 1.5rem');
+    assert.equal(app.get('.kata-label')?.['margin-bottom'], '0.5rem');
+    assert.equal(app.get('.kata-head')?.margin, '1rem 0 1.5rem');
+    assert.equal(app.get('.kata-head')?.['text-align'], 'center');
+});
+
+// A labelled blank is a grid row, not a flex line: the label keeps its own
+// column so the six conjugation inputs line up, and the input column is
+// `minmax(0, 1fr)` so a long placeholder cannot push the row off a phone.
+test('a labelled blank gives its label a column and its input the rest', () => {
+    const row = app.get('.kata-row') ?? {};
+    assert.equal(row.display, 'grid');
+    assert.match(row['grid-template-columns'] ?? '', /minmax\(0, 1fr\)/, 'the input column must be able to shrink');
+    assert.ok(app.get('.kata-row-label'), 'a row has no label class');
+    assert.ok(app.get('html.dark .kata-row'), 'a row has no dark-mode rule');
 });
 
 test('the shared kata input class carries the values the katas depend on', () => {
