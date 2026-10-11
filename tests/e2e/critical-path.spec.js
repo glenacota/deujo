@@ -55,7 +55,7 @@ test('hotkeys dispatch: kata jump, help, skip, umlaut typing, back to menu', asy
 
     await page.keyboard.press('Shift+Digit1');
     await expect(page.locator('#focusView')).toBeVisible();
-    await expect(page.locator('#focusKataName')).toHaveText(/Noun/i);
+    await expect(page.locator('#focusKataName')).toHaveText(/Substantive/i);
 
     await page.keyboard.press('?');
     await expect(page.locator('#helpModal')).toBeVisible();

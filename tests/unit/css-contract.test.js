@@ -299,14 +299,12 @@ test('a review chip is sized as a value, not as a tappable option', () => {
     assert.equal(app.get('.kata-option--compact'), undefined, 'a chip is not a small option');
 });
 
-// Every kata has one caption style and no variants. Uppercase micro-labels at
-// 12px are the least legible thing in the UI and read no faster, and the old
-// sentence-case exception for the picker is gone with them: nothing shouts a
-// German noun now, because nothing shouts at all.
-test('the caption is one style, in sentence case, for every kata', () => {
+// Every kata has one caption style and no variants. The caption is an uppercase
+// micro-label set by the stylesheet alone: the template text stays sentence case.
+test('the caption is one style for every kata', () => {
     const caption = app.get('.kata-label') ?? {};
 
-    assert.equal(caption['text-transform'], undefined, 'a caption is not shouted');
+    assert.equal(caption['text-transform'], 'uppercase');
     assert.equal(caption.color, 'rgb(100 116 139)', 'a caption is slate-500');
     assert.equal(caption['font-size'], '0.75rem');
 
@@ -367,7 +365,7 @@ test('the shared kata input class carries the values the katas depend on', () =>
   const input = app.get('.blank-input') ?? {};
   assert.equal(input.width, '100%');
   assert.equal(input['border-radius'], '0.5rem');
-  assert.equal(app.get('.blank-input:focus')?.['border-color'], 'rgb(168 85 247)');
+  assert.equal(app.get('.blank-input:focus')?.['box-shadow'], '0 0 0 1px rgb(99 102 241)');
   assert.equal(app.get('.blank-input--inline')?.display, 'inline-block');
   // The lg step is where the block variant grows its padding and the inline one
   // grows its text.
