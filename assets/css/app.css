@@ -141,6 +141,7 @@ html.dark .kata-gloss { color: rgb(148 163 184); }
     font-size: 0.75rem;
     font-weight: 600;
     letter-spacing: 0.02em;
+    text-transform: uppercase;
 }
 html.dark .kata-label { color: rgb(148 163 184); }
 
