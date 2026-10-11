@@ -140,8 +140,19 @@ html.dark .pick-slot--open { border-bottom-color: rgb(168 85 247); }
     box-shadow: 0 0 0 1px rgb(168 85 247);
 }
 .pick-option:focus-visible { outline: 2px solid rgb(168 85 247); outline-offset: 2px; }
-.pick-option--compact { min-height: 36px; font-size: 0.85rem; padding: 0.25rem 0.5rem; }
-.pick-option:disabled { opacity: 1; cursor: default; }
+
+.pick-value {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid rgb(203 213 225);
+    border-radius: 0.6rem;
+    background: rgb(241 245 249);
+    color: rgb(67 56 202);
+    font-weight: 700;
+    font-size: 0.85rem;
+    line-height: 1.2;
+}
+html.dark .pick-value { background: rgb(2 6 23); border-color: rgb(51 65 85); color: rgb(165 180 252); }
 /* The digit the hotkey uses, printed on the left of the option so it reads as the
    key to press beside the word it picks. The margin is on the right because the
    form is what follows it. */
@@ -170,23 +181,17 @@ html.dark .pick-option[aria-pressed="true"] { background: rgb(59 7 100); }
 @media (prefers-reduced-motion: reduce) {
     .pick-option { transition: none; }
 }
-/* Sentence case, not uppercase: the prompt quotes a German noun and a
-   preposition, and printing "FRAU" or "WÄHREND" as a shout reads as emphasis the
-   lesson never meant. The step number carries the structure instead. */
+
 .picker-step-label {
     margin-bottom: 0.5rem;
     font-size: 0.75rem;
     line-height: 1rem;
     font-weight: 600;
-    text-transform: uppercase;
     color: rgb(71 85 105);
 }
 .picker-step-label--form { margin-top: 1rem; }
 html.dark .picker-step-label { color: rgb(148 163 184); }
-/* One review row per blank: a label, the case cell, a label, the form cell.
-   Two columns so a label always sits beside its own cell, whatever the cells
-   wrap to: a label stranded on the far side of a wide cell reads as a heading
-   for the next blank rather than for the value above it. */
+
 .pick-review-row {
     display: grid;
     grid-template-columns: auto auto;

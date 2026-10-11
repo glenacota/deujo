@@ -9,9 +9,11 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import '../helpers/bootstrap.js';
 
 const { createPickerKata, validatePickerDataset } = await import('../../assets/js/katas/factories/picker-kata.js');
+const { createPrepositionKata } = await import('../../assets/js/katas/prepositions/kata.js');
 const { pickerTemplate } = await import('../../assets/js/katas/factories/picker-template.js');
 const { nounAfter, prepositionBefore } = await import('../../assets/js/katas/factories/trigger.js');
 const { determinerOptions } = await import('../../assets/js/services/determiner-options.js');
@@ -54,6 +56,13 @@ const buttonIn = (container, stage, value) => container
     .querySelectorAll(`[data-role="${stage}"] > *`)
     .find((button) => button.dataset.value === value);
 
+/**
+ * A render target, reached through the mounted section the same way a learner
+ * reaches it. `el` is the section and nothing more, so a test that wanted
+ * anything else would be reaching past the interface the app itself uses.
+ */
+const part = (container, role) => container.querySelector(`[data-role="${role}"]`);
+
 /** Renders ITEM and answers each blank with `[caseKey, form]`. */
 function answer(picks, overrides) {
     const { kata, container, lessons } = build(overrides);
@@ -88,9 +97,9 @@ test('the sentence carries one slot per placeholder, in order', () => {
 });
 
 test('the translation is shown above the picker, so nothing is hidden from the learner', () => {
-    const { kata } = build();
+    const { kata, container } = build();
     kata.render(ITEM);
-    assert.match(kata.el.translation.textContent, /A sentence\./);
+    assert.match(part(container, 'translation').textContent, /A sentence\./);
 });
 
 test('nothing in a picker is a text field', () => {
@@ -122,10 +131,10 @@ test('step one offers every case the kata allows, and nothing else', () => {
 test('step two is hidden until step one is answered', () => {
     const { kata, container } = build();
     kata.render(ITEM);
-    assert.equal(kata.el.stageForm.hidden, true);
+    assert.equal(part(container, 'stage-form').hidden, true);
 
     buttonIn(container, 'stage-case', 'Dativ').click();
-    assert.equal(kata.el.stageForm.hidden, false);
+    assert.equal(part(container, 'stage-form').hidden, false);
 });
 
 test('step two offers the blank\'s own answer among its distractors', () => {
@@ -150,7 +159,7 @@ test('a picked case stays pressed while step two is open', () => {
         .map((b) => b.dataset.value);
 
     assert.deepEqual(pressed, ['Dativ']);
-    assert.equal(kata.el.stageCase.hidden, false, 'the chosen case stays on show');
+    assert.equal(part(container, 'stage-case').hidden, false, 'the chosen case stays on show');
 });
 
 test('a blank the learner answered fills into the sentence', () => {
@@ -182,7 +191,7 @@ test('a two-blank sentence walks the blanks in order', () => {
             .filter((b) => b.getAttribute('aria-pressed') === 'true'),
         [],
     );
-    assert.equal(kata.el.prompt.textContent, 'Step 1 · blank 1?');
+    assert.equal(part(container, 'prompt').textContent, 'Step 1 · blank 1?');
 });
 
 /**
@@ -272,17 +281,17 @@ test('an unfinished blank blocks the check with a warning', () => {
     kata.render(ITEM);
 
     // Nothing picked at all.
-    assert.match(kata.check(ITEM).warning, /answer every blank/i);
+    assert.match(kata.check(ITEM).warning, /finish every blank/i);
     assert.equal(kata.check(ITEM).correct, undefined, 'a warning is not a verdict');
 
     // Step one taken, step two not: still unfinished, and the stage-two row is
     // the one that has to be answered before the check means anything.
     buttonIn(container, 'stage-case', 'Dativ').click();
-    assert.match(kata.check(ITEM).warning, /answer every blank/i);
+    assert.match(kata.check(ITEM).warning, /finish every blank/i);
 
     // One blank of two done.
     buttonIn(container, 'stage-form', 'dem').click();
-    assert.match(kata.check(ITEM).warning, /answer every blank/i);
+    assert.match(kata.check(ITEM).warning, /finish every blank/i);
 });
 
 test('checking before rendering reports rather than throwing', () => {
@@ -316,10 +325,10 @@ test('a second render discards the previous item\'s picks', () => {
 
     const single = { ...ITEM, id: 't2', s: 'Der Mann bringt {0} Gast.', b: [{ a: 'dem', c: 'dat' }] };
     kata.render(single);
-    assert.match(kata.check(single).warning, /answer every blank/i, 'picks must not survive a new item');
+    assert.match(kata.check(single).warning, /finish every blank/i, 'picks must not survive a new item');
     // Counted in the sentence, because that is what the renderer rebuilds: a slot
     // left over from the previous item would be a blank the learner cannot answer.
-    assert.equal(kata.el.sentence.querySelectorAll('.pick-slot').length, 1);
+    assert.equal(part(container, 'sentence').querySelectorAll('.pick-slot').length, 1);
 });
 
 test('every option prints the digit that picks it, and names it to assistive tech', () => {
@@ -362,7 +371,7 @@ test('a digit picks the option in that position on whichever stage is open', () 
     kata.render(ITEM);
 
     assert.equal(kata.pickOption(3), true, 'step one, the third case');
-    assert.equal(kata.el.stageForm.hidden, false, 'so step two opened');
+    assert.equal(part(container, 'stage-form').hidden, false, 'so step two opened');
 
     // Where the answer sits is the generator's business, not this test's: read it
     // off the row so the assertion is about the digit picking *that* button.
@@ -385,14 +394,14 @@ test('a digit from the other stage is refused, not guessed at', () => {
 });
 
 test('a digit with no option in that position is refused, not silently claimed', () => {
-    const { kata } = build();
+    const { kata, container } = build();
     kata.render(ITEM);
 
     // Four cases and four forms is the widest row any stage builds, so 9 is past
     // the end of both, and 0 is before the start of either.
     assert.equal(kata.pickOption(9), false);
     assert.equal(kata.pickOption(0), false);
-    assert.equal(kata.el.stageForm.hidden, true, 'and nothing was opened by asking');
+    assert.equal(part(container, 'stage-form').hidden, true, 'and nothing was opened by asking');
 });
 
 test('a digit after the last pick does not re-answer a graded blank', () => {
@@ -446,15 +455,15 @@ test('help is answer-blind: it is called with no item at all', () => {
 
 test('the stage-one prompt is asked per blank and never reads the answer', () => {
     const asked = [];
-    const { kata } = build({ prompt: (item, blank, index) => { asked.push({ index, answer: blank.a }); return `?${index}`; } });
+    const { kata, container } = build({ prompt: (item, blank, index) => { asked.push({ index, answer: blank.a }); return `?${index}`; } });
     kata.render(ITEM);
 
-    buttonIn(kata.el.section.parentElement, 'stage-case', 'Dativ');
+    buttonIn(container, 'stage-case', 'Dativ');
     assert.deepEqual(asked.map((a) => a.index), [0]);
     // The factory passes the blank so a kata can find the trigger, and the kata
     // reads only the sentence from it. What matters is the prompt text never
     // carrying the case.
-    assert.equal(kata.el.prompt.textContent, '?0');
+    assert.equal(part(container, 'prompt').textContent, '?0');
 });
 
 test('validatePickerDataset accepts an entry it should', () => {
@@ -538,4 +547,158 @@ test('the option generator always offers the answer it was asked about', () => {
         assert.ok(options.length >= 3, `${blank.a} has nothing to choose between`);
         assert.equal(new Set(options.map((f) => f.toLowerCase())).size, options.length, 'a duplicate button');
     }
+});
+
+test('the answer moves from item to item, but stays put for the same blank', () => {
+    // The rotation is what stops a learner learning the button's position instead
+    // of the form. It is a hash, so it is pinned both ways: the same blank always
+    // renders the same way, or a reload would move the answer under their finger.
+    const blanks = [
+        { a: 'dem', c: 'dat' }, { a: 'seinem', c: 'dat' }, { a: 'ihrem', c: 'dat' },
+        { a: 'meinen', c: 'akk' }, { a: 'einem', c: 'dat' }, { a: 'unseren', c: 'dat' },
+        { a: 'deinen', c: 'akk' }, { a: 'euerem', c: 'dat' }, { a: 'jenem', c: 'dat' },
+    ];
+    const position = (blank) => determinerOptions(blank).findIndex((form) => form.toLowerCase() === blank.a.toLowerCase());
+
+    assert.deepEqual(
+        blanks.map((blank) => position(blank)),
+        blanks.map((blank) => position({ ...blank })),
+        'the same blank must render identically every time',
+    );
+    assert.ok(
+        new Set(blanks.map(position)).size > 1,
+        'the answer never moves, so the first button is always the right one',
+    );
+});
+
+test('the digits the keyboard listens for cover both rows and nothing else', () => {
+    // `ui/keyboard-shortcut.js` holds its own list of digits, because a keyboard
+    // funnel that imported the picker to learn them would couple the two layers
+    // for one array. So the agreement between the two is watched here instead of
+    // built in: a wider row would print a digit no binding claims, and the key
+    // would do nothing at all.
+    const funnel = readFileSync(new URL('../../assets/js/ui/keyboard-shortcut.js', import.meta.url), 'utf8');
+    const digits = [...funnel.matchAll(/'([1-9])'/g)].map(([, digit]) => Number(digit));
+
+    const widest = Math.max(
+        CASES.length,
+        ...blanksAnOptionRowIsBuiltFor().map((blank) => determinerOptions(blank).length),
+    );
+    assert.deepEqual(
+        digits,
+        Array.from({ length: widest * 2 }, (_, i) => i + 1),
+        'the funnel must listen to exactly the digits the two rows can print',
+    );
+});
+
+/** Every blank shape the shipped option generator has to cope with. */
+const blanksAnOptionRowIsBuiltFor = () => [
+    { a: 'dem', c: 'dat' }, { a: 'seinem', c: 'dat' }, { a: 'seine', c: 'akk' },
+    { a: 'die', c: 'akk' }, { a: 'ihnen', c: 'dat' }, { a: 'mich', c: 'akk' },
+    { a: 'eines', c: 'gen' }, { a: 'jeder', c: 'nom' }, { a: 'diese', c: 'akk' },
+];
+
+test('a row the learner can actually choose between is what gets built', () => {
+    // The service test covers this per blank; this is the same guarantee read
+    // off the rendered row, because a row that came back short would leave a gap
+    // in the grid rather than an error anywhere.
+    for (const blank of blanksAnOptionRowIsBuiltFor()) {
+        const { kata, container } = build();
+        const item = { ...ITEM, s: 'Ein Satz {0} hier.', b: [blank] };
+        kata.render(item);
+        buttonIn(container, 'stage-case', CASE_LABELS[blank.c]).click();
+
+        const offered = Array.from(part(container, 'stage-form').children);
+        assert.ok(offered.length >= 3, `${blank.a} rendered a row of ${offered.length}`);
+        // Every button on the row has to have a digit that is bound, or it is
+        // reachable by mouse only while its neighbours are not.
+        assert.deepEqual(
+            offered.map((button) => button.getAttribute('aria-keyshortcuts')),
+            offered.map((_, index) => String(index + 1 + CASES.length)),
+        );
+    }
+});
+
+test('a review chip is a value, not a live option', () => {
+    // It is a disabled button, so it can never be tapped or hovered: giving it
+    // the option's 44px tap target would make the review list twice as tall as
+    // the answers it holds, and its hover utilities would do nothing at all.
+    const { container } = answer([['dat', 'den'], ['akk', 'seine']]);
+    const chips = Array.from(container.querySelectorAll('.pick-value'));
+
+    assert.ok(chips.length > 0, 'the review list has no chips');
+    for (const chip of chips) {
+        assert.ok(!chip.classList.contains('pick-option'), 'a chip is styled as a live option');
+        assert.equal(chip.disabled, true);
+    }
+});
+
+test('the graded cells and the verdict come from one comparison', () => {
+    // `markReview` reads the verdicts `check` built rather than repeating the
+    // comparison, so a cell cannot show a different finding from the one the
+    // correction panel explains.
+    const { container } = answer([['dat', 'den'], ['dat', 'seine']]);
+    const chips = Array.from(container.querySelectorAll('.pick-value'));
+
+    // Blank one: the case held, the form slipped, and the correction sits beside
+    // it. Blank two: the form held and the case was corrected instead. Flattened
+    // in document order, so a row that gained or lost a cell would show here.
+    assert.deepEqual(
+        chips.map((chip) => chip.dataset.answerState),
+        ['correct', 'wrong', 'correct', 'wrong', 'correct', 'correct'],
+    );
+});
+
+test('a kata exposes the section and nothing else', () => {
+    // `focus-view.js`, `registry.js` and `app.js` reach a kata through
+    // `el.section` alone. A wider public handle would read as an interface the
+    // rest of the code depends on, and nothing would notice when it stopped
+    // meaning one.
+    const { kata } = build();
+    assert.deepEqual(Object.keys(kata.el), ['section']);
+});
+
+test('each row of buttons is described by the question printed above it', () => {
+    // Otherwise a screen reader hears four buttons and a bare "Which case?" and
+    // never the sentence's own question.
+    const { kata, container } = build();
+    kata.render(ITEM);
+
+    assert.equal(
+        part(container, 'stage-case').getAttribute('aria-describedby'),
+        part(container, 'prompt').id,
+    );
+    assert.equal(
+        part(container, 'stage-form').getAttribute('aria-describedby'),
+        part(container, 'prompt-form').id,
+    );
+});
+
+test('a question id is namespaced by its kata, so two mounted sections cannot share one', () => {
+    // Every kata is mounted at boot, so both picker sections are on the page at
+    // once and a shared id would leave one row describing the other's question.
+    const { container: left } = build({ manifest: { ...MANIFEST, id: 'cases' } });
+    const { container: right } = build({ manifest: { ...MANIFEST, id: 'prepositions' } });
+
+    assert.equal(part(left, 'prompt').id, 'cases-prompt');
+    assert.equal(part(right, 'prompt-form').id, 'prepositions-prompt-form');
+});
+
+test("a kata's own dataset rule is enforced alongside the shared ones", () => {
+    // The preposition kata asks step one about a preposition the sentence prints,
+    // so an entry without one cannot answer its own question. Checked at load
+    // rather than survived at runtime: a fallback would be the case kata's
+    // question, which a learner in this kata has no way to tell from the one
+    // they should have been asked.
+    const { validateDataset } = createPrepositionKata(document.createElement('div'));
+    const entry = {
+        id: 'p1', w: 'Ein Satz.', m: 'A sentence.',
+        s: 'Der Kellner bringt {0} Gast.', b: [{ a: 'dem', c: 'dat' }],
+    };
+
+    assert.throws(() => validateDataset([entry]), /entry 0/, 'no preposition in front of the blank');
+    assert.doesNotThrow(
+        () => validateDataset([{ ...entry, s: 'Ich warte auf {0} Gast.' }]),
+        '"auf" governs the blank, so step one has something to ask about',
+    );
 });

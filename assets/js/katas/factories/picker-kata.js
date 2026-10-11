@@ -17,11 +17,15 @@ import { createSectionFromTemplate } from '../../platform/dom/template.js';
 import { renderPickSentence, setSlot } from '../../platform/dom/pick-sentence.js';
 import { markControl } from '../../platform/dom/answer-marking.js';
 import { CASE_LABELS, determinerBelongsTo, hasOrderedBlankPlaceholders, normalizePhrase } from '../../services/grammar.js';
-import { determinerOptions } from '../../services/determiner-options.js';
+import { determinerOptions, OPTION_ROW_SIZE } from '../../services/determiner-options.js';
 import { assertDataset, hasCoreFields } from '../dataset-rules.js';
 
-/** A blank the learner has only part-answered is unfinished, not wrong. */
-const NOT_READY = 'Answer every blank before checking.';
+/**
+ * A blank the learner has only part-answered is unfinished, not wrong. "Finish"
+ * rather than "answer", because a case picked with no form behind it has been
+ * answered as far as the learner knows and still is not checkable.
+ */
+const NOT_READY = 'Finish every blank before checking.';
 
 /** The two steps of one blank, in the order they are taken. */
 const Step = Object.freeze({ CASE: 'case', FORM: 'form', DONE: 'done' });
@@ -35,16 +39,26 @@ const Step = Object.freeze({ CASE: 'case', FORM: 'form', DONE: 'done' });
 const OPTION_CLASS = 'pick-option hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/40';
 
 /**
- * The digit each stage starts at, and the widest row any of them builds.
- *
- * Step one and step two get disjoint ranges on purpose. Both rows are open at
- * once — step one's stays on show with the chosen case pressed, so the learner
+ * A review chip is a value the learner gave, not a control they can use. It is
+ * its own class rather than a `.pick-option` variant because a disabled button
+ * still needs none of a live option's furniture: no 44px tap target it can never
+ * be tapped on, and no hover treatment. `[data-answer-state]` is class-agnostic,
+ * so the correct/wrong palette still reaches it unchanged.
+ */
+const VALUE_CLASS = 'pick-value';
+
+/**
+ * The digit each stage starts at. Step one opens at 1 and step two starts one row
+ * further on, so the two get disjoint ranges on purpose: both rows are on screen
+ * at once — step one's stays on show with the chosen case pressed, so the learner
  * can see what they picked — and a shared range would mean `3` could stand for
  * Nominativ or for a determiner depending on which row the eye had drifted to.
  * Disjoint ranges make every digit mean exactly one button.
  */
-const DIGITS = Object.freeze({ [Step.CASE]: 1, [Step.FORM]: 5 });
-const OPTIONS_PER_ROW = 4;
+const DIGITS = Object.freeze({
+    [Step.CASE]: 1,
+    [Step.FORM]: 1 + OPTION_ROW_SIZE,
+});
 
 /**
  * The dataset check both picker katas share: a sentence carrying one `{n}`
@@ -58,12 +72,16 @@ const OPTIONS_PER_ROW = 4;
  * @param describeProblem words this kata's own failure message for entry `index`
  * @param cases the case keys this kata allows, so a preposition kata cannot ship
  *   a Nominativ answer that no preposition governs
+ * @param entryRule (item) => boolean, this kata's own extra rule. A kata whose
+ *   step one asks about something its sentence has to contain states so here,
+ *   rather than degrading to a vaguer question when it does not.
  */
-export function validatePickerDataset(dataset, describeProblem, cases) {
+export function validatePickerDataset(dataset, describeProblem, cases, entryRule = () => true) {
     assertDataset(dataset);
 
     dataset.forEach((item, index) => {
-        const ok = hasCoreFields(item, { sentence: true })
+        const ok = entryRule(item)
+            && hasCoreFields(item, { sentence: true })
             && Array.isArray(item?.b)
             && item.b.length > 0
             && hasOrderedBlankPlaceholders(item?.s, item.b.length)
@@ -91,6 +109,7 @@ export function validatePickerDataset(dataset, describeProblem, cases) {
  * @param lessonFor (miss) -> the correction panel's `Lesson`, or null. Called on
  *   every verdict including a clean one, so it must tolerate an absent miss.
  * @param describeProblem (index) -> this kata's validation failure message
+ * @param entryRule (item) -> boolean, this kata's own extra dataset rule
  */
 export function createPickerKata({
     manifest,
@@ -100,6 +119,7 @@ export function createPickerKata({
     cases = Object.keys(CASE_LABELS),
     lessonFor,
     describeProblem,
+    entryRule,
 }) {
     return (container) => {
         // Rebuilt per item, so a graded answer is compared against its own picks
@@ -113,8 +133,12 @@ export function createPickerKata({
         const section = createSectionFromTemplate(template);
         container.appendChild(section);
 
-        const el = {
-            section,
+        // The render targets stay in the closure. `section` is the whole of what
+        // the app asks a kata for — it shows, locks, releases and clears marks
+        // through it, and `registry.js` fails a kata that mounts no section. A
+        // wider public handle would read as an interface the rest of the code
+        // depends on, and nothing would notice when it stopped meaning one.
+        const dom = {
             sentence: section.querySelector('[data-role="sentence"]'),
             translation: section.querySelector('[data-role="translation"]'),
             steps: section.querySelector('[data-role="steps"]'),
@@ -125,6 +149,16 @@ export function createPickerKata({
             stageForm: section.querySelector('[data-role="stage-form"]'),
             review: section.querySelector('[data-role="review"]'),
         };
+
+        // Each row is described by the question printed above it, so a screen
+        // reader hears the sentence's own wording before the buttons rather than
+        // a generic "Which case?". Ids are namespaced by kata because every kata
+        // is mounted at boot, and two sections sharing one id would leave the
+        // second row pointing at the first kata's question.
+        dom.prompt.id = `${manifest.id}-prompt`;
+        dom.promptForm.id = `${manifest.id}-prompt-form`;
+        dom.stageCase.setAttribute('aria-describedby', dom.prompt.id);
+        dom.stageForm.setAttribute('aria-describedby', dom.promptForm.id);
 
         /**
          * One row of buttons, rebuilt per blank. Rebuilt rather than reused
@@ -181,12 +215,12 @@ export function createPickerKata({
         }
 
         /** Step one's chosen case stays pressed while step two is open. */
-        const pressCase = (chosen) => Array.from(el.stageCase.children)
+        const pressCase = (chosen) => Array.from(dom.stageCase.children)
             .forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.value === chosen)));
 
         /** Fills the step-two row for one blank. */
         const showFormsFor = (index) => buildRow(
-            el.stageForm,
+            dom.stageForm,
             determinerOptions(item.b[index]),
             (form) => pickForm(form),
             DIGITS[Step.FORM],
@@ -196,16 +230,16 @@ export function createPickerKata({
         function paint() {
             slots.forEach((slot, index) => setSlot(slot, answers[index]?.form, index === open));
 
-            el.prompt.textContent = prompt(item, item.b[open], open);
-            el.stageCase.hidden = false;
+            dom.prompt.textContent = prompt(item, item.b[open], open);
+            dom.stageCase.hidden = false;
             // Step two carries its own label. Without it the second row of
             // buttons reads as four more cases, and the learner cannot tell
             // which question the forms are answering.
-            el.stageForm.hidden = step !== Step.FORM;
-            el.promptForm.hidden = step !== Step.FORM;
+            dom.stageForm.hidden = step !== Step.FORM;
+            dom.promptForm.hidden = step !== Step.FORM;
             pressCase(CASE_LABELS[answers[open]?.caseKey] ?? '');
 
-            el.progress.textContent = item.b.length > 1
+            dom.progress.textContent = item.b.length > 1
                 ? `Blank ${open + 1} of ${item.b.length}`
                 : '';
         }
@@ -220,12 +254,12 @@ export function createPickerKata({
             // press. The buttons are still in the DOM behind the hidden step
             // block, and without this a stray key would re-answer a graded blank.
             step = Step.DONE;
-            el.steps.hidden = true;
-            el.review.hidden = false;
-            el.progress.textContent = '';
+            dom.steps.hidden = true;
+            dom.review.hidden = false;
+            dom.progress.textContent = '';
             slots.forEach((slot, index) => setSlot(slot, answers[index].form, false));
 
-            el.review.textContent = '';
+            dom.review.textContent = '';
             const fragment = document.createDocumentFragment();
             item.b.forEach((blank, index) => {
                 const row = document.createElement('div');
@@ -244,7 +278,7 @@ export function createPickerKata({
                 row.appendChild(reviewCell(answers[index].form, blank.a));
                 fragment.appendChild(row);
             });
-            el.review.appendChild(fragment);
+            dom.review.appendChild(fragment);
         }
 
         /**
@@ -270,7 +304,7 @@ export function createPickerKata({
 
             const picked = document.createElement('button');
             picked.type = 'button';
-            picked.className = 'pick-option pick-option--compact';
+            picked.className = VALUE_CLASS;
             picked.disabled = true;
             picked.textContent = given ?? '—';
             cell.appendChild(picked);
@@ -278,7 +312,7 @@ export function createPickerKata({
             if (wanted && normalizePhrase(wanted) !== normalizePhrase(given)) {
                 const expected = document.createElement('button');
                 expected.type = 'button';
-                expected.className = 'pick-option pick-option--compact';
+                expected.className = VALUE_CLASS;
                 expected.disabled = true;
                 expected.textContent = wanted;
                 cell.appendChild(expected);
@@ -309,7 +343,7 @@ export function createPickerKata({
             if (open < answers.length - 1) {
                 open += 1;
                 step = Step.CASE;
-                buildRow(el.stageForm, [], () => {}, DIGITS[Step.FORM]);
+                buildRow(dom.stageForm, [], () => {}, DIGITS[Step.FORM]);
                 paint();
                 return;
             }
@@ -318,8 +352,10 @@ export function createPickerKata({
 
         return {
             ...manifest,
-            validateDataset: (dataset) => validatePickerDataset(dataset, describeProblem, cases),
-            el,
+            validateDataset: (dataset) => validatePickerDataset(dataset, describeProblem, cases, entryRule),
+            // The section and nothing else: it is what `registry.js` checks for
+            // and what the app shows, locks and releases the kata through.
+            el: { section },
 
             /**
              * Answer-blind: `help` takes no item, so the body cannot print the
@@ -347,9 +383,9 @@ export function createPickerKata({
                 // both rows are on screen, and `3` must mean one button only.
                 const first = DIGITS[step];
                 const position = digit - first;
-                if (!Number.isInteger(position) || position < 0 || position >= OPTIONS_PER_ROW) return false;
+                if (!Number.isInteger(position) || position < 0 || position >= OPTION_ROW_SIZE) return false;
 
-                const host = step === Step.FORM ? el.stageForm : el.stageCase;
+                const host = step === Step.FORM ? dom.stageForm : dom.stageCase;
                 const button = host.children[position];
                 if (!button) return false;
 
@@ -360,16 +396,16 @@ export function createPickerKata({
             render(next) {
                 item = next;
                 answers = (next?.b ?? []).map(() => ({ caseKey: null, form: null }));
-                slots = renderPickSentence(el, next);
+                slots = renderPickSentence(dom, next);
                 open = 0;
                 step = Step.CASE;
-                el.steps.hidden = false;
-                el.review.hidden = true;
-                el.review.textContent = '';
-                el.promptForm.hidden = true;
+                dom.steps.hidden = false;
+                dom.review.hidden = true;
+                dom.review.textContent = '';
+                dom.promptForm.hidden = true;
 
-                buildRow(el.stageCase, cases.map((caseKey) => CASE_LABELS[caseKey]), (label) => pickCase(label), DIGITS[Step.CASE]);
-                buildRow(el.stageForm, [], () => {}, DIGITS[Step.FORM]);
+                buildRow(dom.stageCase, cases.map((caseKey) => CASE_LABELS[caseKey]), (label) => pickCase(label), DIGITS[Step.CASE]);
+                buildRow(dom.stageForm, [], () => {}, DIGITS[Step.FORM]);
                 paint();
             },
 
@@ -379,58 +415,77 @@ export function createPickerKata({
                     return { warning: NOT_READY };
                 }
 
-                const misses = [];
-                const fields = item.b.map((blank, index) => {
-                    const given = answers[index];
-                    // Case graded on what was named in step one, form on what was
-                    // picked in step two, so the correction names the stage that
-                    // went wrong rather than one verdict for the pair.
-                    const caseOk = given.caseKey === blank.c;
-                    const formOk = normalizePhrase(given.form) === normalizePhrase(blank.a);
-                    if (!caseOk || !formOk) misses.push({ blank, index, item, given, caseOk, formOk });
-                    return { ok: caseOk && formOk };
-                });
-
-                markReview();
+                const graded = grade();
+                markReview(graded);
 
                 return {
-                    correct: fields.every((field) => field.ok),
-                    fields,
+                    correct: graded.every(({ caseOk, formOk }) => caseOk && formOk),
+                    fields: graded.map(({ caseOk, formOk }) => ({ ok: caseOk && formOk })),
                     // The first miss teaches: a two-blank sentence has two rules,
                     // and the panel has room for one.
-                    lesson: lessonFor(misses[0]),
+                    lesson: lessonFor(firstMiss(graded)),
                 };
             },
         };
 
         /**
-         * Grades the two stages separately and paints them. The picked control is
-         * marked as picked, and the one the blank wanted is marked right beside
-         * it, the way the noun kata marks the gender it meant: a wrong pick with
-         * no right one next to it teaches nothing.
+         * Both stages of every blank, graded once.
          *
-         * Graded from the picks rather than from a passed-in miss list, so a cell
-         * and the verdict it explains cannot drift apart.
+         * One pass, one result. The verdict, the correction panel and the review
+         * list are all built from this, so a cell and the sentence explaining it
+         * cannot come from two comparisons that happened to agree this time.
          */
-        function markReview() {
-            Array.from(el.review.children).forEach((row, index) => {
+        function grade() {
+            return item.b.map((blank, index) => {
                 const given = answers[index];
-                const wanted = item.b[index];
-                // The row is [label, caseCell, label, formCell], and grading
+                return {
+                    blank,
+                    index,
+                    given,
+                    // Case graded on what was named in step one, form on what was
+                    // picked in step two, so the correction names the stage that
+                    // went wrong rather than one verdict for the pair.
+                    caseOk: given.caseKey === blank.c,
+                    formOk: normalizePhrase(given.form) === normalizePhrase(blank.a),
+                };
+            });
+        }
+
+        /**
+         * The first blank that went wrong, as the correction panel wants it, or
+         * `undefined` on a clean verdict.
+         *
+         * `lessonFor` runs on every verdict, so it has to be able to cope with
+         * there being no miss. `item` and `index` travel with it because the
+         * preposition kata's panel reads the sentence to name the preposition the
+         * blank sits behind; the case kata's panel needs neither.
+         */
+        function firstMiss(graded) {
+            const miss = graded.find(({ caseOk, formOk }) => !caseOk || !formOk);
+            if (!miss) return undefined;
+            const { blank, index, given, caseOk } = miss;
+            return { blank, index, item, given, caseOk };
+        }
+
+        /**
+         * Paints the two stages of each graded row. The picked control is marked
+         * as picked, and the one the blank wanted is marked right beside it, the
+         * way the noun kata marks the gender it meant: a wrong pick with no right
+         * one next to it teaches nothing.
+         *
+         * Reads the verdicts it is handed rather than comparing again, so what a
+         * cell shows and what the panel explains are the same finding.
+         */
+        function markReview(graded) {
+            Array.from(dom.review.children).forEach((row, index) => {
+                const { caseOk, formOk } = graded[index];
+                // The row is [label, caseCell, label, formCell], and painting
                 // reads the cells rather than trusting their position in the row.
                 const cells = Array.from(row.children).filter((node) => node.classList.contains('pick-review-cell'));
                 const [caseCell, formCell] = cells;
 
-                markControl(caseCell.children[0], {
-                    ok: given.caseKey === wanted.c,
-                    inside: true,
-                    note: false,
-                });
-                markControl(formCell.children[0], {
-                    ok: normalizePhrase(given.form) === normalizePhrase(wanted.a),
-                    inside: true,
-                    note: false,
-                });
+                markControl(caseCell.children[0], { ok: caseOk, inside: true, note: false });
+                markControl(formCell.children[0], { ok: formOk, inside: true, note: false });
                 // The wanted control is the second child, present only on a miss.
                 if (formCell.children[1]) markControl(formCell.children[1], { ok: true, inside: true, note: false });
                 if (caseCell.children[1]) markControl(caseCell.children[1], { ok: true, inside: true, note: false });

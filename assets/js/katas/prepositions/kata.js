@@ -1,11 +1,11 @@
 // katas/prepositions/kata.js
-// Prepositions: name the case the preposition governs, then pick the article that
-// case takes.
+// Prepositions: name the case the preposition governs, then pick the determiner
+// that case and the noun's gender produce.
 
 import { CASE_LABELS, prepositionRection } from '../../services/grammar.js';
 import { createPickerKata, validatePickerDataset } from '../factories/picker-kata.js';
 import { pickerTemplate } from '../factories/picker-template.js';
-import { nounAfter, prepositionBefore } from '../factories/trigger.js';
+import { prepositionBefore } from '../factories/trigger.js';
 import { prepositionsManifest } from './manifest.js';
 import { renderPrepositionHelp } from './help.js';
 import { renderPrepositionLesson } from './lesson.js';
@@ -18,6 +18,17 @@ const describeProblem = (index) =>
     `entry ${index} has an invalid sentence, translation, or determiner answers`;
 
 /**
+ * Every blank has to sit behind a preposition the sentence actually prints,
+ * because step one asks about that preposition by name.
+ *
+ * Enforced as a dataset rule rather than survived at runtime: a fallback question
+ * would be the case kata's, which a learner in this kata cannot tell from the one
+ * they should have been asked, and the mistake would read as a wrong answer.
+ */
+const governedByItsSentence = (item) =>
+    Array.isArray(item?.b) && item.b.every((_, index) => prepositionBefore(item?.s, index));
+
+/**
  * Step one, keyed to the preposition already sitting in the sentence.
  *
  * @param item the dataset entry, for its `s`
@@ -27,24 +38,13 @@ const describeProblem = (index) =>
 function askCase(item, blank, index) {
     const preposition = prepositionBefore(item?.s, index);
 
-    if (prepositionRection(preposition ?? '') === 'two') {
-        return `Step 1 · "${preposition}" takes two cases. Which one here?`;
-    }
-    if (preposition) {
-        return `Step 1 · "${preposition}" always takes which case?`;
-    }
-
-    // No preposition governs this blank, so there is no table to name: ask about
-    // the noun instead, which is the case kata's question and is just as
-    // answerable from German.
-    const noun = nounAfter(item?.s, index);
-    return noun
-        ? `Step 1 · which case does "${noun}" take here?`
-        : 'Step 1 · which case does this blank take?';
+    return prepositionRection(preposition ?? '') === 'two'
+        ? `Step 1 · "${preposition}" takes two cases. Which one here?`
+        : `Step 1 · "${preposition}" always takes which case?`;
 }
 
 export function validatePrepositionDataset(dataset) {
-    return validatePickerDataset(dataset, describeProblem, CASES);
+    return validatePickerDataset(dataset, describeProblem, CASES, governedByItsSentence);
 }
 
 /** Mounts the preposition kata's section, so `el` is populated for the caller. */
@@ -56,4 +56,5 @@ export const createPrepositionKata = (container) => createPickerKata({
     cases: CASES,
     lessonFor: renderPrepositionLesson,
     describeProblem,
+    entryRule: governedByItsSentence,
 })(container);

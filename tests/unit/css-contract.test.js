@@ -218,6 +218,33 @@ test('a picker option hovers exactly like a noun gender button', () => {
   assert.equal(app.get('.pick-option:hover'), undefined, 'app.css must not also define the hover');
 });
 
+// A review chip is a disabled button holding what the learner gave. It is not a
+// control they can use, so it must not be sized as one: the option's 44px tap
+// target on a chip nobody can tap makes the review list taller than the answers
+// it holds, and its hover utilities would do nothing at all. The correct/wrong
+// palette still reaches it, because `[data-answer-state]` names no class.
+test('a review chip is sized as a value, not as a tappable option', () => {
+  const chip = app.get('.pick-value') ?? {};
+  assert.ok(chip.padding, 'a chip has no padding of its own');
+  assert.equal(chip['min-height'], undefined, 'a disabled chip pays for a tap target it cannot be tapped on');
+  assert.equal(app.get('.pick-value:hover'), undefined, 'and for a hover it can never be hovered');
+  // A chip is its own thing rather than a smaller option, so the compact variant
+  // that used to bridge the two has nothing left to bridge.
+  assert.equal(app.get('.pick-option--compact'), undefined, 'a chip is not a small option');
+});
+
+// Every other kata's section label is uppercase. This one is not, and that is the
+// point: the prompt quotes a German noun and a preposition, and "FRAU" or
+// "WÄHREND" reads as a shout the lesson never meant. The step number carries the
+// structure instead.
+test('the picker step label does not shout the German it quotes', () => {
+  assert.equal(
+    app.get('.picker-step-label')?.['text-transform'],
+    undefined,
+    'the step label must stay sentence case so the quoted noun reads as a word',
+  );
+});
+
 test('the shared kata input class carries the values the katas depend on', () => {
   // P5 consolidated nine copies of this into app.css; if a declaration is dropped
   // here the blanks silently lose their size or their focus ring.

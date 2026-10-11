@@ -22,8 +22,15 @@ import {
 /** Genders in the order a declension table lists them. */
 const GENDERS = ['der', 'die', 'das', 'plural'];
 
-/** Buttons in a stage-two row: the answer plus three distractors. */
-const DEFAULT_SIZE = 4;
+/**
+ * Buttons in a stage-two row: the answer plus three distractors.
+ *
+ * Exported because the picker owns the geometry that goes with it — the digit
+ * printed on each button, and the range the keyboard funnel listens for, are
+ * both this number's consequences, so a row that grew would move all three
+ * rather than quietly leaving two of them behind.
+ */
+export const OPTION_ROW_SIZE = 4;
 
 /**
  * One determiner resolved to the forms its stem takes.
@@ -217,7 +224,7 @@ function rotate(options, seed) {
  * @param {number} size how many buttons to offer
  * @returns {string[]} distinct forms, the dataset's own spelling among them
  */
-export function determinerOptions(blank, size = DEFAULT_SIZE) {
+export function determinerOptions(blank, size = OPTION_ROW_SIZE) {
     const answer = String(blank?.a ?? '');
     if (!answer) return [];
 

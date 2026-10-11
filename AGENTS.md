@@ -43,7 +43,10 @@ no backend, no login.
 - A fill-in-the-blank kata (dataset sentences using `{n}` placeholders) builds
   on `katas/factories/picker-kata.js` and `pickerTemplate()`, and declares only
   what differs: `cases` (which cases step one offers), `prompt` (what it asks),
-  `lessonFor`, `describeProblem`.
+  `lessonFor`, `describeProblem`, and `entryRule` when its step one needs
+  something its sentence has to contain — the preposition kata rejects an entry
+  with no preposition in front of a blank rather than falling back at runtime to
+  the case kata's question, which a learner in that kata cannot tell apart.
   Do not copy a grader or a section template out of `cases/` or
   `prepositions/` — that duplication is what the factory exists to remove, and
   `tests/unit/picker-kata.test.js` covers the shared path. Note `lessonFor`
@@ -51,8 +54,11 @@ no backend, no login.
 - A picker grades its two stages **separately**, and that is the point: a learner
   who names Dativ and then reaches for "seinen" has two separate mistakes. So
   `check()` compares the picked `caseKey` against `blank.c` *and* the picked form
-  against `blank.a`; never collapse the two into one string match. `blank.c` is
-  off limits to `prompt` too, or step one would print the answer it asks for.
+  against `blank.a`; never collapse the two into one string match. Grade once:
+  `grade()` builds the verdicts, and `check()`, `markReview()` and the correction
+  panel all read that one result, so a painted cell cannot come from a second
+  comparison that happened to agree. `blank.c` is off limits to `prompt` too, or
+  step one would print the answer it asks for.
 - A picker blank holds a **determiner**, never a whole prepositional phrase: the
   preposition sits in the sentence where the learner can read it, which is what
   makes step one answerable from German alone. `determinerOptions()` in
@@ -63,14 +69,30 @@ no backend, no login.
 - A picker option is picked by mouse or by the digit printed on its left. Step
   one is 1–4 and step two 5–8, disjoint on purpose: both rows are on screen at
   once, so a shared range would make `3` mean Nominativ or a determiner
-  depending on which row the eye had drifted to. The digit is bound in
-  `ui/keyboard-shortcut.js` (the one funnel for every binding) and routed through
-  `KataFlow.pickOption` to the kata's own `pickOption`, because `ui/` and
+  depending on which row the eye had drifted to. The width of a row is
+  `OPTION_ROW_SIZE` in `services/determiner-options.js`, and step two's range
+  starts one row further on, so the two cannot overlap by accident. The digit is
+  bound in `ui/keyboard-shortcut.js` (the one funnel for every binding) and routed
+  through `KataFlow.pickOption` to the kata's own `pickOption`, because `ui/` and
   `katas/` are peers and may not import each other. A picker answering by digit
   **must** return false when no option carries that digit — a digit belonging to
   the other stage, or one past the end of the row: the binding claims the key
   only when the kata used it, so an unusable digit stays with the page instead of
-  being swallowed by a no-op.
+  being swallowed by a no-op. The funnel keeps its own digit list rather than
+  importing the picker for it, so `picker-kata.test.js` reads the funnel's source
+  and fails when the two disagree about how wide a row is.
+- A kata's public surface is its section and nothing else. `registry.js` fails a
+  kata with no `el.section`, and `focus-view.js` and `app.js` reach a kata
+  through that one field — so the factory keeps every other render target in its
+  closure, and its tests drive the mounted section the way the app does. An `el`
+  wider than the contract is a public interface nothing reads, and it reads as
+  one that everything does.
+- A picker option and a review chip are different things. An option is a live
+  control: a 44px tap target, a pressed state, a hover. A chip is what the
+  learner gave, already disabled, so it carries none of that furniture (`.pick-value`,
+  not `.pick-option`) and only keeps the classless `[data-answer-state]` palette.
+  Anything reachable by hover is reachable by keyboard and by tap, and a chip is
+  neither.
 - A kata's help body lives in `<id>/help.js` as a pure function and is built from
   the helpers in `katas/help-kit.js`. Help must be **answer-blind**: it takes no
   item, or ignores it, so the modal cannot print the answer to the question on

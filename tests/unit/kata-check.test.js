@@ -179,7 +179,7 @@ test('a half-answered blank blocks the check with a warning', () => {
     // A case named and no form picked is unfinished, not wrong: choosing again is
     // cheaper than guessing which of the two the learner meant.
     const answer = graderFor(createPrepositionKata, item);
-    assert.equal(answer([['akk', null]]).warning, 'Answer every blank before checking.');
+    assert.equal(answer([['akk', null]]).warning, 'Finish every blank before checking.');
     assert.equal(answer([['akk', null]]).correct, undefined, 'a warning is not a verdict');
     assert.equal(answer([['akk', 'dich']]).correct, true);
 });
