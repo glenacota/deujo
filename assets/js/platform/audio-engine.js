@@ -1,9 +1,5 @@
 // platform/audio-engine.js
 
-// Wraps the WebAudio API for the app's short sound effects. Lazily creates
-// the AudioContext on first use, since browsers refuse to start one before
-// a user gesture - and resumes it if the tab suspended it in the background
-
 import { get, set } from './preferences.js';
 
 export class AudioEngine {
@@ -20,6 +16,7 @@ export class AudioEngine {
     set('sound', isOn);
   }
 
+  // Created lazily: browsers refuse to start an AudioContext before a user gesture.
   #ensureContext() {
     if (!this.#soundOn) return null;
     if (!this.#ctx) {
@@ -34,7 +31,7 @@ export class AudioEngine {
 
   #playTone(type, freq, rampTo, duration, gainStart) {
     const ctx = this.#ensureContext();
-    if (!ctx) return; // WebAudio unsupported or muted - sound is decoration, fail silently
+    if (!ctx) return; // unsupported or muted: sound is decoration
 
     const now = ctx.currentTime;
     const osc = ctx.createOscillator();

@@ -1,14 +1,11 @@
 // platform/preferences.js
-// Single owner of the user's settings: reads, defaults, and writes.
-// UI modules (settings-view, keyboard-shortcut) never touch storage directly.
 
 import { CONFIG } from '../config.js';
 import { Storage } from './storage.js';
 
 export const THEME_MODES = CONFIG.themeModes;
 
-// Every setting is stored in its positive form, so "on" always means the
-// feature is on. DEFAULTS is what a user with no stored choices gets.
+// Settings are stored in positive form: true always means the feature is on.
 const DEFAULTS = Object.freeze({
   theme: 'system',
   sound: true,

@@ -5,7 +5,5 @@ export const nounsManifest = {
     subtitle: 'Gender & Plural',
     datasetUrl: './assets/datasets/nouns.json',
     accent: 'indigo',
-    // The modal covers gender and plural together, because the plural rules
-    // depend on the gender.
     helpTitle: 'Gender & Plural Rules',
 };

@@ -1,15 +1,6 @@
 // platform/dom/answer-marking.js
-// Inline marking of a kata's own controls: colour plus emoji, right where the
-// learner is looking.
-//
-// Two shapes, because controls sit in two different layouts:
-//
-//   inside: true  -> the badge becomes a child of the control itself. Used for
-//                    buttons in a grid, where a wrapper would become the grid
-//                    item and collapse the button's width.
-//   inside: false -> the control is wrapped in an `.answer-field` span that
-//                    reserves room for an absolutely positioned badge. Used for
-//                    text inputs, which must keep their exact layout.
+// `inside: true` parents the badge on the control: a wrapper around a grid button would become the grid item and collapse its width.
+// `inside: false` wraps the control in `.answer-field`, reserving room for the badge so text inputs keep their layout.
 
 const WRAPPER_CLASS = 'answer-field';
 const BADGE_CLASS = 'answer-badge';
@@ -44,34 +35,20 @@ function setNote(parent, text, state) {
   note.textContent = text;
 }
 
-/**
- * A wrapper hangs the badge to the right of the control; a button gets it
- * appended after its label. The badge carries no Tailwind classes: app.css
- * owns `.answer-badge`, and the tighter `button > .answer-badge` variant, so
- * an `inside` badge must land in a <button> to pick up its offset.
- */
+// app.css owns `.answer-badge` and its tighter `button > .answer-badge` offset, so an `inside` badge must land in a <button>.
 function setBadge(parent, ok) {
   const existing = childOf(parent, BADGE_CLASS);
   const badge = existing ?? document.createElement('span');
   badge.className = BADGE_CLASS;
   badge.textContent = ok ? '✅' : '❌';
-  // Always last, so a re-mark never lands between a label and its badge.
+  // Always last, so a re-mark keeps the badge after the label.
   parent.appendChild(badge);
 }
 
-/**
- * Marks one control as right or wrong.
- *
- * A wrong control carries its expected value as a note next to it, so the
- * correction is readable in place. A correct one gets the badge only: six green
- * ticks with repeated text is noise, and the panel already lists the answers.
- *
- * @param options `note: false` suppresses the note entirely
- */
+// A correct control gets the badge only (the panel already lists the answers); `note: false` suppresses the note.
 export function markControl(control, { ok, expected = '', inside = false, note } = {}) {
   if (!control) return;
 
-  // A button takes its badge as a child; an input gets a wrapper to hang it on.
   const host = inside ? control : wrapControl(control);
   control.dataset.answerState = ok ? 'correct' : 'wrong';
   control.setAttribute('aria-invalid', String(!ok));
@@ -84,7 +61,6 @@ export function markControl(control, { ok, expected = '', inside = false, note }
   setNote(host, note ?? (ok ? null : expected || '—'), ok ? 'correct' : 'wrong');
 }
 
-/** Removes every mark and unwraps the controls again, ready for the next item. */
 export function clearAnswerMarks(root) {
   if (!root) return;
 
@@ -102,15 +78,8 @@ export function clearAnswerMarks(root) {
   });
 }
 
-/**
- * Freezes one kata section while the verdict is on screen. `inert` blocks
- * focus and taps; `readOnly` keeps text fields out of iOS's disabled greying.
- * `disabled` is never touched, so a kata's own per-item rules (a noun with no
- * plural) survive the lock and the call is idempotent.
- *
- * Takes the section itself, not a container: every kata is mounted from boot,
- * so locking a container would freeze the katas the learner is not looking at.
- */
+// readOnly, not disabled: iOS greys disabled fields, and per-item disabled state (a noun with no plural) must survive the lock.
+// Takes the section, not a container: every kata is mounted from boot.
 export function setSectionLocked(section, locked) {
   if (!section) return;
 

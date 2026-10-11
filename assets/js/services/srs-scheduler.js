@@ -1,10 +1,5 @@
 // services/srs-scheduler.js
-// Three-stage Leitner boxes: Learning, Review, Mastered. An item moves up one
-// box per correct answer and falls back to the first box on a mistake. Wrong
-// answers come back soon, right answers earn more breathing room.
-//
-// The ladder lives in CONFIG.srs, beside the belt points it shares a reward
-// schedule with. Still pure: `now` is injected, so no clock and no random.
+// Pure: `now` is injected, so no clock and no random.
 
 import { CONFIG } from '../config.js';
 

@@ -1,24 +1,11 @@
 // services/answer-matcher.js
-// One place that decides whether a typed answer is right. A blank can have more
-// than one correct answer, so grading never compares a single string.
-//
-// Three kinds of alternative exist, and a blank may use all of them at once:
-//   - spelling variants the grammar service derives ("zum" <-> "zu dem")
-//   - a dataset `alt` list for answers the grammar cannot derive
-//   - multi-word answers: the learner may type "der Mann" where the blank holds
-//     only "der", so the extra words in the sentence are accepted too
-//
-// No DOM here, so it stays unit testable.
 
 import { normalizePhrase, prepositionSpellings } from './grammar.js';
 
 /** A dataset answer is either a plain string or `{ a, alt }`; both are read here. */
 const toBlank = (answer) => (typeof answer === 'string' ? { a: answer } : answer ?? {});
 
-/**
- * Every answer that counts as correct for one blank, normalised and without
- * duplicates. The dataset's own answer comes first so it stays the one shown.
- */
+/** Normalised and duplicate-free; the dataset's own answer comes first because it is the one shown. */
 export function acceptedAnswers(answer) {
     const blank = toBlank(answer);
     const primary = normalizePhrase(blank.a);
@@ -27,10 +14,7 @@ export function acceptedAnswers(answer) {
     return [...new Set(all)];
 }
 
-/**
- * Grades one blank. `allowExtraWords` lets "der Mann" answer a blank holding
- * only "der", so a whole-phrase answer is still right.
- */
+/** `allowExtraWords` lets "der Mann" answer a blank holding only "der". */
 export function matchAnswer(given, answer, { allowExtraWords = false } = {}) {
     const accepted = acceptedAnswers(answer);
     const typed = normalizePhrase(given);
@@ -42,11 +26,7 @@ export function matchAnswer(given, answer, { allowExtraWords = false } = {}) {
     return { ok, accepted };
 }
 
-/**
- * True when `typed` is the answer plus exactly one extra word at either end, so
- * the noun that sits in the sentence may be typed along with its article:
- * "der" answers "der Mann", but "der große Mann" is a different answer.
- */
+/** Exactly one extra word at either end: "der Mann" matches "der", "der große Mann" does not. */
 function isAnswerPlusOneWord(typed, answer) {
     if (!answer) return false;
     const typedWords = typed.split(' ');

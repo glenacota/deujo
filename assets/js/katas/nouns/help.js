@@ -1,14 +1,5 @@
 // katas/nouns/help.js
-// The noun kata's help modal, as pure markup. Pure string work, so it stays
-// unit-testable and never touches the DOM.
-//
-// Answer-blind: the body takes no item, so it cannot print the noun on screen or
-// the plural it expects.
-//
-// The order is the teaching. Gender first, then the plural, because every plural
-// rule below depends on the gender: `das` + `-er` takes the umlaut (die Bücher)
-// while `der` + `-er` usually does not (die Lehrer). A plural rule taught before
-// the gender is a rule the learner cannot apply.
+// Gender comes before plural because every plural rule depends on it.
 
 import { banner, disclosure, rule, ruleList, wordGroup } from '../help-kit.js';
 
@@ -64,7 +55,6 @@ function pluralHelp() {
     ].join('');
 }
 
-/** The noun kata's help body. Takes no item, so it can never leak the answer. */
 export function renderNounHelp() {
     return [
         banner(

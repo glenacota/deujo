@@ -1,18 +1,13 @@
 // services/answer-summary.js
-// Pure grading-to-display logic. No DOM here, so it stays unit testable.
 
-// A tone is one of these three strings, and `ui-controller.js` owns the class
-// list and the hover hint for each.
+// Keyed by tone; `ui-controller.js` owns the class list and hover hint for each.
 const ICONS = {
     correct: '✅',
     wrong: '❌',
     warning: '⚠️',
 };
 
-/**
- * Turns a kata's `check()` result into everything the verdict panel needs.
- * @param {{correct?: boolean, fields?: {ok: boolean}[]}|null} result
- */
+/** @param {{correct?: boolean, fields?: {ok: boolean}[]}|null} result a kata's `check()` result */
 export function summarizeAnswer(result) {
     const fields = Array.isArray(result?.fields) ? result.fields : [];
     const wrong = fields.filter((field) => !field.ok);
@@ -29,26 +24,18 @@ export function summarizeAnswer(result) {
         detail: correct
             ? 'Well done.'
             : 'Review, learn, and continue.',
-        // The kata's own `{form, note}` for a miss, passed straight through: the
-        // summary decides tone and wording, the kata owns the grammar. A correct
-        // answer teaches nothing, so it never carries one.
+        // Passed through from the kata, which owns the grammar; a correct answer carries none.
         lesson: correct ? null : (result?.lesson ?? null),
     };
 }
 
-/**
- * A blocking complaint (empty field, missing choice) is not an answer: it gets
- * an amber panel, no grading, and never advances on its own. "—", so a missing
- * message never renders as an empty title.
- * @param {string} message
- */
+/** A blocking complaint (empty field, missing choice) is not an answer: no grading, never advances. */
 export function summarizeWarning(message) {
     return {
         tone: 'warning',
         icon: ICONS.warning,
         title: String(message ?? '').trim() || '—',
         detail: '',
-        // Nothing was graded, so there is nothing to correct.
         lesson: null,
     };
 }

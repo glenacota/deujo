@@ -1,25 +1,10 @@
 // katas/verbs/help.js
-// The three verb katas' help modal, as pure markup. One pure function per tense
-// so the content stays unit-testable and never touches the DOM.
-//
-// Answer-blind: it teaches the rule and works one fixed verb, so opening help
-// never reveals which person, ending or auxiliary the current item needs.
-//
-// The worked verbs (messen, schneiden and the Perfekt examples) and the worked
-// sentences are deliberately verbs the dataset does not ship. A worked table of a
-// shipped verb leaks an answer, so a new verb may only be added here after checking
-// `assets/datasets/verbs.json`.
-//
-// Every dynamic string is escaped before it reaches `UiController#showHelpContent`,
-// which is the one trusted-HTML sink and does not escape for its caller.
+// Worked verbs and sentences must stay out of `assets/datasets/verbs.json`, or the help leaks an answer.
 
 import { escapeHtml } from '../../services/escape-html.js';
 import { PERSONS } from '../../services/grammar.js';
 import { banner, code, disclosure, rule, ruleList } from '../help-kit.js';
 
-// ---- tables ---------------------------------------------------------------
-
-/** The six persons against one ending each, built from `PERSONS` so it cannot drift. */
 function endingsTable(endings) {
     return `
         <div class="overflow-x-auto">
@@ -36,7 +21,6 @@ function endingsTable(endings) {
         </div>`;
 }
 
-/** The worked verb, written out, so the method lands on a real sentence. */
 function exampleTable(forms) {
     return `
         <div class="overflow-x-auto">
@@ -53,8 +37,6 @@ function exampleTable(forms) {
         </div>
         <p class="px-1 text-xs text-slate-500 dark:text-slate-400">A fixed verb, never the one on screen.</p>`;
 }
-
-// ---- Präsens --------------------------------------------------------------
 
 const PRES_ENDINGS = ['-e', '-st', '-t', '-en', '-t', '-en'];
 
@@ -91,8 +73,6 @@ function presHelp() {
     ].join('');
 }
 
-// ---- Präteritum -----------------------------------------------------------
-
 const PRAET_WEAK_ENDINGS = ['-te', '-test', '-te', '-ten', '-tet', '-ten'];
 
 function praetHelp() {
@@ -124,8 +104,6 @@ function praetHelp() {
         disclosure('Worked example: schneiden', exampleTable(['schnitt', 'schnittst', 'schnitt', 'schnitten', 'schnitt', 'schnitten'])),
     ].join('');
 }
-
-// ---- Perfekt --------------------------------------------------------------
 
 function perfHelp() {
     return [
@@ -163,7 +141,6 @@ function perfHelp() {
     ].join('');
 }
 
-/** The help body for one tense. Takes no item, so it can never leak the answer. */
 export function renderVerbHelp(tenseKey) {
     if (tenseKey === 'perf') return perfHelp();
     if (tenseKey === 'praet') return praetHelp();

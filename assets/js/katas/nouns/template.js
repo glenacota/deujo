@@ -1,7 +1,4 @@
 // katas/nouns/template.js
-// The noun kata's markup: a word, its gloss, then a gender row and a plural
-// field. Every colour, padding and label here is shared through `.kata-*` in
-// app.css, so this file carries only what is different about this kata.
 export const nounsTemplate = `
     <section class="kata-section hidden" data-role="section">
         <div class="kata-head">

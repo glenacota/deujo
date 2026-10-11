@@ -1,16 +1,10 @@
 // platform/dataset-loader.js
 
-/**
- * Fetches and schema-checks a kata's dataset, cached by URL.
- *
- * Katas that share one file share one request. A failure evicts the entry so
- * the next attempt really refetches instead of replaying the same rejection.
- */
+// Cached by URL, so katas sharing a file share one request; a failure evicts the entry so the next call refetches.
 export function createDatasetLoader(fetchImpl = (...args) => fetch(...args)) {
   const cache = new Map(); // dataset URL -> Promise<dataset>
 
   return {
-    /** @param {{ id: string, datasetUrl: string, validateDataset: (data: unknown) => void }} kata */
     load(kata) {
       const { id, datasetUrl } = kata;
       if (!cache.has(datasetUrl)) {

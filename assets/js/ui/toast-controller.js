@@ -10,8 +10,7 @@ export class ToastController {
         const beltIndex = Math.min(belt, CONFIG.belts.labels.length - 1);
         const beltName = `${CONFIG.belts.icons[beltIndex]} ${CONFIG.belts.labels[beltIndex]}`;
 
-        // Only the palette is swapped; the card's geometry lives on `.toast-card` in
-        // app.css, and `.animate-bounce` rides on the promotion only.
+        // Palette only; geometry lives on `.toast-card` in app.css.
         dom.toast.card.className = isPromotion
             ? 'toast-card toast-card--promoted animate-bounce'
             : 'toast-card toast-card--demoted';

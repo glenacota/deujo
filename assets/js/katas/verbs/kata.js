@@ -1,5 +1,4 @@
 // katas/verbs/kata.js
-// Self-contained verb-conjugation kata.
 
 import { createSectionFromTemplate } from '../../platform/dom/template.js';
 import { acceptedAnswers, matchAnswer } from '../../services/answer-matcher.js';
@@ -12,19 +11,16 @@ import { renderVerbHelp } from './help.js';
 import { renderVerbLesson } from './lesson.js';
 import { verbsTemplate } from './template.js';
 
-// Tense-neutral placeholders (from "gehen"), one per person, so the hint never leaks the current verb's answer.
+// Placeholders come from "gehen", so a hint never leaks the current verb's answer.
 const TENSE_PLACEHOLDERS = {
     pres: ['e.g. gehe', 'e.g. gehst', 'e.g. geht', 'e.g. gehen', 'e.g. geht', 'e.g. gehen'],
     praet: ['e.g. ging', 'e.g. gingst', 'e.g. ging', 'e.g. gingen', 'e.g. gingt', 'e.g. gingen'],
 };
 
-// The conjugated Perfekt auxiliaries; every other one-part form is "sein".
+// Any other auxiliary form counts as "sein".
 const HABEN_AUXILIARIES = ['habe', 'hast', 'hat', 'haben', 'habt'];
 
-/**
- * Splits one Perfekt form into its two answers: `"ist gegangen"` and any `alt`
- * spelling split the same way, so the kata grades a choice plus a typed word.
- */
+/** Splitting `alt` spellings the same way lets the kata grade a choice plus a typed word. */
 function splitPerfekt(form) {
     const [auxiliary, ...participle] = normalizePhrase(form).split(' ');
     return {
@@ -33,12 +29,11 @@ function splitPerfekt(form) {
     };
 }
 
-/** The chosen auxiliary is the pressed one; app.css paints the state from the attribute. */
+// app.css paints the pressed state from aria-pressed.
 function markSelected(btn, active) {
     btn.setAttribute('aria-pressed', String(active));
 }
 
-/** A conjugated form is a string, or `{a, alt}` when two spellings are correct. */
 function isUsableForm(form) {
     if (typeof form === 'string') return Boolean(form.trim());
     if (!form || typeof form !== 'object' || typeof form.a !== 'string' || !form.a.trim()) return false;
@@ -61,14 +56,8 @@ export function validateVerbDataset(dataset) {
     });
 }
 
-/**
- * Mounts one verb tense's section, so `el` is populated for the caller. Each
- * tense gets its own parsed section, so the three verb katas coexist.
- * @param tenseKey one of the keys of `TENSES`
- */
 export function createVerbKata(tenseKey, container) {
     const manifest = getVerbManifest(tenseKey);
-    // Perfekt asks for one auxiliary choice and one participle, not six forms.
     const isPerf = tenseKey === 'perf';
 
     const section = createSectionFromTemplate(verbsTemplate(isPerf));
@@ -88,23 +77,18 @@ export function createVerbKata(tenseKey, container) {
         auxiliary = btn.dataset.aux;
         el.auxButtons.forEach((b) => markSelected(b, b.dataset.aux === auxiliary));
     }));
-    // The same rule as a picker's row: tap the auxiliary, or press its digit.
-    // A tense with no option buttons of its own simply has none to print.
+    // Same tap-or-digit rule as a picker row; tenses without aux buttons get none.
     digitiseOptions(el.auxButtons);
 
-    /**
-     * Perfekt grading: the auxiliary is a choice, the participle the only typed
-     * answer. The participle is the same in all six forms, so one is enough.
-     */
     function checkPerfekt(verb) {
         if (!auxiliary) return { warning: 'Please select sein or haben.' };
 
+        // The participle is identical in all six forms, so perf[0] suffices.
         const targets = [...new Set(acceptedAnswers(verb.perf[0]).map(splitPerfekt))];
         const given = el.participle.value.trim();
         if (!given) return { warning: 'Please type the participle before checking.' };
 
-        // Both auxiliaries can be right, so any accepted one counts; the
-        // dataset lists the other as an `alt` on the same form.
+        // Both auxiliaries can be right; the dataset lists the other as an `alt`.
         const auxOk = targets.some((target) => target.aux === auxiliary);
         const partOk = targets.some((target) => matchAnswer(given, target.participle).ok);
 
@@ -118,8 +102,7 @@ export function createVerbKata(tenseKey, container) {
         return {
             correct: auxOk && partOk,
             fields: [{ ok: auxOk }, { ok: partOk }],
-            // The auxiliary is the choice that carries the rule, so a wrong one
-            // outranks a wrong participle.
+            // A wrong auxiliary outranks a wrong participle: it carries the rule.
             lesson: !auxOk
                 ? renderVerbLesson({ verb, tenseKey, index: null, expected: targets[0].aux, accepted: targets.map((t) => t.aux) })
                 : !partOk
@@ -133,23 +116,11 @@ export function createVerbKata(tenseKey, container) {
         validateDataset: validateVerbDataset,
         el,
 
-    /**
-         * Answer-blind: the modal teaches the tense's rule and works a fixed
-         * example verb, so it takes no item and cannot print the answer.
-         */
         getHelpContent() {
             return renderVerbHelp(tenseKey);
         },
 
-        /**
-         * Picks the auxiliary whose digit was pressed, for the keyboard funnel.
-         *
-         * Only the Perfekt has option buttons, so a tense with none claims no
-         * digit at all: `false` leaves the key to the page rather than binding
-         * one that would do nothing.
-         *
-         * @returns {boolean}
-         */
+        // Returns false when no button carries the digit (non-Perfekt tenses have none), so the key stays with the page.
         pickOption(digit) {
             const button = optionForDigit(el.auxButtons, digit);
             if (!button) return false;
@@ -174,7 +145,6 @@ export function createVerbKata(tenseKey, container) {
             });
         },
 
-        /** @returns a verdict `{ correct, fields }`, or `{ warning }` when the answer is not ready to grade. */
         check(verb) {
             if (isPerf) return checkPerfekt(verb);
 
@@ -188,8 +158,6 @@ export function createVerbKata(tenseKey, container) {
             const misses = [];
             const fields = el.inputs.map((input, i) => {
                 const given = input.value.trim();
-                // A form may carry `alt` for the second accepted spelling, e.g. a
-                // Perfekt participle written with or without the "ge-" infix.
                 const { ok, accepted } = matchAnswer(given, targetForms[i]);
                 markControl(input, { ok, note: false });
                 if (!ok) misses.push({ index: i, expected: accepted[0] });
@@ -199,8 +167,7 @@ export function createVerbKata(tenseKey, container) {
             return {
                 correct: fields.every((f) => f.ok),
                 fields,
-                // The first miss teaches: six wrong endings need six panels, and
-                // one is already on screen.
+                // Only the first miss gets a lesson; one panel is already on screen.
                 lesson: renderVerbLesson({ verb, tenseKey, ...misses[0] }),
             };
         },

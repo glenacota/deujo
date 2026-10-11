@@ -1,11 +1,5 @@
 // katas/registry.js
-// The only place that knows which katas exist.
-// To add one: create `<name>/kata.js` exporting a `create<Name>Kata(container)`
-// factory, then append its factory call here.
-//
-// Each factory mounts its own section into the container it is given, so a
-// kata's `el.section` exists from the moment `loadKatas` returns and no caller
-// has to remember a second step.
+// The only place that knows which katas exist. To add one, append its factory call to `loadKatas`.
 
 import { CONFIG } from '../config.js';
 import { createNounKata } from './nouns/kata.js';
@@ -53,8 +47,7 @@ export function validateKata(kata) {
         }
     });
 
-    // A real element, not just the key: the factory mounts the section, so a
-    // kata that forgot to must fail here rather than in a keypress handler.
+    // A real element, not just the key, so a kata that forgot to mount fails here rather than in a keypress handler.
     if (!kata.el?.section) {
         throw new Error(`Kata "${kata.id}" requires a mounted el.section.`);
     }
@@ -63,8 +56,7 @@ export function validateKata(kata) {
 }
 
 /**
- * Builds and mounts every kata into `container`.
- * @param {HTMLElement} container the element that holds the kata sections
+ * Mounts every kata into `container`.
  * @returns {Kata[]}
  */
 export function loadKatas(container) {

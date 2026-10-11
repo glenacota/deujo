@@ -1,12 +1,4 @@
 // services/determiner-options.js
-// The button set a stage-two picker offers for one blank: the right form, plus
-// the forms a learner reaches for when they picked the wrong case or the wrong
-// gender.
-//
-// Pure and DOM-free, so the picker factory asks this for its buttons and never
-// builds them itself. Dataset authoring stays light because no option is hand
-// written per item: every one is derived from the grammar tables, so a form can
-// never be offered as a distractor against its own case.
 
 import {
     CASE_KEYS,
@@ -19,31 +11,14 @@ import {
     normalizePhrase,
 } from './grammar.js';
 
-/** Genders in the order a declension table lists them. */
 const GENDERS = ['der', 'die', 'das', 'plural'];
 
-/**
- * Buttons in a stage-two row: the answer plus three distractors.
- *
- * Exported because the picker owns the geometry that goes with it — the digit
- * printed on each button, and the range the keyboard funnel listens for, are
- * both this number's consequences, so a row that grew would move all three
- * rather than quietly leaving two of them behind.
- */
+/** Buttons per stage-two row; the printed digits and the keyboard funnel's range follow from it. */
 export const OPTION_ROW_SIZE = 4;
 
 /**
- * One determiner resolved to the forms its stem takes.
- *
- * `stem` is what a learner held on to in stage one — "der", "ein", "sein" — and
- * is what the distractor passes vary. `class` is the broader family, so a
- * learner who reached for the wrong kind of determiner is offered the right kind
- * in the right case. `gender` is kept because a bare string is ambiguous: "den"
- * is the Akkusativ of `der` and the Dativ of the plural, so the word alone cannot
- * say which row produced it.
- *
- * A case left as '' is one the row does not cover. It is never shown as a
- * button, which is how "mich" ends up with a Dativ distractor but no Genitiv.
+ * `gender` is kept because a bare form is ambiguous: "den" is the Akkusativ of `der` and the Dativ plural.
+ * A case left as '' is not covered by the row and is never shown as a button.
  */
 function row(stem, gender, byCase) {
     return {
@@ -53,14 +28,9 @@ function row(stem, gender, byCase) {
     };
 }
 
-/** The class a stem belongs to, which is its own name unless it collides. */
 const classOf = (stem) => (stem === 'der' ? 'definite' : stem === 'ein' ? 'indefinite' : stem);
 
-/**
- * `euer` drops its -r before an -e ending, so "eure Jacke" is not a stem plus a
- * suffix. Its forms are listed rather than derived, using the short spellings
- * Duden prints.
- */
+/** `euer` drops its -r before an -e ending, so its forms are listed (short Duden spellings) rather than derived. */
 const EUER = {
     der: { nom: 'euer', akk: 'euer', dat: 'euerm', gen: 'eueres' },
     die: { nom: 'eure', akk: 'eure', dat: 'euerer', gen: 'euerer' },
@@ -68,12 +38,7 @@ const EUER = {
     plural: { nom: 'eure', akk: 'eure', dat: 'euren', gen: 'euerer' },
 };
 
-/**
- * Personal pronouns decline by person, not by gender, so a row here is keyed by
- * the person and holds only the cases that person really has. The third-person
- * plural is its own row: "ihnen" is Dativ plural and belongs to no single-person
- * paradigm, which is why it cannot fall out of the others.
- */
+/** Keyed by person, not gender, holding only the cases that person has. */
 const PERSONAL_PRONOUNS = [
     ['ich', { akk: 'mich', dat: 'mir' }],
     ['du', { akk: 'dich', dat: 'dir' }],
@@ -86,14 +51,8 @@ const PERSONAL_PRONOUNS = [
 ];
 
 /**
- * A count is invariable in the Nominativ and the Akkusativ, so those repeat
- * rather than carrying a distinct form. "drei" therefore yields no case
- * distractor of its own and the picker falls through to the other cases it has.
- *
- * Written out rather than read out of `NUMERALS`: those three lists are
- * membership sets, so index 6 of one is not the same word as index 6 of another
- * (the Akkusativ holds "alle" where the Genitiv holds "aller"), and pairing them
- * by position would pair the wrong words.
+ * Nominativ and Akkusativ repeat because counts are invariable there.
+ * Written out, not read from `NUMERALS`: those lists are membership sets that do not line up by index.
  */
 const NUMERAL_ROWS = [
     ['eins', { nom: 'eins', akk: 'eins', dat: 'einem', gen: 'eines' }],
@@ -106,22 +65,12 @@ const NUMERAL_ROWS = [
     ['alle', { nom: 'alle', akk: 'alle', dat: 'allen', gen: 'aller' }],
 ];
 
-/**
- * "alles" and "jeder" are written pronouns that decline like articles and keep
- * an allomorph Duden lists separately ("jedes" is the Genitiv, "alles" the
- * Genitiv and the Dativ "allem"), so they get rows of their own rather than
- * being folded into the cardinals.
- */
 const PRONOUN_ADJECTIVES = [
     ['alles', { nom: 'alles', akk: 'alles', dat: 'allem', gen: 'alles' }],
     ['jeder', { nom: 'jeder', akk: 'jeden', dat: 'jedem', gen: 'jedes' }],
 ];
 
-/**
- * Demonstratives and negated determiners. `grammar.js` stores these as flat
- * per-case membership lists, whose members do not line up across cases, so the
- * rows are written out here rather than read back out of those lists.
- */
+/** Written out: `grammar.js` stores these as per-case membership lists that do not line up. */
 const DEMONSTRATIVES = [
     ['dieser', { nom: 'dieser', akk: 'diesen', dat: 'diesem', gen: 'dieses' }],
     ['diese', { nom: 'diese', akk: 'diese', dat: 'dieser', gen: 'dieser' }],
@@ -137,8 +86,7 @@ const NEGATIVES = [
 ];
 
 const ROWS = [
-    // The three articles, each its own stem, so "der" is never offered to a
-    // feminine noun and "ein" is never offered where an article belongs.
+    // Each article is its own stem, so "der" is never offered where "ein" belongs.
     ...GENDERS.map((g) => row('der', g, { plural: PLURAL_DEFINITE, ...DEFINITE }[g])),
     ...['der', 'die', 'das'].map((g) => row('ein', g, INDEFINITE[g])),
     ...POSSESSIVE_STEMS.flatMap((stem) => GENDERS.map((g) => row(
@@ -154,7 +102,7 @@ const ROWS = [
     ...NEGATIVES.map(([word, byCase]) => row(word, word, byCase)),
 ];
 
-/** Every form every row holds, lowercased, so a word can be traced back to its row. */
+/** Normalised form -> every row that produces it. */
 const FORM_INDEX = new Map();
 for (const entry of ROWS) {
     for (const [caseKey, form] of Object.entries(entry.forms)) {
@@ -166,14 +114,11 @@ for (const entry of ROWS) {
     }
 }
 
-/** Every spelling Duden allows for `euer`, which the picker has to be able to accept. */
 const EUER_VARIANTS = new Set(Object.values(POSSESSIVE_EUER).flat());
 
 /**
- * The rows that produce `form` in `caseKey`. A form can belong to more than one
- * ("die" is the Nominativ of a woman and of a plural), and the case the dataset
- * declares is what narrows it; when it still cannot, every candidate
- * contributes, so the answer is never left out of its own row.
+ * A form can belong to several rows ("die"); the declared case narrows it, and if it still
+ * cannot, every candidate contributes so the answer is never left out of its own row.
  */
 function rowsFor(form, caseKey) {
     const matches = FORM_INDEX.get(normalizePhrase(form)) ?? [];
@@ -181,7 +126,6 @@ function rowsFor(form, caseKey) {
     return inCase.length ? inCase : matches;
 }
 
-/** Appends a form unless it is blank, already on show, or there is no room. */
 function push(options, form, size) {
     if (options.length >= size) return;
     const value = String(form ?? '');
@@ -190,11 +134,7 @@ function push(options, form, size) {
     options.push(value);
 }
 
-/**
- * A stable per-blank rotation, so the answer is not always the first button.
- * Deterministic on purpose: a reload, a test and a screenshot all land on the
- * same order, and the position still moves from item to item.
- */
+/** Deterministic, so a reload, a test and a screenshot agree, yet the answer's position varies per item. */
 function rotate(options, seed) {
     if (options.length < 2) return options;
     let hash = 0;
@@ -204,25 +144,10 @@ function rotate(options, seed) {
 }
 
 /**
- * The buttons for one blank, answer included.
- *
- * Distractors come from three passes, in the order they are worth:
- *
- *   1. the answer's own stem in the other cases — the learner named a case in
- *      stage one and then spelled the wrong ending for it;
- *   2. the same stem in the other genders of the answer's case — "ihr" offered
- *      where "ihren" belongs, which is the trap the noun's gender sets;
- *   3. any other stem in the answer's case — a learner who reached for the wrong
- *      determiner altogether, and the fallback for a form with no row of its own.
- *
- * Every option takes the answer's capitalisation. The tables are lowercase
- * throughout, and a sentence-initial blank ("Der Mann") would otherwise be
- * offered "der" as a distractor to "Der", which is the same answer spelled
- * differently and would make a correct pick look wrong.
- *
+ * Distractor passes, in order: the answer's stem in other cases; the same stem in other genders
+ * of the answer's case; any other stem in that case.
+ * Options take the answer's capitalisation, or a sentence-initial "Der" would be offered "der" too.
  * @param {{a: string, c: string}} blank the dataset blank being answered
- * @param {number} size how many buttons to offer
- * @returns {string[]} distinct forms, the dataset's own spelling among them
  */
 export function determinerOptions(blank, size = OPTION_ROW_SIZE) {
     const answer = String(blank?.a ?? '');
@@ -238,16 +163,14 @@ export function determinerOptions(blank, size = OPTION_ROW_SIZE) {
         for (const entry of rows) push(options, asSpelled(entry.forms[caseKey]), size);
     }
 
-    // The answer's own determiner in the other genders, which is the trap the
-    // noun's gender sets: "seine" beside "seinen" and "sein".
+    // Same stem, other genders: "seine" beside "seinen".
     for (const entry of ROWS) {
         if (!stems.has(entry.stem)) continue;
         if (rows.some((r) => r.stem === entry.stem && r.gender === entry.gender)) continue;
         push(options, asSpelled(entry.forms[blank?.c]), size);
     }
 
-    // Then any other determiner in the answer's case, for a learner who reached
-    // for the wrong kind altogether and for a form with no row of its own.
+    // Other stems in the answer's case; also the fallback for a form with no row.
     for (const entry of ROWS) {
         if (stems.has(entry.stem)) continue;
         push(options, asSpelled(entry.forms[blank?.c]), size);
@@ -256,12 +179,7 @@ export function determinerOptions(blank, size = OPTION_ROW_SIZE) {
     return rotate(options.slice(0, size), `${answer} ${blank?.c ?? ''}`);
 }
 
-/**
- * A table form spelled the way the answer is. Only the first letter can differ,
- * so that is all this changes: German capitalises a noun and nothing else, and a
- * determiner at the head of a sentence is the one place a lowercase form has to
- * follow suit.
- */
+/** Only the first letter can differ: a sentence-initial determiner is the one capitalised non-noun. */
 function matchCase(answer, form) {
     const value = String(form ?? '');
     if (!value || !answer || answer === value) return value;
@@ -269,11 +187,7 @@ function matchCase(answer, form) {
     return capitalised ? value.charAt(0).toUpperCase() + value.slice(1) : value;
 }
 
-/**
- * True when a dataset answer is a determiner the picker can put on a button.
- * The `euer` variants are listed separately because Duden allows two spellings
- * of one row, and an authored answer may use either.
- */
+/** `euer` variants are checked apart because Duden allows two spellings of one row. */
 export function isSelectableDeterminer(form) {
     const word = normalizePhrase(form);
     return FORM_INDEX.has(word) || EUER_VARIANTS.has(word);

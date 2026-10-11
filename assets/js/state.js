@@ -1,5 +1,4 @@
-// state/game-state.js
-// All mutable app state lives here, plus the pure rules for how it changes
+// state.js
 
 import { CONFIG } from './config.js';
 import { addPoints, beltAt, clampProgress, creditOnChange, pointsEarnedInBelt } from './belt-rules.js';
@@ -8,9 +7,8 @@ import { SrsStore } from './platform/srs-store.js';
 import { newRecord, schedule } from './services/srs-scheduler.js';
 
 export class GameState {
-  /** Correct answers in a row, across every kata. Any mistake resets it. */
+  /** Across every kata; any mistake resets it. */
   streak = 0;
-  /** The longest streak ever run, across all katas and all sessions. */
   maxStreak = 0;
   beltProgress = {};  // per kata: fractional mastery points, unaffected by the global streak
   activeKata = '';
@@ -33,12 +31,7 @@ export class GameState {
 
   #beltKey(kataId) { return `${CONFIG.storage.belt}_${kataId}`; }
 
-  /**
-   * The streak counts correct answers across every kata, so it no longer hangs
-   * off a kata id. One migration folds the per-kata counters written before
-   * this change into a single pair: the best live run becomes the streak and
-   * the best record becomes the max, so returning players keep their history.
-   */
+  /** One-time migration of the old per-kata counters: best live run becomes the streak, best record the max. */
   #loadStreak(kataIds) {
     if (Storage.getString(CONFIG.storage.streakMigration)) {
       this.streak = Storage.getNumber(CONFIG.storage.streak);
@@ -59,7 +52,6 @@ export class GameState {
     Storage.setString(CONFIG.storage.kata, kata);
   }
 
-  /** The item a kata is showing, or null when it has none open. */
   currentItem(kataId) { return this.#current.get(kataId) ?? null; }
 
   setCurrentItem(kataId, item) {
@@ -79,16 +71,7 @@ export class GameState {
     Storage.setNumber(this.#beltKey(kataId), this.beltProgress[kataId]);
   }
 
-  /**
-   * Moves one kata's progress by `points` and reports which way, if either, it
-   * crossed a belt boundary.
-   *
-   * The three outcomes differ only in their points and in whether they also
-   * touch the streak, so the crossing test lives here once. Only one direction
-   * is reachable per outcome in practice -- points are signed and `beltAt`
-   * never falls as progress grows -- but both are reported rather than assumed,
-   * so a future rule change cannot quietly skip a credit that a crossing earns.
-   */
+  /** Both crossing directions are reported, not assumed, so a rule change cannot skip a credit. */
   #applyOutcome(kataId, points) {
     const before = beltAt(this.beltProgress[kataId]);
     const moved = addPoints(this.beltProgress[kataId], points);
@@ -120,11 +103,7 @@ export class GameState {
     return demoted;
   }
 
-  /**
-   * A skipped exercise costs half a point, and the SRS schedule is left alone:
-   * the item was never graded. The streak survives, because the streak counts
-   * answers and a skipped item is not a wrong one.
-   */
+  /** Not graded: SRS is left alone and the streak survives, since a skip is not a wrong answer. */
   applySkip(kataId) {
     const { demoted } = this.#applyOutcome(kataId, CONFIG.rules.skipPoints);
     this.#persist(kataId);
@@ -135,19 +114,14 @@ export class GameState {
     return beltAt(this.beltProgress[kataId]);
   }
 
-  /**
-   * Points earned inside the current belt, so the tick bar can show an exact
-   * count instead of a rounded percentage. Fractional: a skip leaves half a
-   * point and a fresh belt starts with a fifth.
-   */
+  /** Fractional, so the tick bar shows an exact count rather than a rounded percentage. */
   getBeltPointsEarned(kataId) {
     return pointsEarnedInBelt(this.beltProgress[kataId]);
   }
 
   /**
-   * Uniform random draw from due items. New items are always due; if none of
-   * the available items are due, draw from the full pool.
-   * The most recently served `recentExclude` ids are skipped when possible.
+   * Uniform draw from due items (new items are always due), else from the full pool.
+   * The last `recentExclude` served ids are skipped when the dataset is larger than that.
    */
   pickNext(dataset, kataId, rng = Math.random, now = Date.now()) {
     if (!dataset?.length) return null;

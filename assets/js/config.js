@@ -1,5 +1,4 @@
 // config.js
-// Central, immutable configuration for the whole app.
 
 export const CONFIG = Object.freeze({
   storage: {
@@ -19,20 +18,16 @@ export const CONFIG = Object.freeze({
   },
   themeModes: ['system', 'light', 'dark'],
   rules: {
-    recentExclude: 10,    // last N served items are skipped by pickNext 
+    recentExclude: 10,    // last N served items are skipped by pickNext
     milestoneInterval: 5, // belt points needed to advance one belt
     maxBelt: 6,           // index of the last belt (Black Belt)
-    // Belt points per outcome. Negative values cost progress, so a belt has to
-    // be defended, not just climbed.
+    // Negative values cost progress.
     correctPoints: 1,
     wrongPoints: -1,
     skipPoints: -0.5,
-    // A promotion never lands on an empty bar: it starts one fifth of the way
-    // into the new belt, which is one whole point, one filled tick, 20% of the
-    // bar. Whatever overflow the winning answer carried is dropped.
+    // A promotion starts one fifth into the new belt; the winning answer's overflow is dropped.
     promotionCredit: 1,
-    // A demotion is not a reset: the belt you drop into starts four fifths of the
-    // way in, so a mistake costs the gap plus the tick above the boundary.
+    // A demotion is not a reset: the lower belt starts four fifths in.
     demotionCredit: 4,
   },
   timing: {
@@ -41,16 +36,13 @@ export const CONFIG = Object.freeze({
   links: {
     support: 'https://ko-fi.com/A6C827EN29',
   },
-  // Leitner spaced repetition. Grouped next to the belt points rather than in
-  // `timing`, because the box ladder and the reward schedule are tuned
-  // together: both decide what a correct answer is worth.
+  // Leitner spaced repetition. Kept beside the belt points, not in `timing`: both are tuned together.
   srs: {
     boxes: 3,             // Learning, Review, Mastered
-    // Days an item waits before it counts as due again, indexed by the box it
-    // landed in. Index 0 is the first box, so a mistake is due straight away.
+    // Days until due again, indexed by the box landed in; a mistake (box 0) is due at once.
     delaysDays: [0, 2, 9],
     dayMs: 86_400_000,
-    // One debounced write for a burst of answers, rather than one per answer.
+    // One debounced write per burst of answers.
     saveDebounceMs: 500,
   },
   belts: {

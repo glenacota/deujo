@@ -1,12 +1,10 @@
 // katas/prepositions/help.js
-// The preposition kata's help modal, as pure markup. Pure string work, so it
-// stays unit-testable and never touches the DOM.
 
 import { escapeHtml } from '../../services/escape-html.js';
 import { PREPOSITION_CONTRACTIONS, PREPOSITION_GROUP_LABELS, PREPOSITION_GROUPS } from '../../services/grammar.js';
 import { banner, disclosure, rule, ruleList, wordGroup } from '../help-kit.js';
 
-/** The three one-way groups, generated so a table change cannot miss the modal. */
+/** Generated from the grammar tables so a table change cannot miss the modal. */
 function groupLists() {
     return Object.entries(PREPOSITION_GROUPS).map(([group, list]) => `
         <div>
@@ -21,9 +19,6 @@ function groupLists() {
 }
 
 function locationTable() {
-    // One row per two-way preposition, each pair taken from the kata's own
-    // sentences: a state (Dativ) and a movement (Akkusativ) side by side, so the
-    // difference is a word rather than a rule to hold in the head.
     const pairs = [
         { preposition: 'an', place: 'Die Laterne hängt an der Decke.', move: 'Die Vase hängt an den Haken.' },
         { preposition: 'auf', place: 'Der Brief liegt auf dem Schreibtisch.', move: 'Die Katze springt auf den Schrank.' },

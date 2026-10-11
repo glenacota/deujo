@@ -1,26 +1,10 @@
 // katas/cases/help.js
-// The case kata's help modal, as pure markup. Pure string work, so it stays
-// unit-testable and never touches the DOM.
-//
-// Answer-blind: the body takes no item, so it cannot print the sentence on screen
-// or the case the answer expects. The examples are determiner-plus-noun pairs the
-// dataset really ships, which is what a learner has to produce and which
-// `tests/unit/katas.test.js` enforces; that makes this kata's modal the mirror
-// image of the two-way-prepositions one, where an example must not coincide with
-// a shipped item.
-//
-// What this kata actually asks: every blank is a determiner — an article, a
-// possessive or a numeral — and the noun it belongs to is always still visible in
-// the sentence. So the gender is never in question, only the case. That is what
-// this modal is about.
+// Answer-blind: takes no item. Examples are determiner-plus-noun pairs the dataset ships (enforced in katas.test.js).
 
 import { escapeHtml } from '../../services/escape-html.js';
 import { CASE_LABELS, DEFINITE, INDEFINITE, PLURAL_DEFINITE, POSSESSIVE_ENDINGS, PREPOSITION_GROUPS } from '../../services/grammar.js';
 import { banner, disclosure, rule, ruleList, wordGroup } from '../help-kit.js';
 
-// ---- tables ---------------------------------------------------------------
-
-/** The definite and indefinite article for every gender and case, as shipped in `grammar.js`. */
 function articleMatrix() {
     const rows = [
         { label: 'Masculine', gender: 'der' },
@@ -58,14 +42,7 @@ function articleMatrix() {
         <p class="mt-3 text-xs text-slate-500 dark:text-slate-400">Definite / indefinite. — = no plural indefinite article.</p>`;
 }
 
-/**
- * The possessive endings per case and gender, straight from the `POSSESSIVE_ENDINGS`
- * table the answer matcher grades against. A quarter of this kata's answers are
- * possessives, and the article table says nothing about them.
- *
- * Showing endings rather than whole words is deliberate: the stem never changes,
- * so `mein` + `em` covers every one of the six at once.
- */
+// Endings, not whole words: the stem never changes, and the matcher grades against this same table.
 function possessiveMatrix() {
     const cases = Object.keys(CASE_LABELS);
     const genders = [
@@ -98,8 +75,6 @@ function possessiveMatrix() {
         </div>
         <p class="mt-3 text-xs text-slate-500 dark:text-slate-400">Add the ending to the stem: <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">mein</code> + <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">em</code> = <code class="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono">meinem</code>. An em dash means the bare stem.</p>`;
 }
-
-// ---- blocks ---------------------------------------------------------------
 
 function roleHelp() {
     const genPrepositions = PREPOSITION_GROUPS.gen.map(escapeHtml).join(', ');
@@ -150,7 +125,6 @@ function roleHelp() {
     ].join('');
 }
 
-/** The case kata's help body. Takes no item, so it can never leak the answer. */
 export function renderCaseHelp() {
     return [
         banner(

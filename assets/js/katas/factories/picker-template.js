@@ -1,16 +1,5 @@
 // katas/factories/picker-template.js
-// The markup both two-stage picker katas render.
-//
-// Kept in a factory rather than in each kata's template.js because a kata that
-// copied this markup would copy its Tailwind classes too, and Tailwind only
-// emits what it finds in a scanned source file: a kata with a stale copy would
-// render unstyled, with nothing to fail a test. With the shared look in
-// app.css instead, a copy could not drift visually at all.
-//
-// Three blocks rather than one that swaps its contents, so the learner never
-// loses their place: step one's row of case buttons stays on show with the
-// chosen case pressed, step two opens beneath it, and a per-blank review list
-// takes over once every blank is answered.
+// The markup both picker katas render; shared so a copy cannot drift.
 export function pickerTemplate() {
     return `
     <section class="kata-section hidden" data-role="section">

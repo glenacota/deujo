@@ -1,8 +1,4 @@
 // ui/dashboard-view.js
-// The landing page: one card per kata, built from the markup in index.html's
-// <template>, plus the belt badge mounted on each card. The maps are keyed by
-// kata id and survive focus mode, so a badge can be re-rendered while its kata
-// section is not the one on screen.
 
 import { CONFIG } from '../config.js';
 import { dom } from './dom.js';
@@ -34,7 +30,6 @@ export class DashboardView {
             belt.id = `belt-${kata.id}`;
             grid.appendChild(fragment);
 
-            // Cards/belts live in the dashboard, independent of a kata's own (lazy) focus-section mount.
             this.#cards.set(kata.id, card);
             this.#belts.set(kata.id, belt);
         });

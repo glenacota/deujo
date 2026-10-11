@@ -95,7 +95,6 @@ class App {
         promise.catch((error) => console.error('Kata action failed:', error));
     }
 
-    /** The page operations `KataFlow` drives, composed from the UI pieces. */
     #buildView() {
         const focus = this.#focus;
         const ui = this.#ui;
@@ -106,7 +105,7 @@ class App {
             renderHeader: (kata) => focus.renderHeader(kata, state),
             renderProgress: (kata) => {
                 ui.renderStreak(state);
-                // Belt badges live on the dashboard card, independent of the kata's own focus-section mount.
+                // Belt badges live on the dashboard card, not in the kata's focus section.
                 renderBeltBadge(this.#dashboard.getBelt(kata.id), state, kata.id);
                 if (state.activeKata === kata.id) focus.renderHeader(kata, state);
             },
@@ -135,7 +134,6 @@ class App {
 
     #bindEvents() {
         const flow = this.#flow;
-        // One command surface, shared by every click and every shortcut.
         const actions = {
             enter: (id) => this.#report(flow.enter(id)),
             exit: () => flow.exit(),

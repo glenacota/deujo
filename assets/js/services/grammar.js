@@ -2,7 +2,6 @@
 
 export const CASE_LABELS = { nom: 'Nominativ', akk: 'Akkusativ', dat: 'Dativ', gen: 'Genitiv' };
 
-/** The four case keys, in the order every table in this file lists them. */
 export const CASE_KEYS = Object.keys(CASE_LABELS);
 
 export const DEFINITE = {
@@ -34,17 +33,10 @@ export const TENSES = {
     perf: { id: 'verbs-perf', label: 'Perfekt' },
 };
 
-/**
- * The `{n}` blank placeholder, captured. One definition, shared by the dataset
- * validators that count placeholders and by the renderer that splits on them:
- * if the two ever disagreed, a dataset could validate and then render wrongly.
- */
+/** Shared by validators and renderer, so a dataset cannot validate and then render differently. */
 export const BLANK_PLACEHOLDER = /\{(\d+)\}/g;
 
-/**
- * The sentence as alternating literal text and blank indices, where odd
- * positions are blank indices: `'Ich gehe {0} Arzt.'` -> `['Ich gehe ', '0', ' Arzt.', '']`.
- */
+/** `'Ich gehe {0} Arzt.'` -> `['Ich gehe ', '0', ' Arzt.', '']`; odd positions are blank indices. */
 export function splitBlanks(sentence) {
     return typeof sentence === 'string' ? sentence.split(BLANK_PLACEHOLDER) : [];
 }
@@ -59,11 +51,8 @@ export function hasOrderedBlankPlaceholders(sentence, blankCount) {
 // ---- Prepositions ---------------------------------------------------------
 
 /**
- * The four rection groups. `akk`/`dat`/`gen` prepositions fix the case of their
- * noun phrase; the `two` group (Wechselpräpositionen) takes Dativ for a
- * location and Akkusativ for a movement towards a goal.
- * `wegen` and `trotz` also accept Dativ, but only colloquially (Duden), so they
- * live in `gen` here and the dataset uses the Genitiv form exclusively.
+ * `two` (Wechselpräpositionen) takes Dativ for a location, Akkusativ for a goal.
+ * `wegen` and `trotz` take Dativ only colloquially (Duden), so they stay in `gen`.
  */
 export const PREPOSITION_GROUPS = {
     akk: ['durch', 'für', 'gegen', 'ohne', 'um'],
@@ -72,7 +61,6 @@ export const PREPOSITION_GROUPS = {
     two: ['an', 'auf', 'hinter', 'in', 'neben', 'über', 'unter', 'vor', 'zwischen'],
 };
 
-/** Every preposition mapped back to its rection group, so a phrase can be traced to the table above. */
 const PREPOSITION_GROUP_OF = new Map(
     Object.entries(PREPOSITION_GROUPS).flatMap(([group, list]) => list.map((preposition) => [preposition, group]))
 );
@@ -84,7 +72,6 @@ export const PREPOSITION_GROUP_LABELS = {
     two: 'Dativ = Lage · Akkusativ = Ziel',
 };
 
-/** The nine standard contractions of a preposition plus the definite article. */
 export const PREPOSITION_CONTRACTIONS = {
     zum: { preposition: 'zu', article: 'dem' },
     zur: { preposition: 'zu', article: 'der' },
@@ -97,10 +84,7 @@ export const PREPOSITION_CONTRACTIONS = {
     aufs: { preposition: 'auf', article: 'das' },
 };
 
-/**
- * The written-out spelling behind each contraction: "zu dem" -> "zum". A dataset
- * may store either spelling, so both directions have to be looked up.
- */
+/** Reverse lookup ("zu dem" -> "zum"): a dataset may store either spelling. */
 const CONTRACTED_FORMS = Object.fromEntries(
     Object.entries(PREPOSITION_CONTRACTIONS).map(([fused, { preposition, article }]) => [
         `${preposition} ${article}`,
@@ -108,14 +92,10 @@ const CONTRACTED_FORMS = Object.fromEntries(
     ])
 );
 
-/** The five possessive stems that take an ending; `euer` is listed apart below. */
+/** `euer` is listed apart below. */
 export const POSSESSIVE_STEMS = ['mein', 'dein', 'sein', 'ihr', 'unser'];
 
-/**
- * What a possessive stem takes, per case. Gendered, because that is where the
- * endings split: the Akkusativ of `die` and `das` is the bare stem while `der`
- * grows `-en`, and the Dativ plural is `-en` for every gender.
- */
+/** Masculine Nominativ and neuter Nominativ/Akkusativ take the bare stem. */
 export const POSSESSIVE_ENDINGS = {
     der: { nom: '', akk: 'en', dat: 'em', gen: 'es' },
     die: { nom: 'e', akk: 'e', dat: 'er', gen: 'er' },
@@ -123,12 +103,7 @@ export const POSSESSIVE_ENDINGS = {
     plural: { nom: 'e', akk: 'e', dat: 'en', gen: 'er' },
 };
 
-/**
- * `euer` is the one possessive stem that drops its -r in front of an -e ending,
- * so "eure Jacke" cannot be spelled as a stem plus a suffix. Its forms are
- * listed rather than derived, and the short spellings Duden also allows (euerm,
- * eurer) come with them.
- */
+/** `euer` drops its -r before an -e ending, so its forms are listed, short Duden spellings included. */
 export const POSSESSIVE_EUER = {
     nom: ['euer', 'eure'],
     akk: ['euer', 'eure', 'euren'],
@@ -136,12 +111,7 @@ export const POSSESSIVE_EUER = {
     gen: ['eures', 'euerer', 'eurer'],
 };
 
-/**
- * Every possessive form a case allows, deduplicated: "meine" serves three
- * genders. The Nominativ is here as well as the object cases, because a
- * possessive introduces the subject as often as anything else ("Mein Freund
- * kommt") and a determiner table that cannot name it cannot check it.
- */
+/** Deduplicated across genders ("meine" serves three); Nominativ included because possessives introduce subjects too. */
 const POSSESSIVE = Object.fromEntries(
     CASE_KEYS.map((caseKey) => [
         caseKey,
@@ -159,36 +129,28 @@ export const PERSONAL = {
     dat: ['mir', 'dir', 'ihm', 'ihr', 'uns', 'ihnen'],
 };
 
-/** Cardinals and "all/both": "zwei Bücher", "beiden Kindern", "alle Höhe". */
 export const NUMERALS = {
     akk: ['eins', 'zwei', 'drei', 'vier', 'fünf', 'sechs', 'beide', 'alle'],
     dat: ['einem', 'zwei', 'drei', 'vier', 'fünf', 'sechs', 'beiden', 'allen'],
     gen: ['eines', 'zweier', 'dreier', 'vierer', 'fünfer', 'sechser', 'beider', 'aller', 'allem', 'alledem'],
 };
 
-/** Demonstratives; note that the dative plural is "diesen", not "diese". */
+/** The dative plural is "diesen", not "diese". */
 export const DEMONSTRATIVE = {
     akk: ['diesen', 'diese', 'dieses'],
     dat: ['diesem', 'dieser', 'diesen'],
     gen: ['dieses', 'dieser'],
 };
 
-/** Negated determiners ("für keinen Kunden"). */
 export const NEGATIVE = {
     akk: ['kein', 'keinen', 'keine'],
     dat: ['kein', 'keinem', 'keiner', 'keinen'],
     gen: ['kein', 'keines', 'keiner', 'keinen'],
 };
 
-/** Pulls one case out of the gender-keyed article tables. */
 const formsInCase = (table, caseKey) => Object.values(table).map((forms) => forms[caseKey]);
 
-/**
- * Every determiner form that can legitimately appear after a preposition in the
- * given case, and no other case. Used to check a dataset's answers, so a wrong
- * case or a malformed contraction is caught before the data ever reaches a
- * learner. "dem" is Dativ and must therefore be rejected as an Akkusativ answer.
- */
+/** Forms valid after a preposition in exactly this case: "dem" is Dativ, so it is rejected as an Akkusativ answer. */
 const determinersFor = (caseKey) => new Set([
     ...formsInCase(DEFINITE, caseKey),
     ...formsInCase(INDEFINITE, caseKey),
@@ -200,7 +162,7 @@ const determinersFor = (caseKey) => new Set([
     ...(NEGATIVE[caseKey] ?? []),
 ]);
 
-/** Determiner forms per case, the Nominativ included, for checking a dataset's own answers. */
+/** Includes the Nominativ, for checking a dataset's own answers. */
 const DETERMINERS_BY_CASE = Object.freeze({
     nom: determinersFor('nom'),
     akk: determinersFor('akk'),
@@ -208,57 +170,34 @@ const DETERMINERS_BY_CASE = Object.freeze({
     gen: determinersFor('gen'),
 });
 
-/**
- * The three object cases only, because `determinerCases` below has to answer
- * "which case can this word belong to", and a definite article belongs to the
- * Nominativ of one noun as readily as to the Dativ of another.
- */
+/** Object cases only: a definite article is Nominativ of one noun as readily as Dativ of another, so `determinerCases` could not say much. */
 const DETERMINERS = Object.freeze({
     akk: DETERMINERS_BY_CASE.akk,
     dat: DETERMINERS_BY_CASE.dat,
     gen: DETERMINERS_BY_CASE.gen,
 });
 
-/**
- * True when `form` is a determiner the case really takes, Nominativ included.
- * Membership rather than a derived single case, because "den" is the Akkusativ
- * of `der` and the Dativ of the plural, so only the claimed case settles it.
- * @param form a single determiner word, already normalised
- * @param caseKey one of the `CASE_LABELS` keys
- */
+/** Membership, not a derived single case: "den" is the Akkusativ of `der` and the Dativ plural. */
 export function determinerBelongsTo(form, caseKey) {
     const word = normalizePhrase(form);
     return Boolean(word) && Boolean(DETERMINERS_BY_CASE[caseKey]?.has(word));
 }
 
-/**
- * Every object case a determiner form can belong to, so a correction can name
- * the case the learner slipped into. Empty for a word that is no determiner, and
- * two entries for the shared ones: "den" is the Akkusativ of `der` and the
- * Dativ of the plural, so no single case can be claimed for it.
- */
+/** Empty for a non-determiner; two entries for shared forms ("den"). */
 export function determinerCases(form) {
     const word = normalizePhrase(form);
     return word ? Object.keys(DETERMINERS).filter((caseKey) => DETERMINERS[caseKey].has(word)) : [];
 }
 
-/** Normalises typed input so `Im` / `im ` / `in  dem` all compare cleanly. */
 export function normalizePhrase(value) {
     return String(value ?? '').trim().toLowerCase().replace(/\s+/g, ' ');
 }
 
-/**
- * Every spelling of a prepositional phrase that is still correct German: the
- * fused contraction and the written-out form, in whichever order the dataset
- * stored them. "zum" also answers a blank whose answer is "zu dem", and the
- * other way round; a phrase that cannot contract keeps its single spelling.
- * @returns normalised, duplicate-free, dataset spelling first
- */
+/** Contracted and written-out spellings, both directions ("zum" <-> "zu dem"); dataset spelling first, duplicate-free. */
 export function prepositionSpellings(answer) {
     const phrase = normalizePhrase(answer);
     if (!phrase) return [];
 
-    // The dataset's own spelling first, then the one standard alternative.
     const variants = [phrase];
     const fused = PREPOSITION_CONTRACTIONS[phrase];
     if (fused) variants.push(`${fused.preposition} ${fused.article}`);
@@ -268,14 +207,7 @@ export function prepositionSpellings(answer) {
     return [...new Set(variants)];
 }
 
-/**
- * The rection group of a single preposition, for a sentence that already names
- * one. The picker kata asks about the preposition standing in the sentence, so
- * the rection has to be readable from the word alone.
- *
- * @param word one word, a preposition if it is one
- * @returns a `PREPOSITION_GROUPS` key, or null when the word is not a preposition
- */
+/** A `PREPOSITION_GROUPS` key for the first word, or null when it is not a preposition. */
 export function prepositionRection(word) {
     const head = normalizePhrase(word).split(' ')[0];
     return PREPOSITION_GROUP_OF.get(head) ?? null;

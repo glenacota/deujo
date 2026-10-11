@@ -1,9 +1,5 @@
 // katas/dataset-rules.js
-// The dataset checks that every kata shares. Each kata keeps its own schema rule
-// and its own error message; the field-level plumbing lives here so four
-// validators cannot drift apart on what a usable entry means.
-//
-// Every one of these is pure, so a validator stays unit testable without a DOM.
+// Field-level checks shared by every kata's validator; each kata keeps its own schema rule and message.
 
 /** Non-empty after trimming: what every required field is checked for. */
 export function isNonEmptyString(value) {
@@ -17,10 +13,7 @@ export function assertDataset(dataset) {
     }
 }
 
-/**
- * The fields every kata entry carries: an id, the word, and its translation.
- * `sentence` also requires the `s` sentence, which only the blank katas render.
- */
+/** `sentence` also requires `s`, which only the blank katas render. */
 export function hasCoreFields(entry, { sentence = false } = {}) {
     return Boolean(entry)
         && isNonEmptyString(entry.id)
@@ -29,20 +22,13 @@ export function hasCoreFields(entry, { sentence = false } = {}) {
         && (!sentence || isNonEmptyString(entry.s));
 }
 
-/**
- * `alt` is optional, but when present every entry must be a real answer string,
- * or the learner can never satisfy the blank.
- */
+/** `alt` is optional, but an empty or non-string entry would make the blank unsatisfiable. */
 export function hasAltList(alt) {
     return alt === undefined
         || (Array.isArray(alt) && alt.every((value) => isNonEmptyString(value)));
 }
 
-/**
- * The `b` blank list the sentence katas share. `isValidAnswer(blank)` is the
- * kata's own rule, applied to the primary answer and to every `alt` as well, so
- * an alternative answer can never be looser than the answer it accompanies.
- */
+/** `isValidAnswer` also runs on every `alt`, so an alternative can never be looser than the primary. */
 export function hasValidBlanks(blanks, isValidAnswer) {
     return Array.isArray(blanks)
         && blanks.length > 0

@@ -1,6 +1,4 @@
 // ui/settings-view.js
-// Renders the settings modal and owns every listener inside it: one delegated
-// `change` listener for the inputs, plus the panel's button clicks.
 
 import { CONFIG } from '../config.js';
 import { SrsStore } from '../platform/srs-store.js';
@@ -28,14 +26,12 @@ export class SettingsView {
             input.checked = input.value === themeMode;
         });
 
-        // Every switch reads "on means the feature is on".
         const { switches } = dom.modals.settings;
         switches.sound.checked = this.#audio.isSoundOn();
         switches.confetti.checked = get('confetti');
         switches.animations.checked = get('animations');
         switches.hotkeys.checked = get('hotkeys');
 
-        // Sound off means there is nothing to preview, so the button says so.
         const { testSoundBtn } = dom.modals.settings;
         testSoundBtn.disabled = !this.#audio.isSoundOn();
         testSoundBtn.textContent = this.#audio.isSoundOn() ? 'Test sound' : 'Sound is off';
@@ -44,7 +40,6 @@ export class SettingsView {
     #bind() {
         const { root } = dom.modals.settings;
 
-        // One listener for all inputs: the markup says which setting changed.
         root.addEventListener('change', (event) => this.#onChange(event));
 
         root.addEventListener('click', (event) => {
@@ -57,11 +52,7 @@ export class SettingsView {
         });
     }
 
-    /**
-     * The confirmation is a nested dialog, not a ModalController modal, so it
-     * has to dismiss itself. Esc and a backdrop click both cancel; the modal
-     * controller would otherwise close the whole settings panel instead.
-     */
+    /** Not a ModalController modal, so it handles its own Esc, backdrop click and Tab. */
     #bindConfirm() {
         const { confirmBox } = dom.modals.settings;
 
@@ -81,7 +72,6 @@ export class SettingsView {
         });
     }
 
-    /** Keeps Tab inside the confirmation, so it cannot reach the panel behind. */
     #trapConfirmFocus(event) {
         const { confirmBox, confirmCancelBtn, confirmOkBtn } = dom.modals.settings;
         const first = confirmCancelBtn;
@@ -128,13 +118,11 @@ export class SettingsView {
         this.render();
     }
 
-    /** Deleting is destructive, so it takes an explicit second confirmation. */
     #askClearData() {
         const { confirmBox, clearDataBtn } = dom.modals.settings;
         confirmBox.classList.remove('hidden');
         clearDataBtn.setAttribute('aria-expanded', 'true');
-        // Focus the dialog itself, not the destructive button, so Enter or
-        // Space cannot delete by reflex.
+        // Focus the dialog, not the destructive button, so Enter or Space cannot delete by reflex.
         confirmBox.focus();
     }
 
@@ -147,9 +135,8 @@ export class SettingsView {
 
     #clearData() {
         this.#hideConfirm();
-        // Belt progress, streak and SRS records all live under the dm_ prefix;
-        // removing the prefix key alone would leave the per-kata ones behind.
         Storage.removeByPrefix(CONFIG.storage.prefix);
+        // Drops the in-memory records and pending save, so the wipe is not written back.
         SrsStore.reset();
         this.#onClearData();
     }

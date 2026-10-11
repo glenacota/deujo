@@ -5,7 +5,6 @@ const SUBTITLE = 'Verb Conjugation';
 const ACCENT = 'purple';
 const DATASET_URL = './assets/datasets/verbs.json';
 
-/** Builds the identity manifest for one verb tense (pres/praet/perf). */
 export function getVerbManifest(tenseKey) {
     const tense = TENSES[tenseKey];
     return {

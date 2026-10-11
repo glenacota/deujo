@@ -39,7 +39,7 @@ export class FocusView {
         katas.forEach(({ el }) => el.section.classList.toggle('hidden', el.section !== activeSection));
     }
 
-    /** Locked means a verdict is showing: the bar offers Next, and Skip is hidden. */
+    /** Locked = a verdict is showing: Next replaces Check and Skip is hidden. */
     setActionBar({ locked }) {
         dom.actions.checkLabel.textContent = locked ? 'Next' : 'Check';
         // Skipping a graded answer would let the learner dodge the streak reset.

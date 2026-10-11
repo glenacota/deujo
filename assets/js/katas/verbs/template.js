@@ -1,22 +1,12 @@
 // katas/verbs/template.js
-// The verb kata's markup, built from PERSONS so the six rows cannot drift apart
-// and a seventh person needs no second copy of the same markup. Which of the two
-// forms ships is the only thing that differs between the three verb katas, so it
-// is the template's argument rather than a class the kata toggles afterwards.
-// Every colour, padding and label here is shared through `.kata-*` in app.css.
 import { PERSONS } from '../../services/grammar.js';
 
-/** One `person -> form` row: a label naming the person, and its blank. */
 const conjugationRow = ({ key, label }, last) => `
             <div class="kata-row">
                 <label class="kata-row-label" for="conj-${key}">${label}</label>
                 <input id="conj-${key}" type="text" autocomplete="off" maxlength="40" data-role="conj_${key}" enterkeyhint="${last ? 'done' : 'next'}" class="blank-input">
             </div>`;
 
-/**
- * @param perfekt true to ask one auxiliary plus one participle, false to ask
- *   the six conjugations.
- */
 export const verbsTemplate = (perfekt) => `
     <section class="kata-section hidden" data-role="section">
         <div class="kata-head">

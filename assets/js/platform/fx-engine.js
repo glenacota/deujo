@@ -1,5 +1,4 @@
 // platform/fx-engine.js
-// Canvas confetti burst used to celebrate belt promotions
 
 const COLORS = ['#f59e0b', '#10b981', '#06b6d4', '#8b5cf6', '#ec4899', '#ffffff'];
 const PARTICLES_PER_BURST = 60;

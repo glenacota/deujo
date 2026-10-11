@@ -1,6 +1,5 @@
 // ui/reward-presenter.js
 
-/** Sound, fireworks and toast for a graded answer, so no caller repeats the pairing. */
 export class RewardPresenter {
     #audio;
     #fx;

@@ -1,15 +1,9 @@
 // ui/keyboard-shortcut.js
-// One funnel for every binding: a single window keydown listener with the gates
-// applied in a fixed order before dispatch, so a new shortcut cannot forget one.
+// One window keydown listener applies every gate before dispatch, so a binding cannot skip one.
 
 import { getActiveInputs } from './dom.js';
 
-/**
- * The digits a picker option can be picked with. Step one is 1-4 and step two
- * 5-8, so the two rows get disjoint ranges: they are both on screen at once, and
- * a shared range would make `3` mean Nominativ or a determiner depending on
- * which row the eye had drifted to. The picker owns which row a digit is for.
- */
+/** Step one is 1-4 and step two 5-8: disjoint, since both rows are on screen at once. */
 const DIGIT_OPTIONS = ['1', '2', '3', '4', '5', '6', '7', '8'];
 
 function isTypingTarget(target) {
@@ -33,12 +27,8 @@ export function bindKeyboardShortcuts({
     pickOption = () => false,
     areHotkeysEnabled = () => true,
 }) {
-    // Safari does not move focus to a <button> when it is clicked, so after a
-    // learner picks a gender on iOS `document.activeElement` is still <body> and
-    // focus alone cannot answer "are they holding a control?". Track the press
-    // itself: a pointer press since the last key means mid-interaction, not a
-    // request to leave. Chromium needs this not at all -- it focuses the button
-    // -- which is exactly why the bug only ever showed up on WebKit.
+    // Safari does not focus a <button> on click, so activeElement stays <body>;
+    // track the press itself to tell mid-interaction from idle. Chromium focuses it.
     let pressedSinceLastKey = false;
     inputRoot.addEventListener('pointerdown', () => { pressedSinceLastKey = true; });
 
@@ -77,8 +67,7 @@ export function bindKeyboardShortcuts({
             run: (event) => {
                 event.preventDefault();
                 const target = event.target;
-                // While a verdict is up, the section is locked, so Enter means
-                // "next" rather than "check the next blank".
+                // A verdict locks the section, so Enter means next, not check.
                 if (!isAnswering()) return check();
                 if (target instanceof HTMLInputElement) {
                     const inputs = getActiveInputs(inputRoot);
@@ -96,18 +85,14 @@ export function bindKeyboardShortcuts({
             },
         },
         {
-            // A numbered option on the open stage: 1 is the first button, and so
-            // on. The shift+digit kata jump above keeps its own digits, so the
-            // unmodified ones are free.
+            // Unmodified digits pick an option; shift+digit is the kata jump.
             matches: (event, { typing }) => {
                 if (typing || event.shiftKey || event.altKey || event.ctrlKey || event.metaKey) return false;
                 if (!isFocusModeActive() || !isAnswering()) return false;
                 return DIGIT_OPTIONS.includes(event.key);
             },
             run: (event) => {
-                // Claimed only when the kata actually has that option, so a digit
-                // the open stage cannot use stays available to the page rather
-                // than being swallowed by a binding that would do nothing.
+                // Claim the key only if an option uses it, so other digits stay with the page.
                 if (!pickOption(Number(event.key))) return;
                 event.preventDefault();
             },
@@ -135,17 +120,14 @@ export function bindKeyboardShortcuts({
             },
         },
         {
-            // Claimed whenever a kata is open and the learner is not typing,
-            // even when it will not act. Declining to match would hand the key
-            // back to the browser, and WebKit's default for Backspace is
-            // "go back", which walks the learner out of the drill entirely.
+            // Claimed even when it will not act: WebKit's default for an
+            // unclaimed Backspace is "go back".
             matches: (event, { typing }) => event.key === 'Backspace' && isFocusModeActive() && !typing,
             run: (event, { pressed }) => {
                 event.preventDefault();
-                // Exiting also costs the answer in progress, so it needs nothing
-                // focused and nothing just pressed. `pressed` is what carries
-                // that on WebKit, where a clicked button leaves focus on <body>
-                // and would otherwise read as idle.
+                // Exiting loses the answer in progress, so require nothing focused and
+                // nothing just pressed; `pressed` covers WebKit, where a clicked button
+                // leaves focus on <body>.
                 if (pressed || document.activeElement !== document.body) return;
                 exitToMenu();
             },
@@ -161,17 +143,14 @@ export function bindKeyboardShortcuts({
     ];
 
     window.addEventListener('keydown', (event) => {
-        // A throwing shortcut must not take down the turn loop: log it and let
-        // the keypress be a no-op.
+        // A throwing shortcut must not break later keys.
         try {
-            // Read and cleared first, so `pressed` always means "since the last
-            // key" no matter which gate below returns.
+            // Cleared first, so `pressed` means "since the last key" whichever gate returns.
             const pressed = pressedSinceLastKey;
             pressedSinceLastKey = false;
 
             if (modals.handleKeydown(event)) return;
             if (!areHotkeysEnabled()) return;
-            // One gate for every shortcut, so a new binding cannot forget it.
             if (modals.isOpen()) return;
             if (event.repeat) return;
 

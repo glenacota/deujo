@@ -1,5 +1,4 @@
 // ui/ui-controller.js
-// Rendering layer: takes state/data in, updates the DOM
 
 import { dom } from './dom.js';
 
@@ -28,7 +27,6 @@ export class UiController {
         dom.header.max.textContent = state.maxStreak;
     }
 
-    /** Shows the on-brand error modal, replacing the bootstrap failure alert(). */
     showFatalError(message) {
         dom.modals.error.content.textContent = message;
         this.#modals.open(dom.modals.error.root);
@@ -38,15 +36,13 @@ export class UiController {
     showVerdict(summary) {
         const { root, icon, title, detail, lesson: lessonBox, form, note } = dom.verdict;
 
-        // Geometry, animation and the transparent base border all live on
-        // `.verdict` in app.css; only the tone palette is a Tailwind concern.
+        // Geometry and animation live on `.verdict` in app.css; only the tone palette is Tailwind.
         root.className = `verdict ${VERDICT_TONE_CLASSES[summary.tone] ?? VERDICT_TONE_CLASSES.warning}`;
         icon.textContent = summary.icon;
         title.textContent = summary.title;
         detail.textContent = summary.detail;
 
-        // The rule behind a wrong answer, as two plain strings: `textContent`
-        // both, so no dataset word can reach the panel as markup.
+        // textContent only, so no dataset word reaches the panel as markup.
         form.textContent = summary.lesson?.form ?? '';
         note.textContent = summary.lesson?.note ?? '';
         lessonBox.hidden = !summary.lesson;
@@ -60,10 +56,7 @@ export class UiController {
         dom.verdict.root.hidden = true;
     }
 
-    /**
-     * Sole sink for dynamic HTML: `html` must already be escaped, so callers
-     * pre-escape every interpolated value via escapeHtml() first.
-     */
+    /** Trusted-HTML sink: `html` must already be escaped with escapeHtml(). */
     showHelpContent(title, html) {
         dom.modals.help.title.textContent = title;
         dom.modals.help.content.innerHTML = html;

@@ -1,5 +1,4 @@
 // platform/storage.js
-// Thin wrapper around localStorage
 
 import { CONFIG } from '../config.js';
 
@@ -15,8 +14,7 @@ function safeSet(key, value) {
   try {
     localStorage.setItem(key, value);
   } catch {
-    // Storage unavailable (private mode, quota, etc). Silently no-op -
-    // the app still works, it just won't remember progress this session.
+    // Storage unavailable (private mode, quota): the app works but won't remember progress.
   }
 }
 
@@ -24,15 +22,11 @@ function safeRemove(key) {
   try {
     localStorage.removeItem(key);
   } catch {
-    // Same as safeSet: nothing to do if storage is unavailable.
+    // Storage unavailable: nothing to remove.
   }
 }
 
-/**
- * Removes every key starting with `prefix`. Progress keys are namespaced this
- * way (`dm_belt_progress_<kataId>`), so a prefix scan is the only way to find
- * them all - `removeItem` on the prefix alone would leave them behind.
- */
+// Progress keys like `dm_belt_progress_<kataId>` can only be found by scanning.
 function safeRemoveByPrefix(prefix) {
   try {
     const keys = [];
@@ -89,7 +83,7 @@ export const Storage = {
     safeRemove(key);
   },
 
-  /** Wipes all app-owned keys, including prefixed ones like `dm_belt_progress_<id>`. */
+
   removeByPrefix(prefix) {
     safeRemoveByPrefix(prefix);
   },

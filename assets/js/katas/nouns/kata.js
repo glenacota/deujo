@@ -1,5 +1,4 @@
 // katas/nouns/kata.js
-// Self-contained noun kata: elements, local selection state, rendering, validation.
 
 import { createSectionFromTemplate } from '../../platform/dom/template.js';
 import { acceptedAnswers, matchAnswer } from '../../services/answer-matcher.js';
@@ -16,8 +15,7 @@ export function validateNounDataset(dataset) {
 
     dataset.forEach((noun, index) => {
         const validGender = ['der', 'die', 'das'].includes(noun?.g);
-        // A plural is a string, or `{a, alt}` when more than one spelling is
-        // correct. An empty string still means "this noun has no plural".
+        // A plural is a string or `{a, alt}`; an empty string means the noun has no plural.
         const validPlural = typeof noun?.p === 'string'
             || (noun?.p && typeof noun.p === 'object'
                 && typeof noun.p.a === 'string'
@@ -29,12 +27,11 @@ export function validateNounDataset(dataset) {
     });
 }
 
-/** The chosen gender is the pressed one; app.css paints the state from the attribute. */
+// app.css paints the pressed state from aria-pressed.
 function setGenderActive(btn, active) {
     btn.setAttribute('aria-pressed', String(active));
 }
 
-/** Mounts the noun kata's section, so `el` is populated for the caller. `el` is read-only afterwards: only `gender` changes between items. */
 export function createNounKata(container) {
     let gender = null;
 
@@ -53,7 +50,6 @@ export function createNounKata(container) {
         gender = btn.dataset.gender;
         el.genderButtons.forEach((b) => setGenderActive(b, b.dataset.gender === gender));
     }));
-    // The same rule as a picker's row: tap the gender, or press its digit.
     digitiseOptions(el.genderButtons);
 
     return {
@@ -61,21 +57,11 @@ export function createNounKata(container) {
         validateDataset: validateNounDataset,
         el,
 
-        /**
-         * Answer-blind: the body takes no noun, so it cannot print the word on
-         * screen or the plural the answer expects.
-         */
         getHelpContent() {
             return renderNounHelp();
         },
 
-        /**
-         * Picks the gender whose digit was pressed, for the keyboard funnel.
-         *
-         * @returns {boolean} false when no gender carries that digit, so the key
-         *   is left to the page rather than swallowed by a binding that would do
-         *   nothing
-         */
+        // Returns false when no gender carries the digit, so the key stays with the page.
         pickOption(digit) {
             const button = optionForDigit(el.genderButtons, digit);
             if (!button) return false;
@@ -96,15 +82,13 @@ export function createNounKata(container) {
             el.genderButtons.forEach((btn) => setGenderActive(btn, false));
         },
 
-        /** @returns a verdict `{ correct, fields }`, or `{ warning }` when the answer is not ready to grade. */
         check(noun) {
             if (!gender) return { warning: 'Please select a gender (der, die, or das).' };
 
             const userPlural = el.plural.value.trim();
             const hasNoPlural = !noun.p;
             const genderOk = gender === noun.g;
-            // "p" may be a plain string or {a, alt} for plurals with two
-            // accepted spellings, and the article is optional in the input.
+            // The article is optional in the input.
             const pluralOk = hasNoPlural
                 || matchAnswer(userPlural, noun.p, { allowExtraWords: true }).ok;
 
@@ -115,8 +99,7 @@ export function createNounKata(container) {
             const pluralAnswer = hasNoPlural ? 'no plural' : `die ${acceptedAnswers(noun.p)[0]}`;
             markControl(el.plural, { ok: pluralOk, expected: pluralAnswer });
 
-            // Gender first, because every plural rule hangs off it: a learner who
-            // has the gender wrong cannot use the plural rule yet.
+            // A wrong gender outranks a wrong plural: the plural rules depend on it.
             const lesson = !genderOk
                 ? renderNounLesson({ noun, field: 'gender', expected: noun.g })
                 : !pluralOk

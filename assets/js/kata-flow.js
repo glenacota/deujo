@@ -1,8 +1,5 @@
 // kata-flow.js
-// The learner's path through a kata: enter, answer, review, skip, leave.
-//
-// Everything that touches the page or a sound goes through `view` and
-// `rewards`, so this module names no host global and a test drives it with fakes.
+// Page and sound access go through `view` and `rewards`, so tests drive it with fakes.
 
 import { summarizeAnswer, summarizeWarning } from './services/answer-summary.js';
 import { Phase } from './session.js';
@@ -38,7 +35,6 @@ export class KataFlow {
         return this.#session.isAnswering(this.#state.activeKata);
     }
 
-    /** Resumes the kata the learner left open, or shows the dashboard. */
     async start() {
         const id = this.#state.activeKata;
         if (this.#state.wasFocusModeActive() && id) {
@@ -103,18 +99,14 @@ export class KataFlow {
 
         this.#state.recordAnswer(id, item.id, result.correct);
         const outcome = this.#applyOutcome(id, result.correct);
-        // Reviewing is set before any reward runs: a reward that throws must not
-        // leave a graded item open to be graded again.
+        // Set before any reward runs: a throwing reward must not leave a graded item open to re-grading.
         this.#setPhase(id, Phase.REVIEWING);
         this.#view.renderProgress(kata);
         this.#view.showVerdict(summarizeAnswer(result));
         this.#reward(outcome, id);
     }
 
-    /**
-     * Skipping discards the pending answer and moves on without grading it.
-     * It still costs half a belt point, so dodging hard items has a price.
-     */
+    /** Discards the pending answer ungraded; still costs half a belt point. */
     skip() {
         const id = this.#state.activeKata;
         if (!this.#session.isAnswering(id)) return;
@@ -187,8 +179,7 @@ export class KataFlow {
         this.#session.setPhase(id, phase);
         const { kata } = this.#entries.get(id);
         const locked = !this.#session.isAnswering(id);
-        // Only this kata's section: every kata is mounted from boot, so locking
-        // them all would freeze the siblings.
+        // Every kata is mounted from boot, so lock only this one's section.
         this.#view.setLocked(kata, locked);
         // The Check/Skip bar is shared chrome, so it can only describe the kata on screen.
         if (this.#state.activeKata !== id) return;
@@ -207,8 +198,7 @@ export class KataFlow {
 
     /**
      * A graded item must not be shown again unanswered, or it can be re-scored.
-     * Keyed to one kata on purpose: leaving never touches a sibling that is
-     * still showing a verdict, and a kata left mid-answer keeps its typing.
+     * Scoped to one kata: a sibling still showing a verdict, or mid-answer, is untouched.
      */
     #discardGradedItem() {
         const id = this.#state.activeKata;

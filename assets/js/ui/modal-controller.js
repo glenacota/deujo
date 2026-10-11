@@ -82,12 +82,7 @@ export class ModalController {
         modal.classList.add('hidden');
     }
 
-    /**
-     * Only controls that can actually take focus count as the trap's edges.
-     * A display:none control (the settings confirm box) still matches the
-     * selector, so counting it would make the last stop unreachable and the
-     * wrap-around would never fire, letting Tab walk out behind the modal.
-     */
+    /** display:none controls (the settings confirm box) match the selector but cannot take focus; counting them breaks the wrap-around. */
     #focusableIn(modal) {
         return Array.from(modal.querySelectorAll(FOCUSABLE_SELECTOR))
             .filter((element) => element.getClientRects().length > 0);

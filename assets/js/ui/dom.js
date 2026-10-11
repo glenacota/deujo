@@ -1,5 +1,4 @@
 // ui/dom.js
-// Single place that knows about element IDs
 
 const byId = (id) => document.getElementById?.(id) ?? null;
 const ACTIVE_SECTION_SELECTOR = '[data-role="section"]:not(.hidden)';
