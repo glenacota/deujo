@@ -9,7 +9,7 @@ import { assertDataset, hasAltList, hasCoreFields } from '../dataset-rules.js';
 import { getVerbManifest } from './manifest.js';
 import { renderVerbHelp } from './help.js';
 import { renderVerbLesson } from './lesson.js';
-import { verbsTemplate } from './template.js';
+import { conjugationTemplate, perfektTemplate } from './template.js';
 
 // Placeholders come from "gehen", so a hint never leaks the current verb's answer.
 const TENSE_PLACEHOLDERS = {
@@ -54,7 +54,7 @@ export function validateVerbDataset(dataset) {
 function createPerfektKata(container) {
     return createChoiceTextKata({
         container,
-        template: verbsTemplate(true),
+        template: perfektTemplate,
         manifest: getVerbManifest('perf'),
         validateDataset: validateVerbDataset,
         getHelpContent: () => renderVerbHelp('perf'),
@@ -90,12 +90,10 @@ function createPerfektKata(container) {
     });
 }
 
-export function createVerbKata(tenseKey, container) {
-    if (tenseKey === 'perf') return createPerfektKata(container);
-
+function createVerbConjugationKata(tenseKey, container) {
     const manifest = getVerbManifest(tenseKey);
 
-    const section = createSectionFromTemplate(verbsTemplate(false));
+    const section = createSectionFromTemplate(conjugationTemplate);
     container.appendChild(section);
 
     const el = {
@@ -153,4 +151,10 @@ export function createVerbKata(tenseKey, container) {
             };
         },
     };
+}
+
+export function createVerbKata(tenseKey, container) {
+    return tenseKey === 'perf'
+        ? createPerfektKata(container)
+        : createVerbConjugationKata(tenseKey, container);
 }

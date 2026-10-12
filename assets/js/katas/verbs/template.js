@@ -7,23 +7,23 @@ const conjugationRow = ({ key, label }, last) => `
                 <input id="conj-${key}" type="text" autocomplete="off" maxlength="40" data-role="conj_${key}" enterkeyhint="${last ? 'done' : 'next'}" class="blank-input">
             </div>`;
 
-export const verbsTemplate = (perfekt) => `
+const section = (body) => `
     <section class="kata-section hidden" data-role="section">
         <div class="kata-head">
             <h2 data-role="word" class="kata-prompt kata-prompt--word">gehen</h2>
             <p data-role="meaning" class="kata-gloss">to go</p>
         </div>
-        ${perfekt ? PERFEKT_BLOCK : CONJUGATION_BLOCK}
+        ${body}
     </section>
 `;
 
-const CONJUGATION_BLOCK = `
+export const conjugationTemplate = section(`
         <div class="kata-field">
             <p class="kata-label" id="verbs-conjugation-label">Fill in the conjugations</p>
             <div class="kata-rows" role="group" aria-labelledby="verbs-conjugation-label">${PERSONS.map(conjugationRow).join('')}</div>
-        </div>`;
+        </div>`);
 
-const PERFEKT_BLOCK = `
+export const perfektTemplate = section(`
         <div class="kata-field">
             <p class="kata-label" id="verbs-aux-label">Select the auxiliary</p>
             <div class="kata-options kata-options--2" role="group" aria-labelledby="verbs-aux-label">
@@ -34,4 +34,4 @@ const PERFEKT_BLOCK = `
         <div class="kata-field">
             <label class="kata-label" for="verb-participle">Type the participle</label>
             <input id="verb-participle" type="text" data-role="participle" placeholder="e.g. gegangen" autocomplete="off" maxlength="40" autocapitalize="none" autocorrect="off" spellcheck="false" lang="de" enterkeyhint="done" class="blank-input">
-        </div>`;
+        </div>`);
