@@ -132,3 +132,18 @@ test('renderText runs after the input is cleared', () => {
     kata.render(ITEM);
     assert.equal(kata.el.typed.placeholder, 'wort');
 });
+
+test('noun kata verdict form names the plural whichever field is wrong', async () => {
+  const { createNounKata } = await import('../../assets/js/katas/nouns/kata.js');
+  const kata = createNounKata(document.createElement('div'));
+  const noun = { w: 'Tag', g: 'der', m: 'day', p: 'Tage' };
+  kata.render(noun);
+  kata.el.genderButtons.find((btn) => btn.dataset.gender === 'das').click();
+  kata.el.plural.value = 'tage';
+  const wrongGender = kata.check(noun);
+  assert.match(wrongGender.lesson.form, /die Tage/);
+
+  kata.el.genderButtons.find((btn) => btn.dataset.gender === 'der').click();
+  kata.el.plural.value = 'Tagen';
+  assert.equal(kata.check(noun).lesson.form, 'die Tage');
+});

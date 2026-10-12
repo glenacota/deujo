@@ -48,11 +48,18 @@ export function createNounKata(container) {
             const choiceOk = gender === noun.g;
             // The article is optional in the input.
             const textOk = hasNoPlural || matchAnswer(given, noun.p, { allowExtraWords: true }).ok;
-            const expectedText = hasNoPlural ? 'no plural' : `die ${acceptedAnswers(noun.p)[0]}`;
+            const plural = hasNoPlural ? '' : acceptedAnswers(noun.p)[0];
+            const expectedText = hasNoPlural
+                ? 'no plural'
+                : `die ${plural.charAt(0).toUpperCase()}${plural.slice(1)}`;
 
             // A wrong gender outranks a wrong plural: the plural rules depend on it.
             const lesson = !choiceOk
-                ? renderNounLesson({ noun, field: 'gender', expected: noun.g })
+                ? renderNounLesson({
+                    noun,
+                    field: 'gender',
+                    expected: hasNoPlural ? noun.g : `${noun.g}, ${expectedText}`,
+                })
                 : !textOk
                     ? renderNounLesson({ noun, field: 'plural', expected: expectedText })
                     : null;

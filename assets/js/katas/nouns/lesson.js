@@ -23,19 +23,19 @@ function endingOf(word, pattern) {
     return match ? `-${match[1]}` : '';
 }
 
-function genderLesson(noun) {
+function genderLesson(noun, expected) {
     const word = String(noun?.w ?? '');
     const gender = noun?.g;
     const matched = GENDER_ENDINGS.find((entry) => entry.pattern.test(word));
 
     if (!matched) {
-        return lesson(gender, `${word} has no ending that gives its gender away. Learn it with the article.`);
+        return lesson(expected, `${word} has no ending that gives its gender away. Learn it with the article.`);
     }
     if (matched.gender === gender) {
-        return lesson(gender, `${matched.rule} ${word} is ${GENDER_LABELS[gender]}.`);
+        return lesson(expected, `${matched.rule} ${word} is ${GENDER_LABELS[gender]}.`);
     }
     return lesson(
-        gender,
+        expected,
         `${word} is ${GENDER_LABELS[gender]}, not ${matched.gender}, so it breaks the ${endingOf(word, matched.pattern)} rule: ${matched.rule}`,
     );
 }
@@ -46,7 +46,7 @@ function pluralLesson(noun, expected) {
 
 export function renderNounLesson({ noun, field, expected } = {}) {
     if (typeof expected !== 'string' || !expected.trim()) return null;
-    if (field === 'gender') return genderLesson(noun);
+    if (field === 'gender') return genderLesson(noun, expected);
     if (field === 'plural') return pluralLesson(noun, expected);
     return null;
 }
