@@ -1,5 +1,5 @@
 // tests/unit/answer-marking.test.js
-// Inline marking: colour, emoji, and the corrections that travel with them.
+// Inline marking: colour and emoji only; corrections live in the verdict panel.
 // Uses the shared DOM stub, since there is no jsdom dependency in this project.
 
 import { test } from 'node:test';
@@ -16,62 +16,48 @@ const mountInput = (parent, tag = 'input') => {
 const loadModule = async () => import('../../assets/js/platform/dom/answer-marking.js');
 
 const badgeOf = (wrapper) => wrapper.children.find((c) => c.classList.has('answer-badge'));
-const noteOf = (wrapper) => wrapper.children.find((c) => c.classList.has('answer-note'));
 
-test('a wrong control is flagged red and shows the expected value inline', async () => {
+test('a wrong control is flagged red with a badge and no inline correction', async () => {
   const { markControl } = await loadModule();
   const parent = document.createElement('div');
   const input = mountInput(parent);
 
-  markControl(input, { ok: false, expected: 'die Bäume' });
+  markControl(input, { ok: false });
 
   const wrapper = input.parentElement;
   assert.ok(wrapper.classList.has('answer-field'), 'the control is wrapped for the badge');
   assert.equal(input.dataset.answerState, 'wrong');
-  assert.equal(noteOf(wrapper).dataset.answerState, 'wrong');
   assert.equal(input.getAttribute('aria-invalid'), 'true');
   assert.equal(badgeOf(wrapper).textContent, '❌');
-  assert.match(noteOf(wrapper).textContent, /die Bäume/);
+  assert.equal(wrapper.children.length, 2, 'the control and its badge, nothing else');
 });
 
-test('a correct control shows the badge and no repeating note', async () => {
+test('a correct control shows the badge only', async () => {
   const { markControl } = await loadModule();
   const parent = document.createElement('div');
   const input = mountInput(parent);
 
-  markControl(input, { ok: true, expected: 'die Bäume' });
+  markControl(input, { ok: true });
 
   const wrapper = input.parentElement;
   assert.equal(input.dataset.answerState, 'correct');
   assert.equal(badgeOf(wrapper).textContent, '✅');
-  assert.equal(noteOf(wrapper), undefined, 'a correct answer needs no inline correction');
+  assert.equal(wrapper.children.length, 2);
 });
 
-test('note: false suppresses the correction on a wrong control', async () => {
+test('re-marking the same control does not stack wrappers or badges', async () => {
   const { markControl } = await loadModule();
   const parent = document.createElement('div');
   const input = mountInput(parent);
 
-  markControl(input, { ok: false, expected: 'geht', note: false });
-
-  assert.equal(input.dataset.answerState, 'wrong');
-  assert.equal(badgeOf(input.parentElement).textContent, '❌');
-  assert.equal(noteOf(input.parentElement), undefined);
-});
-
-test('re-marking the same control does not stack wrappers, badges, or notes', async () => {
-  const { markControl } = await loadModule();
-  const parent = document.createElement('div');
-  const input = mountInput(parent);
-
-  markControl(input, { ok: false, expected: 'a' });
-  markControl(input, { ok: false, expected: 'b' });
+  markControl(input, { ok: false });
+  markControl(input, { ok: false });
   markControl(input, { ok: true });
 
   const wrapper = input.parentElement;
   assert.equal(parent.children.length, 1, 'still a single wrapper');
   assert.equal(wrapper.children.filter((c) => c.classList.has('answer-badge')).length, 1);
-  assert.equal(wrapper.children.filter((c) => c.classList.has('answer-note')).length, 0, 'stale note removed');
+  assert.equal(badgeOf(wrapper).textContent, '✅');
   assert.equal(input.dataset.answerState, 'correct');
 });
 
@@ -80,12 +66,12 @@ test('a button takes the badge as a child, so its grid cell keeps its width', as
   const parent = document.createElement('div');
   const button = mountInput(parent, 'button');
 
-  markControl(button, { ok: false, expected: 'der', inside: true });
+  markControl(button, { ok: false, inside: true });
 
   assert.equal(parent.children.length, 1, 'no wrapper around a grid button');
   assert.equal(parent.children[0], button);
   assert.equal(badgeOf(button).textContent, '❌');
-  assert.equal(noteOf(button).textContent, 'der');
+  assert.equal(button.children.length, 1, 'the badge only');
 });
 
 test('clearAnswerMarks also strips marks living inside a button', async () => {
@@ -93,10 +79,10 @@ test('clearAnswerMarks also strips marks living inside a button', async () => {
   const parent = document.createElement('div');
   const button = mountInput(parent, 'button');
 
-  markControl(button, { ok: false, expected: 'der', inside: true });
+  markControl(button, { ok: false, inside: true });
   clearAnswerMarks(parent);
 
-  assert.equal(button.children.length, 0, 'badge and note removed from the button');
+  assert.equal(button.children.length, 0, 'badge removed from the button');
   assert.equal('answerState' in button.dataset, false);
   assert.equal(parent.children.length, 1);
   assert.equal(parent.children[0], button);
@@ -108,7 +94,7 @@ test('clearAnswerMarks unwraps controls and strips the state', async () => {
   const a = mountInput(parent);
   const b = mountInput(parent);
 
-  markControl(a, { ok: false, expected: 'x' });
+  markControl(a, { ok: false });
   markControl(b, { ok: true });
   clearAnswerMarks(parent);
 

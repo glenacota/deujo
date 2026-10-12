@@ -222,7 +222,6 @@ test('checking from a reopened blank hides the step rows behind the results', ()
 
     kata.check(ITEM);
     assert.equal(part(container, 'steps').hidden, true);
-    assert.equal(part(container, 'review').hidden, false);
     assert.equal(kata.pickOption(5), false);
 });
 
@@ -289,7 +288,6 @@ test('re-picking a form after the last pick settles again without re-walking lat
     buttonIn(container, 'stage-form', 'dem').click();
     buttonIn(container, 'stage-case', 'Akkusativ').click();
     buttonIn(container, 'stage-form', 'seine').click();
-    assert.equal(part(container, 'review').hidden, true, 'the review waits for Check');
     assert.equal(part(container, 'steps').hidden, true);
 
     slotsOf(container)[0].click();
@@ -300,53 +298,29 @@ test('re-picking a form after the last pick settles again without re-walking lat
     buttonIn(container, 'stage-form', other).click();
 
     assert.equal(part(container, 'steps').hidden, true);
-    assert.equal(part(container, 'review').hidden, true);
     assert.equal(slotsOf(container)[0].textContent, other);
     assert.equal(slotsOf(container)[1].textContent, 'seine');
 
-    kata.check(ITEM);
-    assert.equal(part(container, 'review').hidden, false);
+    assert.equal(typeof kata.check(ITEM).correct, 'boolean');
 });
 
 test('a graded answer cannot be reopened', () => {
     const { kata, container } = answer([['dat', 'dem'], ['akk', 'seine']]);
     slotsOf(container)[0].click();
-    assert.equal(part(container, 'review').hidden, false);
+    assert.equal(part(container, 'steps').hidden, true);
     assert.equal(kata.pickOption(1), false);
 });
 
-/**
- * The cells of one review row: the picked case and the picked form, each with
- * the wanted value beside it on a miss. Selected by class rather than by
- * position, so adding a label to the row cannot silently shift a cell.
- */
-const reviewCellsOf = (container, index) => {
-    const row = container.querySelectorAll('[data-role="review"] > *')[index];
-    return Array.from(row.children).filter((node) => node.classList.contains('pick-review-cell'));
-};
+const badgeOf = (node) => node.children.find((child) => child.classList.has('answer-badge'))?.textContent;
 
-test('the last pick steps aside for a review row per blank', () => {
+test('the sentence slots carry the verdict, so no second list is rendered', () => {
     const { container } = answer([['dat', 'dem'], ['akk', 'seine']]);
 
-    const rows = container.querySelectorAll('[data-role="review"] > *');
-    assert.equal(rows.length, 2, 'one row per blank, so grading can address each');
-
-    // The step rows are gone, so a stale button cannot be picked after grading.
-    const [caseCell, formCell] = reviewCellsOf(container, 0);
-    assert.equal(caseCell.children[0].textContent, 'Dativ');
-    assert.equal(formCell.children[0].textContent, 'dem');
-});
-
-test('the review row names which stage each value belongs to', () => {
-    // Two rows of bare buttons with nothing to say which is the case and which
-    // the form would read as a list of words rather than an answer the learner
-    // gave.
-    const { container } = answer([['dat', 'dem'], ['akk', 'seine']]);
-    const labels = Array.from(container.querySelectorAll('[data-role="review"] > *')[0].children)
-        .filter((node) => node.classList.contains('pick-review-label'))
-        .map((node) => node.textContent);
-
-    assert.deepEqual(labels, ['Blank 1 · case', 'form']);
+    assert.equal(part(container, 'review'), null, 'there is no review panel');
+    assert.deepEqual(slotsOf(container).map(badgeOf), ['✅', '✅']);
+    assert.deepEqual(slotsOf(container).map((slot) => slot.dataset.answerState), ['correct', 'correct']);
+    // The learner's own pick stays on the slot after the badge lands.
+    assert.match(slotsOf(container)[0].textContent, /^dem/);
 });
 
 test('a fully correct answer reports one field per blank', () => {
@@ -370,31 +344,25 @@ test('the two stages are graded apart, so one wrong stage fails the blank', () =
     assert.deepEqual(wrongCase.result.fields, [{ ok: true }, { ok: false }]);
 });
 
-test('a miss shows the wanted value beside the one taken', () => {
+test('a miss marks its slot wrong and leaves the wanted form off every control', () => {
     const { container } = answer([['dat', 'den'], ['akk', 'seine']]);
-    const [caseCell, formCell] = reviewCellsOf(container, 0);
 
-    // Two buttons in the form cell: the pick, then the correction.
-    assert.equal(caseCell.children.length, 1, 'the case was right, so nothing to correct');
-    assert.deepEqual(formCell.children.map((b) => b.textContent), ['den', 'dem']);
+    assert.deepEqual(slotsOf(container).map(badgeOf), ['❌', '✅']);
+    assert.deepEqual(slotsOf(container).map((slot) => slot.dataset.answerState), ['wrong', 'correct']);
+    assert.doesNotMatch(slotsOf(container)[0].textContent, /dem/, 'the answer belongs to the verdict panel');
 });
 
-test('a wrong case is corrected beside the case that was named', () => {
+test('a wrong case alone marks the slot wrong, since the slot holds both stages', () => {
     const { container } = answer([['dat', 'dem'], ['dat', 'seine']]);
-    const [caseCell, formCell] = reviewCellsOf(container, 1);
 
-    assert.deepEqual(caseCell.children.map((b) => b.textContent), ['Dativ', 'Akkusativ']);
-    // The form was right, so only the case carries a correction.
-    assert.deepEqual(formCell.children.map((b) => b.textContent), ['seine']);
+    assert.deepEqual(slotsOf(container).map((slot) => slot.dataset.answerState), ['correct', 'wrong']);
 });
 
-test('a clean answer carries no second button, only a badge', () => {
-    const { container } = answer([['dat', 'dem'], ['akk', 'seine']]);
+test('a re-check does not stack badges on a slot', () => {
+    const { kata, container } = answer([['dat', 'dem'], ['akk', 'seine']]);
+    kata.check(ITEM);
 
-    for (const cell of reviewCellsOf(container, 0)) {
-        assert.equal(cell.children.length, 1);
-        assert.equal(cell.children[0].dataset.answerState, 'correct');
-    }
+    assert.equal(slotsOf(container)[0].children.filter((child) => child.classList.has('answer-badge')).length, 1);
 });
 
 test('an unfinished blank blocks the check with a warning', () => {
@@ -422,20 +390,38 @@ test('checking before rendering reports rather than throwing', () => {
     assert.equal(result.correct, undefined);
 });
 
-test('the correction panel is asked to teach the first miss only', () => {
-    const { lessons } = answer([['dat', 'den'], ['dat', 'seiner']]);
-    assert.equal(lessons.length, 1);
-    assert.equal(lessons[0].index, 0);
-    assert.equal(lessons[0].blank, ITEM.b[0]);
-    assert.deepEqual(lessons[0].given, { caseKey: 'dat', form: 'den' });
+test('the verdict is asked to teach every wrong blank, and only those', () => {
+    const { lessons, result } = answer([['dat', 'den'], ['dat', 'seiner']], {
+        lessonFor: (miss) => ({ form: miss.blank.a, note: `rule ${miss.index}` }),
+    });
+    assert.deepEqual(result.lessons, [
+        { label: 'Blank 1', form: 'dem', note: 'rule 0' },
+        { label: 'Blank 2', form: 'seine', note: 'rule 1' },
+    ]);
+    assert.deepEqual(lessons, [], 'the default recorder was replaced');
+
+    const first = answer([['dat', 'den'], ['akk', 'seine']]);
+    assert.equal(first.lessons.length, 1);
+    assert.equal(first.lessons[0].index, 0);
+    assert.equal(first.lessons[0].blank, ITEM.b[0]);
+    assert.deepEqual(first.lessons[0].given, { caseKey: 'dat', form: 'den' });
 });
 
-test('a clean verdict still asks for a lesson, with no miss to teach', () => {
-    // lessonFor runs on every verdict, so one that assumed a miss existed would
-    // throw on every right answer.
+test('a clean verdict asks for no lesson and carries none', () => {
     const { lessons, result } = answer([['dat', 'dem'], ['akk', 'seine']]);
     assert.equal(result.correct, true);
-    assert.deepEqual(lessons, [undefined]);
+    assert.deepEqual(lessons, []);
+    assert.deepEqual(result.lessons, []);
+});
+
+test('a one-blank sentence needs no blank label on its lesson', () => {
+    const { kata, container } = build({ lessonFor: (miss) => ({ form: miss.blank.a, note: 'rule' }) });
+    const single = { ...ITEM, id: 't3', s: 'Der Mann bringt {0} Gast.', b: [{ a: 'dem', c: 'dat' }] };
+    kata.render(single);
+    buttonIn(container, 'stage-case', 'Dativ').click();
+    buttonIn(container, 'stage-form', 'den').click();
+
+    assert.deepEqual(kata.check(single).lessons, [{ form: 'dem', note: 'rule' }]);
 });
 
 test('a second render discards the previous item\'s picks', () => {
@@ -534,7 +520,7 @@ test('a digit after the last pick does not re-answer a graded blank', () => {
     const { kata, container } = build();
     kata.render(ITEM);
 
-    // Answer both blanks straight through, so the review list is up.
+    // Answer both blanks straight through, so the step block is gone.
     const answerOpen = () => {
         const pick = (stage, value) => container
             .querySelectorAll(`[data-role="${stage}"] > *`)
@@ -549,7 +535,7 @@ test('a digit after the last pick does not re-answer a graded blank', () => {
 
     // The buttons are still in the DOM behind the hidden step block, so without
     // a DONE step a stray key would re-answer a blank.
-    assert.equal(part(container, 'review').hidden, true, 'no review before Check');
+    assert.equal(part(container, 'steps').hidden, true, 'the step block is hidden before Check');
     assert.equal(kata.pickOption(1), false);
     assert.equal(kata.pickOption(5), false);
 });
@@ -640,9 +626,10 @@ test('the failure message is the kata\'s own wording, with the offending index',
 test('the shared template carries the instruction and every render target', () => {
     const html = pickerTemplate();
 
-    for (const role of ['section', 'sentence', 'translation', 'prompt', 'stage-case', 'stage-form', 'review']) {
+    for (const role of ['section', 'sentence', 'translation', 'prompt', 'stage-case', 'stage-form']) {
         assert.match(html, new RegExp(`data-role="${role}"`), `the template has no ${role}`);
     }
+    assert.doesNotMatch(html, /data-role="review"/, 'the verdict panel is the only place answers appear');
 });
 
 test('the trigger reads the sentence, never the answer', () => {
@@ -747,34 +734,12 @@ test('a row the learner can actually choose between is what gets built', () => {
     }
 });
 
-test('a review chip is a value, not a live option', () => {
-    // It is a disabled button, so it can never be tapped or hovered: giving it
-    // the option's 44px tap target would make the review list twice as tall as
-    // the answers it holds, and its hover utilities would do nothing at all.
+test('a marked slot keeps the picker options as the only live controls', () => {
+    // A slot carries a badge, not a chip: no second button is built to hold an answer.
     const { container } = answer([['dat', 'den'], ['akk', 'seine']]);
-    const chips = Array.from(container.querySelectorAll('.pick-value'));
 
-    assert.ok(chips.length > 0, 'the review list has no chips');
-    for (const chip of chips) {
-        assert.ok(!chip.classList.contains('pick-option'), 'a chip is styled as a live option');
-        assert.equal(chip.disabled, true);
-    }
-});
-
-test('the graded cells and the verdict come from one comparison', () => {
-    // `markReview` reads the verdicts `check` built rather than repeating the
-    // comparison, so a cell cannot show a different finding from the one the
-    // correction panel explains.
-    const { container } = answer([['dat', 'den'], ['dat', 'seine']]);
-    const chips = Array.from(container.querySelectorAll('.pick-value'));
-
-    // Blank one: the case held, the form slipped, and the correction sits beside
-    // it. Blank two: the form held and the case was corrected instead. Flattened
-    // in document order, so a row that gained or lost a cell would show here.
-    assert.deepEqual(
-        chips.map((chip) => chip.dataset.answerState),
-        ['correct', 'wrong', 'correct', 'wrong', 'correct', 'correct'],
-    );
+    assert.equal(container.querySelectorAll('.pick-value').length, 0);
+    assert.equal(container.querySelectorAll('button[disabled]').length, 0);
 });
 
 test('a kata exposes the section and nothing else', () => {

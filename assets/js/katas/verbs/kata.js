@@ -72,19 +72,12 @@ function createPerfektKata(container) {
             const choiceOk = targets.some((target) => target.aux === auxiliary);
             const textOk = targets.some((target) => matchAnswer(given, target.participle).ok);
 
-            // A wrong auxiliary outranks a wrong participle: it carries the rule.
-            const lesson = !choiceOk
-                ? renderVerbLesson({ verb, tenseKey: 'perf', index: null, expected: targets[0].aux, accepted: targets.map((t) => t.aux) })
-                : !textOk
-                    ? renderVerbLesson({ verb, tenseKey: 'perf', index: 0, expected: targets[0].participle })
-                    : null;
-
+            // The note admits a rejected auxiliary was defensible when the dataset lists both.
             return {
                 choiceOk,
                 textOk,
-                correctChoices: targets.map((t) => t.aux),
-                expectedText: targets[0].participle,
-                lesson,
+                choiceLesson: renderVerbLesson({ verb, tenseKey: 'perf', index: null, expected: targets[0].aux, accepted: targets.map((t) => t.aux) }),
+                textLesson: renderVerbLesson({ verb, tenseKey: 'perf', index: 0, expected: targets[0].participle }),
             };
         },
     });
@@ -134,20 +127,22 @@ function createVerbConjugationKata(tenseKey, container) {
                 return { warning: 'Please fill in all six conjugations before checking.' };
             }
 
-            const misses = [];
+            const lessons = [];
             const fields = el.inputs.map((input, i) => {
                 const given = input.value.trim();
                 const { ok, accepted } = matchAnswer(given, targetForms[i]);
-                markControl(input, { ok, note: false });
-                if (!ok) misses.push({ index: i, expected: accepted[0] });
+                markControl(input, { ok });
+                if (!ok) {
+                    const miss = renderVerbLesson({ verb, tenseKey, index: i, expected: accepted[0] });
+                    if (miss) lessons.push({ label: PERSONS[i].label, ...miss });
+                }
                 return { ok };
             });
 
             return {
                 correct: fields.every((f) => f.ok),
                 fields,
-                // Only the first miss gets a lesson; one panel is already on screen.
-                lesson: renderVerbLesson({ verb, tenseKey, ...misses[0] }),
+                lessons,
             };
         },
     };

@@ -9,7 +9,8 @@ import { digitiseOptions, optionForDigit } from '../../platform/dom/option-digit
  * `choice` and `text` name the template's `data-role`s; `choice.key` is the
  * button's dataset key and `elKey` the name each control takes on `kata.el`.
  * `grade(item, {choice, given})` returns `{warning}` or
- * `{choiceOk, textOk, correctChoices, expectedText, lesson}`.
+ * `{choiceOk, textOk, choiceLesson, textLesson}`; each lesson is `{form, note}` or null
+ * and reaches the verdict only for a field that is wrong.
  */
 export function createChoiceTextKata({
     container, template, manifest, validateDataset, getHelpContent,
@@ -67,17 +68,17 @@ export function createChoiceTextKata({
             const verdict = grade(item, { choice: chosen, given: input.value.trim() });
             if (verdict.warning) return { warning: verdict.warning };
 
-            const { choiceOk, textOk, correctChoices, expectedText, lesson } = verdict;
-            markControl(buttonFor(chosen), { ok: choiceOk, inside: true, note: false });
-            if (!choiceOk) {
-                for (const value of correctChoices) markControl(buttonFor(value), { ok: true, inside: true });
-            }
-            markControl(input, { ok: textOk, expected: expectedText });
+            const { choiceOk, textOk, choiceLesson, textLesson } = verdict;
+            markControl(buttonFor(chosen), { ok: choiceOk, inside: true });
+            markControl(input, { ok: textOk });
 
             return {
                 correct: choiceOk && textOk,
                 fields: [{ ok: choiceOk }, { ok: textOk }],
-                lesson,
+                lessons: [
+                    !choiceOk && choiceLesson,
+                    !textOk && textLesson,
+                ].filter(Boolean),
             };
         },
     };

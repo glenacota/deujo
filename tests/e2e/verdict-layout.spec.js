@@ -29,7 +29,7 @@ async function answerWrongly(page) {
     for (let i = 0; i < await inputs.count(); i++) await inputs.nth(i).fill('xyzxyz');
 
     // Each pass opens a blank: a case, then the form that case's row offers. The
-    // review list replaces both rows once every blank is done, which ends this.
+    // step rows hide once every blank is done, which ends this.
     for (let blank = 0; blank < 8; blank += 1) {
         const caseButton = section
             .locator('[data-role="stage-case"] > button')
@@ -76,6 +76,7 @@ for (const id of KATAS) {
             await page.locator('#checkAnswerBtn').click();
 
             await expect(page.locator('#answerVerdict')).toBeVisible();
+            await expect(page.locator('#answerVerdictLessons .verdict-lesson').first()).toBeVisible();
             await expect(page.locator('#checkAnswerBtn [data-role="label"]')).toHaveText('Next');
             expect(await overflow(page)).toBeLessThanOrEqual(0);
             await expect(page.locator('#answerVerdict')).toBeInViewport();

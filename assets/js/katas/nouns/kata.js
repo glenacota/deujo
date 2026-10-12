@@ -53,18 +53,13 @@ export function createNounKata(container) {
                 ? 'no plural'
                 : `die ${plural.charAt(0).toUpperCase()}${plural.slice(1)}`;
 
-            // A wrong gender outranks a wrong plural: the plural rules depend on it.
-            const lesson = !choiceOk
-                ? renderNounLesson({
-                    noun,
-                    field: 'gender',
-                    expected: hasNoPlural ? noun.g : `${noun.g}, ${expectedText}`,
-                })
-                : !textOk
-                    ? renderNounLesson({ noun, field: 'plural', expected: expectedText })
-                    : null;
-
-            return { choiceOk, textOk, correctChoices: [noun.g], expectedText, lesson };
+            // Both lessons are built; the factory shows only the ones for a wrong field.
+            return {
+                choiceOk,
+                textOk,
+                choiceLesson: renderNounLesson({ noun, field: 'gender', expected: noun.g }),
+                textLesson: renderNounLesson({ noun, field: 'plural', expected: expectedText }),
+            };
         },
     });
 }

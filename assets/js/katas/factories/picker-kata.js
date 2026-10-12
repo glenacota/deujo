@@ -15,9 +15,6 @@ const NOT_READY = 'Finish every blank before checking.';
 
 const Step = Object.freeze({ CASE: 'case', FORM: 'form', DONE: 'done' });
 
-// A disabled review chip is not a `.kata-option`: no tap target or hover. `[data-answer-state]` still colours it.
-const VALUE_CLASS = 'pick-value';
-
 // Disjoint ranges: both rows are on screen at once, so each digit must name exactly one button.
 const DIGITS = Object.freeze({
     [Step.CASE]: 1,
@@ -52,8 +49,7 @@ export function validatePickerDataset(dataset, describeProblem, cases, entryRule
 /**
  * @param prompt (item, blank, index) -> step one's question. Reads the sentence
  *   only, never `blank.c`, or it would print the answer.
- * @param lessonFor (miss) -> `Lesson` or null. Runs on every verdict, so `miss`
- *   may be undefined.
+ * @param lessonFor (miss) -> `Lesson` or null. Runs once per wrong blank.
  * @param entryRule (item) -> boolean, extra per-entry dataset rule
  */
 export function createPickerKata({
@@ -86,7 +82,6 @@ export function createPickerKata({
             stageCase: section.querySelector('[data-role="stage-case"]'),
             caseChip: section.querySelector('[data-role="case-chip"]'),
             stageForm: section.querySelector('[data-role="stage-form"]'),
-            review: section.querySelector('[data-role="review"]'),
         };
 
         // Namespaced ids: every kata is mounted at boot, so shared ids would aim
@@ -131,8 +126,6 @@ export function createPickerKata({
         function goTo(index) {
             open = index;
             dom.steps.hidden = false;
-            dom.review.hidden = true;
-            dom.review.textContent = '';
             if (answers[index].caseKey) {
                 step = Step.FORM;
                 showFormsFor(index);
@@ -171,69 +164,15 @@ export function createPickerKata({
             dom.caseChip.setAttribute('aria-label', chosen ? `Case: ${chosen}. Change.` : '');
         }
 
+        // The buttons stay in the DOM behind the hidden block, so DONE keeps a stray digit from re-answering a blank.
+        function finish() {
+            step = Step.DONE;
+            dom.steps.hidden = true;
+        }
+
         function settle() {
-            // DONE: the buttons are still in the DOM behind the hidden block, so a
-            // stray digit would otherwise re-answer a blank.
-            step = Step.DONE;
-            dom.steps.hidden = true;
-            dom.review.hidden = true;
+            finish();
             slots.forEach((slot, index) => setSlot(slot, answers[index].form, false));
-        }
-
-        function showReview() {
-            // Checking from a reopened blank would otherwise leave the step rows up.
-            step = Step.DONE;
-            dom.steps.hidden = true;
-            dom.review.hidden = false;
-
-            dom.review.textContent = '';
-            const fragment = document.createDocumentFragment();
-            item.b.forEach((blank, index) => {
-                const row = document.createElement('div');
-                row.className = 'pick-review-row';
-                // Labelled per stage so two rows of bare buttons don't read as a word list.
-                row.appendChild(reviewLabel(`Blank ${index + 1} · case`));
-                // Each cell carries what the blank wanted, so a wrong case is corrected beside it like a wrong form.
-                row.appendChild(reviewCell(
-                    answers[index].caseKey && CASE_LABELS[answers[index].caseKey],
-                    CASE_LABELS[blank.c],
-                ));
-                row.appendChild(reviewLabel('form'));
-                row.appendChild(reviewCell(answers[index].form, blank.a));
-                fragment.appendChild(row);
-            });
-            dom.review.appendChild(fragment);
-        }
-
-        // Its own element: a screen reader reads a bare "form" as content, not as the value's name.
-        function reviewLabel(text) {
-            const label = document.createElement('span');
-            label.className = 'pick-review-label';
-            label.textContent = text;
-            return label;
-        }
-
-        // The wanted value sits beside the pick only when it differs.
-        function reviewCell(given, wanted) {
-            const cell = document.createElement('span');
-            cell.className = 'pick-review-cell';
-
-            const picked = document.createElement('button');
-            picked.type = 'button';
-            picked.className = VALUE_CLASS;
-            picked.disabled = true;
-            picked.textContent = given ?? '—';
-            cell.appendChild(picked);
-
-            if (wanted && normalizePhrase(wanted) !== normalizePhrase(given)) {
-                const expected = document.createElement('button');
-                expected.type = 'button';
-                expected.className = VALUE_CLASS;
-                expected.disabled = true;
-                expected.textContent = wanted;
-                cell.appendChild(expected);
-            }
-            return cell;
         }
 
         function pickCase(label) {
@@ -288,8 +227,6 @@ export function createPickerKata({
                 step = Step.CASE;
                 checked = false;
                 dom.steps.hidden = false;
-                dom.review.hidden = true;
-                dom.review.textContent = '';
                 dom.promptForm.hidden = true;
 
                 buildRow(dom.stageCase, cases.map((caseKey) => CASE_LABELS[caseKey]), (label) => pickCase(label), DIGITS[Step.CASE]);
@@ -304,19 +241,20 @@ export function createPickerKata({
 
                 const graded = grade();
                 checked = true;
-                showReview();
-                markReview(graded);
+                // Checking from a reopened blank would otherwise leave the step rows up.
+                finish();
+                // A slot holds the form only, so it is ok when both stages were; the verdict names the stage that missed.
+                graded.forEach(({ index, caseOk, formOk }) => markControl(slots[index], { ok: caseOk && formOk, inside: true }));
 
                 return {
                     correct: graded.every(({ caseOk, formOk }) => caseOk && formOk),
                     fields: graded.map(({ caseOk, formOk }) => ({ ok: caseOk && formOk })),
-                    // The first miss teaches: a two-blank sentence has two rules and the panel has room for one.
-                    lesson: lessonFor(firstMiss(graded)),
+                    lessons: lessonsFor(graded),
                 };
             },
         };
 
-        // One pass: verdict, correction panel and review list all read this, so they cannot disagree.
+        // One pass: verdict, slot marks and lessons all read this, so they cannot disagree.
         function grade() {
             return item.b.map((blank, index) => {
                 const given = answers[index];
@@ -332,27 +270,15 @@ export function createPickerKata({
         }
 
         // `item` and `index` travel with the miss because the preposition lesson reads the sentence.
-        function firstMiss(graded) {
-            const miss = graded.find(({ caseOk, formOk }) => !caseOk || !formOk);
-            if (!miss) return undefined;
-            const { blank, index, given, caseOk } = miss;
-            return { blank, index, item, given, caseOk };
-        }
-
-        // Marks the wanted control beside a wrong pick; reads `graded` rather than re-comparing.
-        function markReview(graded) {
-            Array.from(dom.review.children).forEach((row, index) => {
-                const { caseOk, formOk } = graded[index];
-                // The row is [label, caseCell, label, formCell]; select cells by class, not position.
-                const cells = Array.from(row.children).filter((node) => node.classList.contains('pick-review-cell'));
-                const [caseCell, formCell] = cells;
-
-                markControl(caseCell.children[0], { ok: caseOk, inside: true, note: false });
-                markControl(formCell.children[0], { ok: formOk, inside: true, note: false });
-                // The wanted control is the second child, present only on a miss.
-                if (formCell.children[1]) markControl(formCell.children[1], { ok: true, inside: true, note: false });
-                if (caseCell.children[1]) markControl(caseCell.children[1], { ok: true, inside: true, note: false });
-            });
+        function lessonsFor(graded) {
+            return graded
+                .filter(({ caseOk, formOk }) => !caseOk || !formOk)
+                .map(({ blank, index, given, caseOk }) => {
+                    const built = lessonFor({ blank, index, item, given, caseOk });
+                    // Only a multi-blank sentence needs telling which blank a row is about.
+                    return built && (item.b.length > 1 ? { label: `Blank ${index + 1}`, ...built } : built);
+                })
+                .filter(Boolean);
         }
     };
 }

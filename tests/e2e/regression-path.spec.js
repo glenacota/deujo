@@ -119,10 +119,11 @@ test('a wrong answer demotes the belt, resets the streak, and shows the correcti
     await expect(page.locator('#answerVerdictTitle')).toHaveText('Wrong answer.');
     await expect(page.locator('#streakDisplay')).toHaveText('0');
 
-    // The chosen gender is marked wrong in place, and the right one right.
+    // The chosen gender is marked wrong in place; the right one is revealed in the verdict only.
     const section = '#kataSections [data-role="section"]:not(.hidden)';
     await expect(page.locator(`${section} [data-gender="${wrongGender}"]`)).toHaveAttribute('data-answer-state', 'wrong');
-    await expect(page.locator(`${section} [data-gender]:not([data-gender="${wrongGender}"])[data-answer-state="correct"]`)).toHaveCount(1);
+    await expect(page.locator(`${section} [data-gender][data-answer-state="correct"]`)).toHaveCount(0);
+    await expect(page.locator('#answerVerdictLessons .verdict-lesson').first()).toBeVisible();
 
     // A promotion lands a fifth into the new belt, so this first mistake only
     // spends that credit and Yellow still holds.

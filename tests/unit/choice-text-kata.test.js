@@ -38,9 +38,8 @@ const build = (overrides = {}) => {
             return {
                 choiceOk: input.choice === item.answer,
                 textOk: input.given === item.typed,
-                correctChoices: [item.answer],
-                expectedText: item.typed,
-                lesson: 'lesson',
+                choiceLesson: { form: item.answer, note: 'choice rule' },
+                textLesson: { form: item.typed, note: 'text rule' },
             };
         },
         ...overrides,
@@ -101,23 +100,51 @@ test('both stages are graded separately and reported as fields', () => {
   const wrongChoice = kata.check(ITEM);
   assert.equal(wrongChoice.correct, false);
   assert.deepEqual(wrongChoice.fields, [{ ok: false }, { ok: true }]);
-  assert.equal(wrongChoice.lesson, 'lesson');
+  assert.deepEqual(wrongChoice.lessons, [{ form: 'a', note: 'choice rule' }], 'only the wrong field is taught');
 
   button(container, 'a').click();
   kata.el.typed.value = 'nein';
   const wrongText = kata.check(ITEM);
   assert.deepEqual(wrongText.fields, [{ ok: true }, { ok: false }]);
+  assert.deepEqual(wrongText.lessons, [{ form: 'ja', note: 'text rule' }]);
 
+  button(container, 'b').click();
+  const bothWrong = kata.check(ITEM);
+  assert.deepEqual(bothWrong.lessons.map((l) => l.form), ['a', 'ja'], 'every wrong field gets its answer');
+
+  button(container, 'a').click();
   kata.el.typed.value = 'ja';
-  assert.equal(kata.check(ITEM).correct, true);
+  const clean = kata.check(ITEM);
+  assert.equal(clean.correct, true);
+  assert.deepEqual(clean.lessons, []);
 });
 
-test('a wrong choice marks the picked button wrong and every correct one right', () => {
+test('only the picked button and the input are marked, each with a badge', () => {
     const { kata, container } = build();
     button(container, 'b').click();
+    kata.el.typed.value = 'nein';
     kata.check(ITEM);
+
+    const badge = (node) => node.children.find((c) => c.classList.has('answer-badge'))?.textContent;
     assert.equal(button(container, 'b').dataset.answerState, 'wrong');
-    assert.equal(button(container, 'a').dataset.answerState, 'correct');
+    assert.equal(badge(button(container, 'b')), '❌');
+    assert.equal('answerState' in button(container, 'a').dataset, false, 'the right answer is not revealed on a button');
+    assert.equal(button(container, 'a').children.find((c) => c.classList.has('answer-badge')), undefined);
+
+    assert.equal(kata.el.typed.dataset.answerState, 'wrong');
+    assert.equal(badge(kata.el.typed.parentElement), '❌');
+    assert.equal(kata.el.typed.parentElement.children.length, 2, 'no inline correction beside the input');
+});
+
+test('a right choice and a right text each carry a check badge', () => {
+    const { kata, container } = build();
+    button(container, 'a').click();
+    kata.el.typed.value = 'ja';
+    kata.check(ITEM);
+
+    const badge = (node) => node.children.find((c) => c.classList.has('answer-badge'))?.textContent;
+    assert.equal(badge(button(container, 'a')), '✅');
+    assert.equal(badge(kata.el.typed.parentElement), '✅');
 });
 
 test('pickOption clicks the digit-matched button and returns false for any other digit', () => {
@@ -133,7 +160,7 @@ test('renderText runs after the input is cleared', () => {
     assert.equal(kata.el.typed.placeholder, 'wort');
 });
 
-test('noun kata verdict form names the plural whichever field is wrong', async () => {
+test('noun kata verdict names the gender and the plural separately', async () => {
   const { createNounKata } = await import('../../assets/js/katas/nouns/kata.js');
   const kata = createNounKata(document.createElement('div'));
   const noun = { w: 'Tag', g: 'der', m: 'day', p: 'Tage' };
@@ -141,9 +168,12 @@ test('noun kata verdict form names the plural whichever field is wrong', async (
   kata.el.genderButtons.find((btn) => btn.dataset.gender === 'das').click();
   kata.el.plural.value = 'tage';
   const wrongGender = kata.check(noun);
-  assert.match(wrongGender.lesson.form, /die Tage/);
+  assert.deepEqual(wrongGender.lessons.map((l) => l.form), ['der']);
 
   kata.el.genderButtons.find((btn) => btn.dataset.gender === 'der').click();
   kata.el.plural.value = 'Tagen';
-  assert.equal(kata.check(noun).lesson.form, 'die Tage');
+  assert.deepEqual(kata.check(noun).lessons.map((l) => l.form), ['die Tage']);
+
+  kata.el.genderButtons.find((btn) => btn.dataset.gender === 'die').click();
+  assert.deepEqual(kata.check(noun).lessons.map((l) => l.form), ['der', 'die Tage']);
 });

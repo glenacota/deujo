@@ -51,18 +51,19 @@ const graderFor = (createKata, item) => {
 const grade = (createKata, item, picks) => graderFor(createKata, item)(picks);
 
 /**
- * The review list the picker shows once every blank is answered: one row per
- * blank, each holding the picked case and the picked form, with the wanted value
- * beside it on a miss. Read from the rendered DOM rather than the `check()`
- * payload, because the correction reaching the learner is the thing worth
- * pinning. Cells are found by class, not by position, so adding a label to a
- * review row cannot silently shift what a test is asserting about.
+ * What the sentence slots show after a check: the state and the badge of each
+ * blank, read from the rendered DOM. The wanted answers are not on the slots;
+ * they arrive as `lessons` in the verdict.
  */
-const reviewOf = (container) => container
-    .querySelectorAll('[data-role="review"] > *')
-    .map((row) => Array.from(row.children)
-        .filter((node) => node.classList.contains('pick-review-cell'))
-        .map((cell) => Array.from(cell.children).map((button) => button.textContent)));
+const marksOf = (container) => container
+    .querySelectorAll('.pick-slot')
+    .map((slot) => [
+        slot.dataset.answerState,
+        slot.children.find((child) => child.classList.has('answer-badge'))?.textContent,
+    ]);
+
+const RIGHT = ['correct', '✅'];
+const WRONG = ['wrong', '❌'];
 
 test('the preposition kata grades the case, then the form that case calls for', () => {
     const item = {
@@ -76,7 +77,7 @@ test('the preposition kata grades the case, then the form that case calls for', 
     assert.equal(answer([['akk', 'dem']]).correct, false);
 });
 
-test('a wrong pick shows the wanted form beside the one taken', () => {
+test('a wrong pick marks its slot and puts the wanted form in the verdict only', () => {
     const item = {
         id: 'p_test2', w: 'Ich gehe zu dem Arzt.', m: 'I am going to the doctor.',
         s: 'Ich gehe zu {0} Arzt.', b: [{ a: 'dem', c: 'dat' }],
@@ -85,13 +86,17 @@ test('a wrong pick shows the wanted form beside the one taken', () => {
     const wrongGrader = graderFor(createPrepositionKata, item);
     const wrong = wrongGrader([['dat', 'der']]);
     assert.equal(wrong.correct, false);
-    // Dativ named and correct, so only the form is corrected beside it.
-    assert.deepEqual(reviewOf(wrongGrader.container), [[['Dativ'], ['der', 'dem']]]);
+    assert.deepEqual(marksOf(wrongGrader.container), [WRONG]);
+    assert.deepEqual(wrong.lessons.map((lesson) => lesson.form), ['dem']);
+    assert.ok(wrong.lessons[0].note, 'the answer comes with the rule behind it');
+    assert.equal(wrong.lessons[0].label, undefined, 'one blank needs no label');
 
-    // Answered right, the row carries the badge only, with no repeated text.
+    // Answered right, the slot carries the badge and nothing is taught.
     const cleanGrader = graderFor(createPrepositionKata, item);
-    assert.equal(cleanGrader([['dat', 'dem']]).correct, true);
-    assert.deepEqual(reviewOf(cleanGrader.container), [[['Dativ'], ['dem']]]);
+    const clean = cleanGrader([['dat', 'dem']]);
+    assert.equal(clean.correct, true);
+    assert.deepEqual(marksOf(cleanGrader.container), [RIGHT]);
+    assert.deepEqual(clean.lessons, []);
 });
 
 test('a wrong case is a miss even when the form is right for another case', () => {
@@ -102,13 +107,16 @@ test('a wrong case is a miss even when the form is right for another case', () =
 
     // "die" is the Akkusativ answer to a Dativ blank. Accepting it would make step
     // one free and teach the two-way prepositions nothing, so both stages are
-    // graded and both are corrected.
+    // graded and the lesson names the case that was missed.
     const grader = graderFor(createPrepositionKata, item);
-    assert.equal(grader([['akk', 'die']]).correct, false);
-    assert.deepEqual(reviewOf(grader.container), [[['Akkusativ', 'Dativ'], ['die', 'der']]]);
+    const result = grader([['akk', 'die']]);
+    assert.equal(result.correct, false);
+    assert.deepEqual(marksOf(grader.container), [WRONG]);
+    assert.deepEqual(result.lessons.map((lesson) => lesson.form), ['der']);
+    assert.match(result.lessons[0].note, /Akkusativ/);
 });
 
-test('the case kata names its correction beside the wrong blank only', () => {
+test('the case kata marks every blank and teaches the wrong blank only', () => {
     const item = {
         id: 'c_test3', w: 'Der Mann liest den Roman.', m: 'The man reads the novel.',
         s: '{0} Mann liest {1} Roman.', b: [{ a: 'Der', c: 'nom' }, { a: 'den', c: 'akk' }],
@@ -117,11 +125,22 @@ test('the case kata names its correction beside the wrong blank only', () => {
     const grader = graderFor(createCaseKata, item);
     // "der" beside "den" is the gender trap: the sentence says "Roman", and the
     // masculine article is a real button, so the pick has to be a miss.
-    assert.equal(grader([['nom', 'Der'], ['akk', 'der']]).correct, false);
-    assert.deepEqual(reviewOf(grader.container), [
-        [['Nominativ'], ['Der']],
-        [['Akkusativ'], ['der', 'den']],
-    ]);
+    const result = grader([['nom', 'Der'], ['akk', 'der']]);
+    assert.equal(result.correct, false);
+    assert.deepEqual(marksOf(grader.container), [RIGHT, WRONG]);
+    assert.deepEqual(result.lessons.map(({ label, form }) => [label, form]), [['Blank 2', 'den']]);
+});
+
+test('every wrong blank gets its own lesson, in sentence order', () => {
+    const item = {
+        id: 'c_test5', w: 'Der Mann liest den Roman.', m: 'The man reads the novel.',
+        s: '{0} Mann liest {1} Roman.', b: [{ a: 'Der', c: 'nom' }, { a: 'den', c: 'akk' }],
+    };
+
+    const grader = graderFor(createCaseKata, item);
+    const result = grader([['akk', 'Der'], ['nom', 'den']]);
+    assert.deepEqual(marksOf(grader.container), [WRONG, WRONG]);
+    assert.deepEqual(result.lessons.map(({ label, form }) => [label, form]), [['Blank 1', 'Der'], ['Blank 2', 'den']]);
 });
 
 test('a two-blank case sentence is answered one blank at a time', () => {
@@ -138,7 +157,7 @@ test('a two-blank case sentence is answered one blank at a time', () => {
     const cleanGrader = graderFor(createCaseKata, item);
     const clean = cleanGrader([['dat', 'dem'], ['akk', 'seine']]);
     assert.equal(clean.correct, true);
-    assert.deepEqual(reviewOf(cleanGrader.container), [[['Dativ'], ['dem']], [['Akkusativ'], ['seine']]]);
+    assert.deepEqual(marksOf(cleanGrader.container), [RIGHT, RIGHT]);
 
     // The same sentence with the two objects swapped fails, because the Dativ
     // person and the Akkusativ thing are not interchangeable.
@@ -259,4 +278,39 @@ test('the Perfekt kata warns before an answer is ready', () => {
   const noWord = perfekt(GEHEN)('sein', '   ');
   assert.equal(noWord.correct, undefined);
   assert.match(noWord.warning, /participle/);
+});
+test('the Perfekt kata teaches every wrong field and reveals no answer on a control', () => {
+  const container = document.createElement('div');
+  const kata = createVerbKata('perf', container);
+  kata.render(GEHEN);
+  container.querySelectorAll('[data-role="aux"]').find((btn) => btn.dataset.aux === 'haben').click();
+  container.querySelector('[data-role="participle"]').value = 'gehen';
+
+  const result = kata.check(GEHEN);
+  assert.deepEqual(result.lessons.map((lesson) => lesson.form), ['sein', 'gegangen']);
+  assert.equal(container.querySelectorAll('[data-role="aux"]').find((btn) => btn.dataset.aux === 'sein').dataset.answerState, undefined);
+});
+
+test('the conjugation kata marks each input and teaches every wrong person', () => {
+  const verb = {
+    id: 'v_4', w: 'gehen', m: 'to go',
+    pres: ['gehe', 'gehst', 'geht', 'gehen', 'geht', 'gehen'],
+  };
+  const container = document.createElement('div');
+  const kata = createVerbKata('pres', container);
+  kata.render(verb);
+
+  // Persons 0, 2 and 5 are wrong; the rest are right.
+  const given = ['gehst', 'gehst', 'gehe', 'gehen', 'geht', 'geht'];
+  kata.el.inputs.forEach((input, i) => { input.value = given[i]; });
+
+  const result = kata.check(verb);
+  assert.equal(result.correct, false);
+  assert.deepEqual(result.fields.map((f) => f.ok), [false, true, false, true, true, false]);
+  assert.deepEqual(
+    kata.el.inputs.map((input) => input.dataset.answerState),
+    ['wrong', 'correct', 'wrong', 'correct', 'correct', 'wrong'],
+  );
+  assert.deepEqual(result.lessons.map((lesson) => lesson.form), ['gehe', 'geht', 'gehen']);
+  assert.ok(result.lessons.every((lesson) => lesson.label && lesson.note), 'each row names its person and its rule');
 });

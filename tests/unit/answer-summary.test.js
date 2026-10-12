@@ -48,6 +48,15 @@ test('the summary needs nothing from a field but its ok flag', () => {
     summarizeAnswer({ correct: false, fields: decorated }));
 });
 
+test('lessons pass through for a wrong answer and vanish for a right one', () => {
+  const lessons = [{ label: 'Blank 1', form: 'dem', note: 'Dativ' }, { form: 'seine', note: 'Akkusativ' }];
+
+  assert.deepEqual(summarizeAnswer({ correct: false, fields: [field({ ok: false })], lessons }).lessons, lessons);
+  assert.deepEqual(summarizeAnswer({ correct: true, fields: [field()], lessons }).lessons, []);
+  assert.deepEqual(summarizeAnswer({ correct: false, fields: [field({ ok: false })] }).lessons, []);
+  assert.deepEqual(summarizeWarning('x').lessons, []);
+});
+
 test('a result with no fields still grades on the kata verdict alone', () => {
   assert.equal(summarizeAnswer({ correct: true }).tone, 'correct');
 });

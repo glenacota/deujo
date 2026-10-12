@@ -48,12 +48,12 @@ no backend, no login.
   the case kata's question, which a learner cannot tell apart.
   Do not copy a grader or a section template out of `cases/` or
   `prepositions/`. `tests/unit/picker-kata.test.js` covers the shared path.
-  `lessonFor` runs on every verdict, so read `miss?.given`, not `miss.given`.
+  `lessonFor` runs once per wrong blank, so read `miss?.given`, not `miss.given`.
 - A picker grades its two stages **separately**: a learner who names Dativ and
   then picks "seinen" has two mistakes. `check()` compares the picked `caseKey`
   against `blank.c` *and* the picked form against `blank.a`; never collapse them
   into one string match. Grade once: `grade()` builds the verdicts, and
-  `check()`, `markReview()` and the correction panel all read that one result.
+  `check()`, the slot marks and the verdict lessons all read that one result.
   `blank.c` is off limits to `prompt`, or step one would print its own answer.
 - A picker blank holds a **determiner**, never a whole prepositional phrase: the
   preposition stays in the sentence, so step one is answerable from German alone.
@@ -75,10 +75,14 @@ no backend, no login.
 - A kata's public surface is its `el.section` and nothing else. `registry.js`
   fails a kata without it, and `focus-view.js` and `app.js` reach a kata through
   that one field. Keep every other render target in the factory's closure.
-- A picker option and a review chip are different things. An option is a live
-  control: a 44px tap target, a pressed state, a hover. A chip is what the
-  learner gave, already disabled, so it uses `.pick-value`, not `.kata-option`,
-  and keeps only the classless `[data-answer-state]` palette.
+- Every kata shows a verdict the same way. A control (option button, text
+  input, picker `.pick-slot`) gets `markControl()`: the `[data-answer-state]`
+  palette plus a ✅/❌ badge, inside the control. Nothing else marks a control: no
+  correct answer beside a wrong one, no inline note, no review list. The wanted
+  answer of **each** wrong field goes to the verdict panel only, as one entry of
+  `check()`'s `lessons` (`{label?, form, note}`: the answer, and the short rule
+  behind it). A right answer yields no lesson. The panel fills them with
+  `textContent`.
 - One kata surface, in `app.css`: section padding, headline, gloss, caption,
   control block and option button are `.kata-*` classes, so a template says only
   what differs. Do not hand-style a button with a Tailwind utility;

@@ -15,7 +15,6 @@ export function pickerTemplate() {
                 <p data-role="prompt-form" class="kata-label" hidden>Select the form</p>
                 <div data-role="stage-form" class="kata-options kata-options--4" role="group" aria-label="Select the form" hidden></div>
             </div>
-            <div data-role="review" class="kata-stack" hidden></div>
         </div>
     </section>
 `;

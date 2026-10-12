@@ -1,10 +1,10 @@
 // platform/dom/answer-marking.js
 // `inside: true` parents the badge on the control: a wrapper around a grid button would become the grid item and collapse its width.
-// `inside: false` wraps the control in `.answer-field`, reserving room for the badge so text inputs keep their layout.
+// `inside: false` wraps the control in `.answer-field`, which draws the badge inside the input's right edge.
+// Corrections are never drawn here: the verdict panel is the only place a wanted answer appears.
 
 const WRAPPER_CLASS = 'answer-field';
 const BADGE_CLASS = 'answer-badge';
-const NOTE_CLASS = 'answer-note';
 const CONTROL_SELECTOR = '.answer-field > [data-answer-state]';
 
 function childOf(parent, className) {
@@ -22,19 +22,6 @@ function wrapControl(control) {
   return wrapper;
 }
 
-function setNote(parent, text, state) {
-  const existing = childOf(parent, NOTE_CLASS);
-  if (!text) {
-    existing?.remove();
-    return;
-  }
-
-  const note = existing ?? parent.appendChild(document.createElement('span'));
-  note.className = NOTE_CLASS;
-  note.dataset.answerState = state;
-  note.textContent = text;
-}
-
 // app.css owns `.answer-badge` and its tighter `button > .answer-badge` offset, so an `inside` badge must land in a <button>.
 function setBadge(parent, ok) {
   const existing = childOf(parent, BADGE_CLASS);
@@ -45,33 +32,25 @@ function setBadge(parent, ok) {
   parent.appendChild(badge);
 }
 
-// A correct control gets the badge only (the panel already lists the answers); `note: false` suppresses the note.
-export function markControl(control, { ok, expected = '', inside = false, note } = {}) {
+export function markControl(control, { ok, inside = false } = {}) {
   if (!control) return;
 
-  const host = inside ? control : wrapControl(control);
   control.dataset.answerState = ok ? 'correct' : 'wrong';
   control.setAttribute('aria-invalid', String(!ok));
-  setBadge(inside ? control : host, ok);
-
-  if (note === false) {
-    setNote(host, null, ok);
-    return;
-  }
-  setNote(host, note ?? (ok ? null : expected || '—'), ok ? 'correct' : 'wrong');
+  setBadge(inside ? control : wrapControl(control), ok);
 }
 
 export function clearAnswerMarks(root) {
   if (!root) return;
 
-  // Unwrap first, so the badges and notes leave with the wrapper they hang on.
+  // Unwrap first, so the badges leave with the wrapper they hang on.
   root.querySelectorAll(`.${WRAPPER_CLASS}`).forEach((wrapper) => {
     const control = wrapper.querySelector(CONTROL_SELECTOR);
     if (control) wrapper.replaceWith(control);
     else wrapper.remove();
   });
 
-  root.querySelectorAll('.answer-badge, .answer-note').forEach((node) => node.remove());
+  root.querySelectorAll('.answer-badge').forEach((node) => node.remove());
   root.querySelectorAll('[data-answer-state]').forEach((control) => {
     delete control.dataset.answerState;
     control.removeAttribute('aria-invalid');

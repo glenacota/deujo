@@ -13,41 +13,30 @@
 #logo:active img { transform: scale(0.9); }
 /* ---- Answer marking ---------------------------------------------------- */
 [hidden] { display: none !important; }
+/* The badge sits inside the input's right edge, so the wrapper adds no layout of its own. */
 .answer-field {
-    display: inline-flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.35rem;
+    position: relative;
+    display: inline-block;
     vertical-align: middle;
     max-width: 100%;
     min-width: 0;
 }
 /* A full-width input needs a wrapper that fills its row, or width:100% collapses. */
-.answer-field:has(> .blank-input:not(.blank-input--inline)) {
-    display: flex;
-    flex: 1 1 0;
-    width: 100%;
-}
-.answer-field > .blank-input:not(.blank-input--inline) { flex: 1 1 8rem; min-width: 0; width: auto; }
-.answer-field:has(> .blank-input:not(.blank-input--inline)) > .answer-note { flex: 1 1 100%; }
+.answer-field:has(> .blank-input:not(.blank-input--inline)) { display: block; width: 100%; }
+.answer-field > [data-answer-state] { padding-right: 1.9rem; }
 .answer-badge {
     flex: none;
     font-size: 0.95rem;
     line-height: 1;
     pointer-events: none;
 }
-button > .answer-badge { margin-left: 0.45rem; font-size: 0.85rem; }
-.answer-note {
-    font-size: 0.75rem;
-    font-weight: 600;
-    line-height: 1.2;
-    min-width: 0;
-    overflow-wrap: anywhere;
+.answer-field > .answer-badge {
+    position: absolute;
+    top: 50%;
+    right: 0.5rem;
+    transform: translateY(-50%);
 }
-.answer-note[data-answer-state="correct"] { color: rgb(4 120 87); }
-.answer-note[data-answer-state="wrong"] { color: rgb(190 18 60); }
-html.dark .answer-note[data-answer-state="correct"] { color: rgb(110 231 183); }
-html.dark .answer-note[data-answer-state="wrong"] { color: rgb(253 164 175); }
+button > .answer-badge { margin-left: 0.45rem; font-size: 0.85rem; }
 /* Colour the control itself. Overrides the shared aria-invalid ring. */
 [data-answer-state="correct"] {
     border-color: rgb(16 185 129) !important;
@@ -235,19 +224,6 @@ html.dark .pick-slot--open { border-color: rgb(99 102 241); }
     .pick-slot { padding: 0.375rem 0.75rem; font-size: 1.25rem; line-height: 2rem; }
 }
 
-.pick-value {
-    display: inline-block;
-    padding: 0.25rem 0.5rem;
-    border: 1px solid rgb(203 213 225);
-    border-radius: 0.75rem;
-    background: rgb(241 245 249);
-    color: rgb(67 56 202);
-    font-weight: 700;
-    font-size: 0.85rem;
-    line-height: 1.25;
-}
-html.dark .pick-value { background: rgb(2 6 23); border-color: rgb(51 65 85); color: rgb(165 180 252); }
-
 .option-key {
     margin-right: 0.4rem;
     padding: 0.05rem 0.3rem;
@@ -264,28 +240,6 @@ html.dark .option-key { background: rgb(51 65 85); color: rgb(203 213 225); }
 @media (max-width: 639px) {
     .option-key { display: none}
 }
-
-.pick-review-row {
-    display: grid;
-    grid-template-columns: auto auto;
-    justify-content: start;
-    align-items: center;
-    gap: 0.4rem 0.75rem;
-    padding: 0.5rem 0.75rem;
-    border: 1px solid rgb(226 232 240);
-    border-radius: 0.75rem;
-    background: rgb(248 250 252);
-}
-.pick-review-label {
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: rgb(100 116 139);
-}
-.pick-review-cell { display: inline-flex; flex-wrap: wrap; gap: 0.35rem; }
-html.dark .pick-review-label { color: rgb(148 163 184); }
-html.dark .pick-review-row { background: rgb(15 23 42); border-color: rgb(30 41 59); }
 
 /* ---- Verdict panel ------------------------------------------------------ */
 
@@ -304,21 +258,24 @@ html.dark .pick-review-row { background: rgb(15 23 42); border-color: rgb(30 41 
 .verdict[hidden] { display: none; }
 .verdict-head { display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap; }
 .verdict-icon { font-size: 1.1rem; line-height: 1; }
-/* The rule behind a wrong answer. Geometry only: the text inherits the tone
-   colour from the panel, so a new tone needs no lesson rules of its own. */
-.verdict-lesson {
+/* One row per wrong field: the answer wanted, then the rule behind it. Geometry only:
+   the text inherits the tone colour from the panel, so a new tone needs no rules of its own. */
+.verdict-lessons {
     display: grid;
-    gap: 0.15rem;
-    margin-top: 0.4rem;
-    padding-top: 0.5rem;
+    gap: 0.4rem;
+    margin: 0.4rem 0 0;
+    padding: 0.5rem 0 0;
     border-top: 1px solid rgb(15 23 42 / 0.12);
+    list-style: none;
     font-size: 0.8rem;
     line-height: 1.4;
 }
-.verdict-lesson[hidden] { display: none; }
+.verdict-lessons[hidden] { display: none; }
+.verdict-lesson { display: grid; gap: 0.15rem; }
+.verdict-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; opacity: 0.85; }
 .verdict-form { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 700; overflow-wrap: anywhere; }
 .verdict-note { opacity: 0.85; overflow-wrap: anywhere; }
-html.dark .verdict-lesson { border-top-color: rgb(226 232 240 / 0.18); }
+html.dark .verdict-lessons { border-top-color: rgb(226 232 240 / 0.18); }
 /* Keeps a scrolled-to verdict clear of the sticky action bar. */
 .verdict { scroll-margin-bottom: 6rem; }
 

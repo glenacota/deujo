@@ -76,10 +76,11 @@ test('app.css paints every answer state, in both themes', () => {
       assert.match(rule['border-color'] ?? '', /!important/, `${state} border must beat the kata's own border`);
     }
   }
-  // The correction note beside a wrong control needs a colour per state too.
-  for (const state of ['correct', 'wrong']) {
-    assert.ok(app.get(`.answer-note[data-answer-state="${state}"]`)?.color, `no note colour for ${state}`);
-  }
+  // The badge is the only mark on an input: it sits inside the field and reserves room so text never runs under it.
+  assert.equal(app.get('.answer-field')?.position, 'relative');
+  assert.equal(app.get('.answer-field > .answer-badge')?.position, 'absolute', 'the badge overlays the input');
+  assert.ok(app.get('.answer-field > [data-answer-state]')?.['padding-right'], 'a marked input must not type under its badge');
+  assert.equal(app.get('.answer-note'), undefined, 'corrections live in the verdict panel, not beside a control');
 });
 
 test('the belt tick bar paints from the rank colour tokens', () => {
@@ -284,19 +285,13 @@ test('every kata builds its shell from the shared classes', () => {
     }
 });
 
-// A review chip is a disabled button holding what the learner gave. It is not a
-// control they can use, so it must not be sized as one: the option's 44px tap
-// target on a chip nobody can tap makes the review list taller than the answers
-// it holds, and a hover would do nothing at all. The correct/wrong palette still
-// reaches it, because `[data-answer-state]` names no class.
-test('a review chip is sized as a value, not as a tappable option', () => {
-    const chip = app.get('.pick-value') ?? {};
-    assert.ok(chip.padding, 'a chip has no padding of its own');
-    assert.equal(chip['min-height'], undefined, 'a disabled chip pays for a tap target it cannot be tapped on');
-    assert.equal(app.get('.pick-value:hover'), undefined, 'and for a hover it can never be hovered');
-    // A chip is its own thing rather than a smaller option, so the compact variant
-    // that used to bridge the two has nothing left to bridge.
-    assert.equal(app.get('.kata-option--compact'), undefined, 'a chip is not a small option');
+// The verdict panel is the one place a wanted answer appears, so its list needs
+// the row geometry and the retired review chips must be gone.
+test('the verdict lists its lessons and no review chip survives', () => {
+    assert.ok(app.get('.verdict-lessons'), 'the lesson list has no rule');
+    assert.ok(app.get('.verdict-lesson'), 'a lesson row has no rule');
+    assert.equal(app.get('.pick-value'), undefined, 'a chip has no job once the sentence slots carry the marks');
+    assert.equal(app.get('.pick-review-row'), undefined);
 });
 
 // Every kata has one caption style and no variants. The caption is an uppercase

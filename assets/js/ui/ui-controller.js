@@ -32,9 +32,9 @@ export class UiController {
         this.#modals.open(dom.modals.error.root);
     }
 
-    /** @param {{tone: string, icon: string, title: string, detail: string, lesson: ?{form: string, note: string}}} summary */
+    /** @param {{tone: string, icon: string, title: string, detail: string, lessons: {label?: string, form: string, note: string}[]}} summary */
     showVerdict(summary) {
-        const { root, icon, title, detail, lesson: lessonBox, form, note } = dom.verdict;
+        const { root, icon, title, detail, lessons: lessonList } = dom.verdict;
 
         // Geometry and animation live on `.verdict` in app.css; only the tone palette is Tailwind.
         root.className = `verdict ${VERDICT_TONE_CLASSES[summary.tone] ?? VERDICT_TONE_CLASSES.warning}`;
@@ -43,9 +43,21 @@ export class UiController {
         detail.textContent = summary.detail;
 
         // textContent only, so no dataset word reaches the panel as markup.
-        form.textContent = summary.lesson?.form ?? '';
-        note.textContent = summary.lesson?.note ?? '';
-        lessonBox.hidden = !summary.lesson;
+        const lessons = summary.lessons ?? [];
+        lessonList.textContent = '';
+        lessons.forEach(({ label, form, note }) => {
+            const row = document.createElement('li');
+            row.className = 'verdict-lesson';
+            [['verdict-label', label], ['verdict-form', form], ['verdict-note', note]].forEach(([className, text]) => {
+                if (!text) return;
+                const part = document.createElement('span');
+                part.className = className;
+                part.textContent = text;
+                row.appendChild(part);
+            });
+            lessonList.appendChild(row);
+        });
+        lessonList.hidden = lessons.length === 0;
 
         root.title = HINTS[summary.tone] ?? '';
         root.hidden = false;

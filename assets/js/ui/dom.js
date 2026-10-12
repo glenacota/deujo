@@ -54,9 +54,7 @@ export const dom = {
     icon: byId('answerVerdictIcon'),
     title: byId('answerVerdictTitle'),
     detail: byId('answerVerdictDetail'),
-    lesson: byId('answerVerdictLesson'),
-    form: byId('answerVerdictForm'),
-    note: byId('answerVerdictNote'),
+    lessons: byId('answerVerdictLessons'),
   },
 
   toast: {

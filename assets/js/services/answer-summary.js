@@ -24,8 +24,8 @@ export function summarizeAnswer(result) {
         detail: correct
             ? 'Well done.'
             : 'Review, learn, and continue.',
-        // Passed through from the kata, which owns the grammar; a correct answer carries none.
-        lesson: correct ? null : (result?.lesson ?? null),
+        // Passed through from the kata, which owns the grammar: one entry per wrong field, none when correct.
+        lessons: correct ? [] : (result?.lessons ?? []),
     };
 }
 
@@ -36,6 +36,6 @@ export function summarizeWarning(message) {
         icon: ICONS.warning,
         title: String(message ?? '').trim() || '—',
         detail: '',
-        lesson: null,
+        lessons: [],
     };
 }
