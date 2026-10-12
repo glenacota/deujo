@@ -147,6 +147,15 @@ test('Enter on a button or link is left to the browser', async () => {
     assert.deepEqual(calls, [], 'no check(), no preventDefault');
 });
 
+test('Enter on the verdict toggle opens it instead of advancing', async () => {
+    const { press } = await loadModule({ focusMode: true });
+    const summary = { closest: (sel) => (sel.includes('summary') ? summary : null) };
+
+    const { calls } = press({ key: 'Enter', target: summary });
+
+    assert.deepEqual(calls, []);
+});
+
 test('held keys fire once', async () => {
     const { press } = await loadModule({ focusMode: true });
 

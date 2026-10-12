@@ -63,7 +63,7 @@ export function bindKeyboardShortcuts({
     const shortcuts = [
         {
             matches: (event) => event.key === 'Enter' && isFocusModeActive() &&
-                !event.target?.closest?.('button, a'),
+                !event.target?.closest?.('button, a, summary'),
             run: (event) => {
                 event.preventDefault();
                 const target = event.target;

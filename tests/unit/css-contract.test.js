@@ -289,6 +289,7 @@ test('every kata builds its shell from the shared classes', () => {
 // the row geometry and the retired review chips must be gone.
 test('the verdict lists its lessons and no review chip survives', () => {
     assert.ok(app.get('.verdict-lessons'), 'the lesson list has no rule');
+    assert.ok(app.get('.verdict-toggle'), 'the lesson toggle has no rule');
     assert.ok(app.get('.verdict-lesson'), 'a lesson row has no rule');
     assert.equal(app.get('.pick-value'), undefined, 'a chip has no job once the sentence slots carry the marks');
     assert.equal(app.get('.pick-review-row'), undefined);

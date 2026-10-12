@@ -19,6 +19,10 @@ export class UiController {
     constructor(modals) {
         this.#modals = modals;
         dom.modals.error.reloadBtn.addEventListener('click', () => window.location.reload());
+        // A pointer toggle must not keep focus, or Enter would toggle again instead of advancing. detail is 0 for a keyboard click.
+        dom.verdict.lessons.querySelector('summary').addEventListener('click', (event) => {
+            if (event.detail > 0) event.currentTarget.blur();
+        });
     }
 
     /** The streak is global, so one pair of numbers serves every kata and both views. */
@@ -34,7 +38,7 @@ export class UiController {
 
     /** @param {{tone: string, icon: string, title: string, detail: string, lessons: {label?: string, form: string, note: string}[]}} summary */
     showVerdict(summary) {
-        const { root, icon, title, detail, lessons: lessonList } = dom.verdict;
+        const { root, icon, title, detail, lessons: lessonBox, list } = dom.verdict;
 
         // Geometry and animation live on `.verdict` in app.css; only the tone palette is Tailwind.
         root.className = `verdict ${VERDICT_TONE_CLASSES[summary.tone] ?? VERDICT_TONE_CLASSES.warning}`;
@@ -44,7 +48,7 @@ export class UiController {
 
         // textContent only, so no dataset word reaches the panel as markup.
         const lessons = summary.lessons ?? [];
-        lessonList.textContent = '';
+        list.textContent = '';
         lessons.forEach(({ label, form, note }) => {
             const row = document.createElement('li');
             row.className = 'verdict-lesson';
@@ -55,9 +59,11 @@ export class UiController {
                 part.textContent = text;
                 row.appendChild(part);
             });
-            lessonList.appendChild(row);
+            list.appendChild(row);
         });
-        lessonList.hidden = lessons.length === 0;
+        lessonBox.hidden = lessons.length === 0;
+        // Collapsed on every verdict: the learner opens the answers on purpose.
+        lessonBox.open = false;
 
         root.title = HINTS[summary.tone] ?? '';
         root.hidden = false;

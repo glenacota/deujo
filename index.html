@@ -114,7 +114,10 @@
                 <span id="answerVerdictTitle" class="text-base font-extrabold uppercase"></span>
                 <span id="answerVerdictDetail" class="text-sm"></span>
             </div>
-            <ul id="answerVerdictLessons" class="verdict-lessons" hidden></ul>
+            <details id="answerVerdictLessons" class="verdict-lessons" hidden>
+                <summary class="verdict-toggle">Correct answers</summary>
+                <ul id="answerVerdictList" class="verdict-list"></ul>
+            </details>
         </div>
 
         <div id="kataActions" class="lg:mt-auto px-6 pt-6 mb-4 lg:mb-0">

@@ -123,6 +123,8 @@ test('a wrong answer demotes the belt, resets the streak, and shows the correcti
     const section = '#kataSections [data-role="section"]:not(.hidden)';
     await expect(page.locator(`${section} [data-gender="${wrongGender}"]`)).toHaveAttribute('data-answer-state', 'wrong');
     await expect(page.locator(`${section} [data-gender][data-answer-state="correct"]`)).toHaveCount(0);
+    await expect(page.locator('#answerVerdictLessons')).not.toHaveAttribute('open', '');
+    await page.locator('#answerVerdictLessons > summary').click();
     await expect(page.locator('#answerVerdictLessons .verdict-lesson').first()).toBeVisible();
 
     // A promotion lands a fifth into the new belt, so this first mistake only

@@ -261,16 +261,22 @@ html.dark .option-key { background: rgb(51 65 85); color: rgb(203 213 225); }
 /* One row per wrong field: the answer wanted, then the rule behind it. Geometry only:
    the text inherits the tone colour from the panel, so a new tone needs no rules of its own. */
 .verdict-lessons {
-    display: grid;
-    gap: 0.4rem;
     margin: 0.4rem 0 0;
     padding: 0.5rem 0 0;
     border-top: 1px solid rgb(15 23 42 / 0.12);
-    list-style: none;
     font-size: 0.8rem;
     line-height: 1.4;
 }
 .verdict-lessons[hidden] { display: none; }
+.verdict-toggle { cursor: pointer; font-weight: 700; min-height: 1.5rem; }
+.verdict-toggle:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; border-radius: 0.25rem; }
+.verdict-list {
+    display: grid;
+    gap: 0.4rem;
+    margin: 0.4rem 0 0;
+    padding: 0;
+    list-style: none;
+}
 .verdict-lesson { display: grid; gap: 0.15rem; }
 .verdict-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; opacity: 0.85; }
 .verdict-form { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 700; overflow-wrap: anywhere; }

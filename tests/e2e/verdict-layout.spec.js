@@ -76,11 +76,17 @@ for (const id of KATAS) {
             await page.locator('#checkAnswerBtn').click();
 
             await expect(page.locator('#answerVerdict')).toBeVisible();
-            await expect(page.locator('#answerVerdictLessons .verdict-lesson').first()).toBeVisible();
+            await expect(page.locator('#answerVerdictLessons')).toBeVisible();
+            await expect(page.locator('#answerVerdictLessons')).not.toHaveAttribute('open', '');
             await expect(page.locator('#checkAnswerBtn [data-role="label"]')).toHaveText('Next');
             expect(await overflow(page)).toBeLessThanOrEqual(0);
             await expect(page.locator('#answerVerdict')).toBeInViewport();
             await expect(page.locator('#checkAnswerBtn')).toBeInViewport();
+
+            // Opening the answers must not widen the page either.
+            await page.locator('#answerVerdictLessons > summary').click();
+            await expect(page.locator('#answerVerdictLessons .verdict-lesson').first()).toBeVisible();
+            expect(await overflow(page)).toBeLessThanOrEqual(0);
 
             // Locked with readonly, not disabled: iOS greys disabled text and drops the verdict colour.
             const locked = page.locator(`${ACTIVE_SECTION} input:visible:not([disabled])`);

@@ -55,6 +55,7 @@ export const dom = {
     title: byId('answerVerdictTitle'),
     detail: byId('answerVerdictDetail'),
     lessons: byId('answerVerdictLessons'),
+    list: byId('answerVerdictList'),
   },
 
   toast: {
